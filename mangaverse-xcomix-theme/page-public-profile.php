@@ -15,7 +15,10 @@ get_header();
 $lvl = mv_get_user_level_data($user->ID);
 $stats = mv_get_user_stats($user->ID);
 $avatar = get_avatar_url($user->ID) ?: MV_URI . '/assets/img/default-avatar.png';
-$bookmarks = get_user_meta($user->ID, '_mv_bookmarks', true) ?: [];
+$bookmarks = array_unique(array_merge(
+    get_user_meta($user->ID, '_mv_bookmarks', true) ?: [],
+    get_user_meta($user->ID, '_xcomix_bookmarks', true) ?: []
+));
 $is_self = ($user->ID === get_current_user_id());
 ?>
 

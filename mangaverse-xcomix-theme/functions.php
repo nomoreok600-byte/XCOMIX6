@@ -663,8 +663,11 @@ function mv_is_profile_public($user_id) {
 }
 
 function mv_get_user_stats($user_id) {
-    $history = get_user_meta($user_id, '_mv_history', true) ?: [];
-    $bookmarks = get_user_meta($user_id, '_mv_bookmarks', true) ?: [];
+    $history = function_exists('mvx_user_history') ? mvx_user_history($user_id) : (get_user_meta($user_id, '_mv_history', true) ?: []);
+    $bookmarks = array_unique(array_merge(
+        get_user_meta($user_id, '_mv_bookmarks', true) ?: [],
+        get_user_meta($user_id, '_xcomix_bookmarks', true) ?: []
+    ));
     $comment_count = get_comments(['user_id' => $user_id, 'count' => true]);
     $days = max(1, floor((time() - strtotime(get_userdata($user_id)->user_registered)) / 86400));
     
@@ -778,8 +781,8 @@ function mv_structured_data() {
     $title = get_the_title();
     $cover = mv_get_cover($manga_id, 'large');
     $genres = wp_get_post_terms($manga_id, 'genre', ['fields' => 'names']);
-    $author = get_post_meta($manga_id, '_mv_author', true) ?: 'Unknown';
-    $chapters = get_posts(['post_type' => 'chapter', 'post_parent' => $manga_id, 'posts_per_page' => -1]);
+    $author = function_exists('mvx_manga_meta') ? mvx_manga_meta($manga_id, 'author', 'Unknown') : (get_post_meta($manga_id, '_mv_author', true) ?: 'Unknown');
+    $chapters = function_exists('mvx_get_chapters') ? mvx_get_chapters($manga_id) : get_posts(['post_type' => 'chapter', 'post_parent' => $manga_id, 'posts_per_page' => -1]);
     
     $schema = [
         '@context' => 'https://schema.org',
@@ -807,7 +810,7 @@ function mv_seo_meta_tags() {
         $desc = wp_trim_words(get_the_content(), 30);
         $og_image = mv_get_cover(get_the_ID(), 'large');
     } elseif (is_singular('chapter')) {
-        $manga_id = wp_get_post_parent_id(get_the_ID());
+        $manga_id = function_exists('mvx_parent_manga_id') ? mvx_parent_manga_id(get_the_ID()) : wp_get_post_parent_id(get_the_ID());
         $desc = 'Read ' . get_the_title($manga_id) . ' - ' . get_the_title();
         $og_image = mv_get_cover($manga_id, 'large');
     } elseif (is_home() || is_front_page()) {
@@ -1046,7 +1049,10 @@ if (!function_exists('mv_ad')) {
 // 21. NOTIFICATION SYSTEM
 // ============================================================================
 function mv_get_notifications($user_id, $limit = 10) {
-    $bookmarks = get_user_meta($user_id, '_mv_bookmarks', true) ?: [];
+    $bookmarks = array_unique(array_merge(
+        get_user_meta($user_id, '_mv_bookmarks', true) ?: [],
+        get_user_meta($user_id, '_xcomix_bookmarks', true) ?: []
+    ));
     if (empty($bookmarks)) return [];
     
     $recent = get_posts([
@@ -1054,12 +1060,12 @@ function mv_get_notifications($user_id, $limit = 10) {
         'posts_per_page' => $limit,
         'orderby' => 'date',
         'order' => 'DESC',
-        'meta_query' => [['key' => '_mv_parent_manga', 'value' => $bookmarks, 'compare' => 'IN']],
+        'post_parent__in' => array_map('intval', $bookmarks),
     ]);
     
     $notifications = [];
     foreach ($recent as $ch) {
-        $manga_id = get_post_meta($ch->ID, '_mv_parent_manga', true);
+        $manga_id = function_exists('mvx_parent_manga_id') ? mvx_parent_manga_id($ch->ID) : get_post_meta($ch->ID, '_mv_parent_manga', true);
         $manga = get_post($manga_id);
         if ($manga) {
             $notifications[] = [
@@ -1067,7 +1073,7 @@ function mv_get_notifications($user_id, $limit = 10) {
                 'manga_url' => get_permalink($manga_id),
                 'chapter_title' => $ch->post_title,
                 'chapter_url' => get_permalink($ch->ID),
-                'chapter_num' => get_post_meta($ch->ID, '_mv_chapter_number', true),
+                'chapter_num' => function_exists('mvx_chapter_number') ? mvx_chapter_number($ch->ID) : get_post_meta($ch->ID, '_mv_chapter_number', true),
                 'time' => human_time_diff(get_the_time('U', $ch), current_time('timestamp')),
             ];
         }
@@ -1097,7 +1103,7 @@ add_action('save_post', 'mv_auto_chapter_title', 20);
 function mv_auto_chapter_title($post_id) {
     if (get_post_type($post_id) !== 'chapter') return;
     $parent = wp_get_post_parent_id($post_id);
-    $chap_num = get_post_meta($post_id, '_mv_chapter_number', true);
+    $chap_num = function_exists('mvx_chapter_number') ? mvx_chapter_number($post_id) : get_post_meta($post_id, '_mv_chapter_number', true);
     if ($parent && $chap_num) {
         $manga_title = get_the_title($parent);
         $new_title = $manga_title . ' Chapter ' . $chap_num;

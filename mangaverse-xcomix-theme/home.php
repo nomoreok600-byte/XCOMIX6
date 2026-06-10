@@ -52,8 +52,8 @@ $featured = get_posts(['post_type' => 'manga', 'posts_per_page' => 5, 'meta_key'
                 <?php foreach ($featured as $manga): 
                     $cover = mv_get_cover($manga->ID, 'large');
                     $genres = wp_get_post_terms($manga->ID, 'genre', ['fields' => 'names']);
-                    $score = get_post_meta($manga->ID, '_mv_score', true) ?: 'N/A';
-                    $author = get_post_meta($manga->ID, '_mv_author', true) ?: 'Unknown';
+                    $score = mvx_manga_meta($manga->ID, 'score', 'N/A');
+                    $author = mvx_manga_meta($manga->ID, 'author', 'Unknown');
                     $desc = wp_trim_words($manga->post_content, 30);
                     $last_ch = get_posts([
                         'post_type' => 'chapter', 
@@ -63,7 +63,7 @@ $featured = get_posts(['post_type' => 'manga', 'posts_per_page' => 5, 'meta_key'
                         'order' => 'DESC'
                     ]);
                     $last_ch_url = $last_ch ? get_permalink($last_ch[0]->ID) : '#';
-                    $last_ch_num = $last_ch ? get_post_meta($last_ch[0]->ID, '_mv_chapter_number', true) : '';
+                    $last_ch_num = $last_ch ? mvx_chapter_number($last_ch[0]->ID) : '';
                 ?>
                 <div class="swiper-slide relative">
                     <div class="h-[400px] lg:h-[500px] relative">
@@ -159,7 +159,7 @@ $featured = get_posts(['post_type' => 'manga', 'posts_per_page' => 5, 'meta_key'
         <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 lg:gap-5">
             <?php while ($manga_query->have_posts()): $manga_query->the_post(); 
                 $genres = wp_get_post_terms(get_the_ID(), 'genre', ['fields' => 'names']);
-                $score = get_post_meta(get_the_ID(), '_mv_score', true) ?: 'N/A';
+                $score = mvx_manga_meta(get_the_ID(), 'score', 'N/A');
                 $last_ch = get_posts([
                     'post_type' => 'chapter', 
                     'post_parent' => get_the_ID(),
@@ -167,7 +167,7 @@ $featured = get_posts(['post_type' => 'manga', 'posts_per_page' => 5, 'meta_key'
                     'orderby' => 'date', 
                     'order' => 'DESC'
                 ]);
-                $chap_num = $last_ch ? get_post_meta($last_ch[0]->ID, '_mv_chapter_number', true) : '';
+                $chap_num = $last_ch ? mvx_chapter_number($last_ch[0]->ID) : '';
             ?>
             <a href="<?php the_permalink(); ?>" class="group block card-hover">
                 <div class="relative rounded-xl overflow-hidden bg-[#1a1a22] aspect-[2/3] mb-2">

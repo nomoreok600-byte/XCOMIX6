@@ -12,9 +12,15 @@ $privacy = get_user_meta($user_id, '_mv_profile_privacy', true) ?: 'public';
 
 // Tabs
 $tabs = sanitize_text_field($_GET['tab'] ?? 'overview');
-$bookmarks = get_user_meta($user_id, '_mv_bookmarks', true) ?: [];
-$history = get_user_meta($user_id, '_mv_history', true) ?: [];
-$reading_plans = get_user_meta($user_id, '_mv_reading_plans', true) ?: [];
+$bookmarks = array_unique(array_merge(
+    get_user_meta($user_id, '_mv_bookmarks', true) ?: [],
+    get_user_meta($user_id, '_xcomix_bookmarks', true) ?: []
+));
+$history = mvx_user_history($user_id);
+$reading_plans = array_merge(
+    get_user_meta($user_id, '_mv_reading_plans', true) ?: [],
+    get_user_meta($user_id, '_xcomix_reading_plans', true) ?: []
+);
 ?>
 
 <section class="pt-20 min-h-screen">
@@ -134,7 +140,7 @@ $reading_plans = get_user_meta($user_id, '_mv_reading_plans', true) ?: [];
                     'orderby' => 'date', 
                     'order' => 'DESC'
                 ]);
-                $chap_num = $last_ch ? get_post_meta($last_ch[0]->ID, '_mv_chapter_number', true) : '';
+                $chap_num = $last_ch ? mvx_chapter_number($last_ch[0]->ID) : '';
             ?>
             <div class="group block relative">
                 <a href="<?php echo get_permalink($manga_id); ?>" class="block card-hover">

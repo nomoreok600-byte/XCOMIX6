@@ -162,7 +162,7 @@
                             'orderby' => 'date', 
                             'order' => 'DESC'
                         ]);
-                        $chap_num = $last_ch ? get_post_meta($last_ch[0]->ID, '_mv_chapter_number', true) : '';
+                        $chap_num = $last_ch ? mvx_chapter_number($last_ch[0]->ID) : '';
                     ?>
                     <a href="<?php echo esc_url(get_permalink($manga->ID)); ?>" class="group block card-hover">
                         <div class="relative rounded-xl overflow-hidden bg-[#1a1a22] aspect-[2/3] mb-2">
@@ -209,9 +209,9 @@
                             'date_query' => $date_query ?: null,
                         ]);
                         foreach ($popular as $ch):
-                            $manga_id = get_post_meta($ch->ID, '_mv_parent_manga', true);
+                            $manga_id = mvx_parent_manga_id($ch->ID);
                             $manga = $manga_id ? get_post($manga_id) : null;
-                            $ch_num = get_post_meta($ch->ID, '_mv_chapter_number', true);
+                            $ch_num = mvx_chapter_number($ch->ID);
                         ?>
                         <a href="<?php echo esc_url(get_permalink($ch->ID)); ?>" class="flex items-center gap-3 group hover:bg-white/[0.03] -mx-2 px-2 py-2 rounded-lg transition">
                             <img src="<?php echo $manga ? mv_get_cover($manga->ID, 'mv_cover_small') : ''; ?>" 

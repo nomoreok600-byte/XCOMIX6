@@ -25,10 +25,10 @@ $chapters = get_posts([
         <?php if ($chapters): ?>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             <?php foreach ($chapters as $ch):
-                $manga_id = get_post_meta($ch->ID, '_mv_parent_manga', true);
+                $manga_id = mvx_parent_manga_id($ch->ID);
                 $manga = $manga_id ? get_post($manga_id) : null;
                 if (!$manga) continue;
-                $ch_num = get_post_meta($ch->ID, '_mv_chapter_number', true);
+                $ch_num = mvx_chapter_number($ch->ID);
                 $cover = mv_get_cover($manga->ID, 'medium');
             ?>
             <a href="<?php echo esc_url(get_permalink($ch->ID)); ?>" class="group block card-hover">
