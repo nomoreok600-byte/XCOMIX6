@@ -138,12 +138,12 @@ $comment_count = get_comments_number($current_post_id);
 ?>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { theme: { extend: { colors: { bg: '#08080c', surface: '#12121a', surface2: '#1c1c26', accent: '#7c3aed' } } } };</script>
+<script>tailwind.config = { theme: { extend: { colors: { bg: '#0f0f13', surface: '#12121a', surface2: '#1c1c26', accent: '#e8783a' } } } };</script>
 
 <style>
     /* NATIVE BODY SCROLLING */
     html, body { 
-        background: var(--reader-bg, #08080c); 
+        background: var(--reader-bg, #0f0f13); 
         margin: 0!important; 
         padding: 0!important; 
         width: 100%; 
@@ -206,14 +206,14 @@ $comment_count = get_comments_number($current_post_id);
     /* Sliders */
     .pill-slider { -webkit-appearance: none; width: 100%; background: transparent; height: 4px; border-radius: 2px; }
     .pill-slider::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #2a2a35; border-radius: 2px; }
-    .pill-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #7c3aed; margin-top: -6px; cursor: pointer; box-shadow: 0 0 10px rgba(124, 58, 237, 0.5); }
-    .toggle-checkbox:checked { right: 0; border-color: #7c3aed; }
-    .toggle-checkbox:checked + .toggle-label { background-color: #7c3aed; }
+    .pill-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #e8783a; margin-top: -6px; cursor: pointer; box-shadow: 0 0 10px rgba(232, 120, 58, 0.5); }
+    .toggle-checkbox:checked { right: 0; border-color: #e8783a; }
+    .toggle-checkbox:checked + .toggle-label { background-color: #e8783a; }
 
     .style-grayscale .reader-img { filter: grayscale(100%); }
     .style-invert .reader-img { filter: invert(100%) hue-rotate(180deg); }
 
-    .loader-spin { border: 3px solid rgba(255,255,255,0.1); border-top-color: #7c3aed; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; }
+    .loader-spin { border: 3px solid rgba(255,255,255,0.1); border-top-color: #e8783a; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; }
     @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 </style>
 
@@ -233,7 +233,7 @@ $comment_count = get_comments_number($current_post_id);
         <h3 class="text-center font-black text-xl text-white mb-6">End of Chapter <?php echo (float)$chapter_num; ?></h3>
         <div class="flex items-center gap-4 w-full mb-8">
             <a href="<?php echo $prev_chap ? get_permalink($prev_chap->ID) : '#'; ?>" class="flex-1 py-4 bg-surface2 rounded-xl font-bold text-center text-gray-300 hover:text-white transition shadow-lg border border-white/5 <?php echo !$prev_chap ? 'opacity-30 pointer-events-none' : ''; ?>">Previous Chapter</a>
-            <a href="<?php echo $next_chap ? get_permalink($next_chap->ID) : '#'; ?>" class="flex-[1.5] py-4 bg-accent rounded-xl font-bold text-center text-white hover:bg-purple-500 transition shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-accent/50 <?php echo !$next_chap ? 'opacity-30 pointer-events-none' : ''; ?>">Next Chapter</a>
+            <a href="<?php echo $next_chap ? get_permalink($next_chap->ID) : '#'; ?>" class="flex-[1.5] py-4 bg-accent rounded-xl font-bold text-center text-white hover:bg-purple-500 transition shadow-[0_0_20px_rgba(232,120,58,0.3)] border border-accent/50 <?php echo !$next_chap ? 'opacity-30 pointer-events-none' : ''; ?>">Next Chapter</a>
         </div>
         <div class="text-center">
             <a href="<?php echo esc_url($manga_permalink); ?>" class="inline-block px-8 py-3 bg-surface rounded-xl font-bold text-gray-400 hover:text-white transition border border-white/5 text-sm">
@@ -418,8 +418,8 @@ $comment_count = get_comments_number($current_post_id);
                 <div class="space-y-3">
                     <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">Background Color</span>
                     <div class="flex gap-4">
-                        <button onclick="window.setBg('#08080c')" id="bg-btn-0" class="w-16 h-16 rounded-full bg-[#08080c] border-2 border-accent shadow-lg ring-4 ring-accent/20 transition"></button>
-                        <button onclick="window.setBg('#1a1a1a')" id="bg-btn-1" class="w-16 h-16 rounded-full bg-[#1a1a1a] border-2 border-transparent hover:border-white/20 transition"></button>
+                        <button onclick="window.setBg('#0f0f13')" id="bg-btn-0" class="w-16 h-16 rounded-full bg-[#0f0f13] border-2 border-accent shadow-lg ring-4 ring-accent/20 transition"></button>
+                        <button onclick="window.setBg('#252530')" id="bg-btn-1" class="w-16 h-16 rounded-full bg-[#252530] border-2 border-transparent hover:border-white/20 transition"></button>
                         <button onclick="window.setBg('#ffffff')" id="bg-btn-2" class="w-16 h-16 rounded-full bg-[#ffffff] border-2 border-gray-300 hover:border-gray-400 transition"></button>
                     </div>
                 </div>
@@ -468,7 +468,7 @@ $comment_count = get_comments_number($current_post_id);
 
     let readerSettings = JSON.parse(localStorage.getItem('kagane_settings')) || { 
         mode: 'scroll', fit: 'contain', zoomBase: 'screen', zoom: 100, brightness: 100, 
-        gaps: false, bg: '#08080c', grayscale: false, invert: false, dataSaver: false 
+        gaps: false, bg: '#0f0f13', grayscale: false, invert: false, dataSaver: false 
     };
     function saveSettings() { localStorage.setItem('kagane_settings', JSON.stringify(readerSettings)); }
 
@@ -612,7 +612,7 @@ $comment_count = get_comments_number($current_post_id);
     window.setBg = (color) => {
         readerSettings.bg = color; saveSettings(); root.style.setProperty('--reader-bg', color);
         [0,1,2].forEach(i => document.getElementById(`bg-btn-${i}`).classList.remove('ring-4', 'ring-accent/20', 'border-accent'));
-        let activeId = color === '#08080c' ? 0 : color === '#1a1a1a' ? 1 : 2;
+        let activeId = color === '#0f0f13' ? 0 : color === '#252530' ? 1 : 2;
         document.getElementById(`bg-btn-${activeId}`).classList.add('ring-4', 'ring-accent/20', 'border-accent');
     };
 

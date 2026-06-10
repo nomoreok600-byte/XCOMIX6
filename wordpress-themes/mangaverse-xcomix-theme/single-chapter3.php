@@ -59,8 +59,8 @@ if (!function_exists('xcomix_chapter_chat_render')) {
         $role_badge = ''; $name_color = 'text-gray-200';
         if ($user_obj) {
             if (in_array('administrator', $user_obj->roles)) {
-                $role_badge = '<span class="bg-[#ea580c]/20 text-[#ea580c] text-[8px] font-black uppercase px-1.5 py-0.5 rounded ml-1">Admin</span>';
-                $name_color = 'text-[#ea580c]';
+                $role_badge = '<span class="bg-[#e8783a]/20 text-[#e8783a] text-[8px] font-black uppercase px-1.5 py-0.5 rounded ml-1">Admin</span>';
+                $name_color = 'text-[#e8783a]';
             } elseif (in_array('author', $user_obj->roles) || in_array('editor', $user_obj->roles)) {
                 $role_badge = '<span class="bg-[#3b82f6]/20 text-[#3b82f6] text-[8px] font-black uppercase px-1.5 py-0.5 rounded ml-1">Uploader</span>';
                 $name_color = 'text-[#3b82f6]';
@@ -73,7 +73,7 @@ if (!function_exists('xcomix_chapter_chat_render')) {
             if ($parent_comment) {
                 $p_author = esc_html($parent_comment->comment_author);
                 $p_text = wp_trim_words(esc_html($parent_comment->comment_content), 8, '...');
-                $reply_html = '<div class="flex items-center gap-1.5 text-[11px] text-gray-500 mb-1 pl-2 border-l-2 border-[#333] select-none"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg><span class="truncate">Replying to <b class="text-gray-400">@'.$p_author.'</b>: '.$p_text.'</span></div>';
+                $reply_html = '<div class="flex items-center gap-1.5 text-[11px] text-gray-500 mb-1 pl-2 border-l-2 border-[#3a3a48] select-none"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg><span class="truncate">Replying to <b class="text-gray-400">@'.$p_author.'</b>: '.$p_text.'</span></div>';
             }
         }
 
@@ -88,14 +88,14 @@ if (!function_exists('xcomix_chapter_chat_render')) {
         $raw_content = preg_replace('/(https?:\/\/[^\s"\'<>]+?\.(?:jpg|jpeg|png|gif|webp))/i', '|||IMG|||$1|||', $raw_content);
         $raw_content = make_clickable($raw_content); 
         $raw_content = str_replace('<a href=', '<a class="text-[#3b82f6] hover:underline break-all" target="_blank" href=', $raw_content);
-        $raw_content = preg_replace('/\|\|\|IMG\|\|\|(.*?)\|\|\|/i', '<br><img src="$1" onclick="window.openLightbox(\'$1\')" class="max-w-full md:max-w-[250px] max-h-[200px] w-auto h-auto rounded-xl mt-2 mb-1 border border-[#333] shadow-md hover:opacity-80 transition object-contain cursor-pointer">', $raw_content);
+        $raw_content = preg_replace('/\|\|\|IMG\|\|\|(.*?)\|\|\|/i', '<br><img src="$1" onclick="window.openLightbox(\'$1\')" class="max-w-full md:max-w-[250px] max-h-[200px] w-auto h-auto rounded-xl mt-2 mb-1 border border-[#3a3a48] shadow-md hover:opacity-80 transition object-contain cursor-pointer">', $raw_content);
         
         $raw_content = nl2br($raw_content);
         $likes = (int) get_comment_meta($chat->comment_ID, '_chat_likes', true);
         $exact_time = date('M j, Y g:i A', strtotime($chat->comment_date));
         ?>
-        <div class="flex gap-3 md:gap-4 group hover:bg-[#121212] focus-within:bg-[#121212] -mx-4 px-4 py-3 rounded-xl transition relative cursor-pointer md:cursor-default" tabindex="0" id="chat-msg-<?php echo $chat->comment_ID; ?>">
-            <img src="<?php echo esc_url($author_avatar); ?>" class="w-10 h-10 rounded-full border border-white/5 bg-[#1a1a1a] shrink-0 mt-1 object-cover cursor-pointer" onclick="window.insertText('@<?php echo esc_js($author_name); ?>')">
+        <div class="flex gap-3 md:gap-4 group hover:bg-[#1a1a22] focus-within:bg-[#1a1a22] -mx-4 px-4 py-3 rounded-xl transition relative cursor-pointer md:cursor-default" tabindex="0" id="chat-msg-<?php echo $chat->comment_ID; ?>">
+            <img src="<?php echo esc_url($author_avatar); ?>" class="w-10 h-10 rounded-full border border-white/5 bg-[#252530] shrink-0 mt-1 object-cover cursor-pointer" onclick="window.insertText('@<?php echo esc_js($author_name); ?>')">
             <div class="flex flex-col min-w-0 w-full pointer-events-none md:pointer-events-auto">
                 <?php echo $reply_html; ?>
                 <div class="flex items-baseline gap-2 mb-0.5">
@@ -111,29 +111,29 @@ if (!function_exists('xcomix_chapter_chat_render')) {
                 </div>
                 
                 <div class="mt-2 flex items-center gap-2 pointer-events-auto">
-                    <button onclick="window.likeChat(<?php echo $chat->comment_ID; ?>)" class="flex items-center gap-1.5 bg-[#1a1a1a] border border-[#222] hover:border-pink-500/50 hover:bg-pink-500/10 px-2 py-1 rounded-md transition group/btn">
+                    <button onclick="window.likeChat(<?php echo $chat->comment_ID; ?>)" class="flex items-center gap-1.5 bg-[#252530] border border-[#2a2a35] hover:border-pink-500/50 hover:bg-pink-500/10 px-2 py-1 rounded-md transition group/btn">
                         <svg class="w-3.5 h-3.5 text-gray-500 group-hover/btn:text-pink-500 transition <?php echo ($likes > 0) ? 'text-pink-500' : ''; ?>" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                         <span class="text-[10px] font-bold text-gray-400 group-hover/btn:text-pink-400" id="like-count-<?php echo $chat->comment_ID; ?>"><?php echo $likes > 0 ? $likes : 'Like'; ?></span>
                     </button>
                 </div>
             </div>
             
-            <div class="absolute right-4 top-4 flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition bg-[#121212]/90 backdrop-blur-sm md:bg-[#121212] rounded-lg shadow-lg border border-[#333] z-10 p-0.5">
-                <button onclick="window.copyChatText(<?php echo $chat->comment_ID; ?>)" class="hover:bg-[#1a1a1a] hover:text-white text-gray-400 p-1.5 rounded-lg transition" title="Copy Text">
+            <div class="absolute right-4 top-4 flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition bg-[#1a1a22]/90 backdrop-blur-sm md:bg-[#1a1a22] rounded-lg shadow-lg border border-[#3a3a48] z-10 p-0.5">
+                <button onclick="window.copyChatText(<?php echo $chat->comment_ID; ?>)" class="hover:bg-[#252530] hover:text-white text-gray-400 p-1.5 rounded-lg transition" title="Copy Text">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </button>
                 <?php if ($is_logged_in) { ?>
-                <button onclick="window.triggerReply('<?php echo esc_js($author_name); ?>', <?php echo $chat->comment_ID; ?>)" class="hover:bg-[#1a1a1a] hover:text-[#3b82f6] text-gray-400 p-1.5 rounded-lg transition" title="Reply">
+                <button onclick="window.triggerReply('<?php echo esc_js($author_name); ?>', <?php echo $chat->comment_ID; ?>)" class="hover:bg-[#252530] hover:text-[#3b82f6] text-gray-400 p-1.5 rounded-lg transition" title="Reply">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
                 </button>
                 <?php } ?>
                 <?php if ($is_mine) { ?>
-                <button onclick="window.editChat(<?php echo $chat->comment_ID; ?>)" class="hover:bg-[#1a1a1a] hover:text-green-500 text-gray-400 p-1.5 rounded-lg transition" title="Edit Message">
+                <button onclick="window.editChat(<?php echo $chat->comment_ID; ?>)" class="hover:bg-[#252530] hover:text-green-500 text-gray-400 p-1.5 rounded-lg transition" title="Edit Message">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                 </button>
                 <?php } ?>
                 <?php if ($is_mine || current_user_can('manage_options')) { ?>
-                <button onclick="window.deleteChat(<?php echo $chat->comment_ID; ?>)" class="hover:bg-[#1a1a1a] hover:text-red-500 text-gray-400 p-1.5 rounded-lg transition" title="Delete Message">
+                <button onclick="window.deleteChat(<?php echo $chat->comment_ID; ?>)" class="hover:bg-[#252530] hover:text-red-500 text-gray-400 p-1.5 rounded-lg transition" title="Delete Message">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
                 <?php } ?>
@@ -229,24 +229,24 @@ $images = isset($_GET['clear_cache']) ? false : get_transient($cache_key);
 $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
 ?>
 
-    <main class="min-h-screen relative w-full bg-[#09090b]">
+    <main class="min-h-screen relative w-full bg-[#0f0f13]">
         
         <style>
             #bottom-nav, #global-nav, .site-header { display: none !important; }
             
-            .orange-spinner { width: 24px; height: 24px; border: 3px solid #222; border-top-color: #ea580c; border-radius: 50%; animation: xcomix-spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+            .orange-spinner { width: 24px; height: 24px; border: 3px solid #2a2a35; border-top-color: #e8783a; border-radius: 50%; animation: xcomix-spin 1s linear infinite; display: inline-block; vertical-align: middle; }
             @keyframes xcomix-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
             
-            .progress-bar { position: fixed; top: 0; left: 0; height: 3px; z-[99999]; background: #ea580c; box-shadow: 0 0 10px #ea580c; transition: width 0.2s; }
+            .progress-bar { position: fixed; top: 0; left: 0; height: 3px; z-[99999]; background: #e8783a; box-shadow: 0 0 10px #e8783a; transition: width 0.2s; }
             .drawer { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
             .drawer.open { transform: translateX(0); }
             .overlay { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
             .overlay.open { opacity: 1; pointer-events: auto; }
             .chat-scroll::-webkit-scrollbar { width: 6px; }
             .chat-scroll::-webkit-scrollbar-track { background: transparent; }
-            .chat-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-            .mention-highlight { color: #ea580c; font-weight: 900; background: rgba(234, 88, 12, 0.1); padding: 0 4px; border-radius: 4px; }
-            .spoiler-block { background: #333; color: transparent; padding: 0 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s; user-select: none; }
+            .chat-scroll::-webkit-scrollbar-thumb { background: #3a3a48; border-radius: 10px; }
+            .mention-highlight { color: #e8783a; font-weight: 900; background: rgba(234, 88, 12, 0.1); padding: 0 4px; border-radius: 4px; }
+            .spoiler-block { background: #3a3a48; color: transparent; padding: 0 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s; user-select: none; }
             .spoiler-block:hover, .spoiler-block:active { background: rgba(255,255,255,0.1); color: #fff; }
 
             /* Client-Side Renderer Styles */
@@ -254,29 +254,29 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
             #pages-container.mode-webtoon { gap: 0; display: block; text-align: center; padding-top: 56px; padding-bottom: 20px; }
             #pages-container.mode-webtoon .page-wrapper { max-width: 800px; margin: 0 auto; display: block; line-height: 0; font-size: 0; }
             #pages-container.mode-webtoon .chapter-page { width: 100%; height: auto; margin: 0; padding: 0; display: block; vertical-align: top; }
-            #pages-container.mode-page { gap: 40px; background-color: #09090b; display: flex; flex-direction: column; align-items: center; padding-top: 80px; padding-bottom: 40px; }
+            #pages-container.mode-page { gap: 40px; background-color: #0f0f13; display: flex; flex-direction: column; align-items: center; padding-top: 80px; padding-bottom: 40px; }
             #pages-container.mode-page .page-wrapper { max-width: 1000px; margin: 0 auto; padding: 0 10px; display: flex; justify-content: center; }
             #pages-container.mode-page .chapter-page { max-height: 90vh; width: auto; max-width: 100%; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border-radius: 8px; margin: 0 auto; }
-            .page-wrapper { position: relative; width: 100%; display: block; background: #09090b; margin: 0; padding: 0; }
+            .page-wrapper { position: relative; width: 100%; display: block; background: #0f0f13; margin: 0; padding: 0; }
             .page-wrapper.is-loading { min-height: 400px; } 
             .spinner-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; justify-content: center; align-items: center; }
             .chapter-page { position: relative; z-index: 20; display: block; width: 100%; }
         </style>
 
-        <nav id="reader-top-nav" class="fixed top-0 left-0 w-full z-[9999] bg-[#121212]/95 backdrop-blur-md border-b border-[#333] transition-transform duration-300 shadow-sm">
+        <nav id="reader-top-nav" class="fixed top-0 left-0 w-full z-[9999] bg-[#1a1a22]/95 backdrop-blur-md border-b border-[#3a3a48] transition-transform duration-300 shadow-sm">
             <div class="max-w-[1000px] mx-auto px-4 h-14 flex items-center justify-between gap-3">
-                <a href="<?php echo get_permalink($manga_id); ?>" class="w-8 h-8 bg-[#1a1a1a] border border-[#333] rounded-full flex items-center justify-center hover:border-[#ea580c] transition shrink-0 text-white" onclick="event.stopPropagation();">
+                <a href="<?php echo get_permalink($manga_id); ?>" class="w-8 h-8 bg-[#252530] border border-[#3a3a48] rounded-full flex items-center justify-center hover:border-[#e8783a] transition shrink-0 text-white" onclick="event.stopPropagation();">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </a>
                 <div class="flex-1 flex flex-col items-center justify-center truncate px-2">
                     <h1 class="text-[13px] font-bold text-gray-200 truncate w-full text-center tracking-tight"><?php echo esc_html($manga_title); ?></h1>
-                    <span class="text-[10px] text-[#ea580c] font-black uppercase tracking-widest">Chapter <?php echo (float)$chapter_num; ?></span>
+                    <span class="text-[10px] text-[#e8783a] font-black uppercase tracking-widest">Chapter <?php echo (float)$chapter_num; ?></span>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                    <button type="button" onclick="window.scrollToChat(); event.stopPropagation();" class="hidden md:flex w-8 h-8 bg-[#1a1a1a] border border-[#333] rounded-full items-center justify-center hover:text-[#3b82f6] hover:border-[#3b82f6] transition text-white" title="Go to Comments">
+                    <button type="button" onclick="window.scrollToChat(); event.stopPropagation();" class="hidden md:flex w-8 h-8 bg-[#252530] border border-[#3a3a48] rounded-full items-center justify-center hover:text-[#3b82f6] hover:border-[#3b82f6] transition text-white" title="Go to Comments">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                     </button>
-                    <button type="button" onclick="window.toggleReaderDrawer(); event.stopPropagation();" class="w-8 h-8 bg-[#1a1a1a] border border-[#333] rounded-full flex items-center justify-center hover:border-[#ea580c] transition text-white">
+                    <button type="button" onclick="window.toggleReaderDrawer(); event.stopPropagation();" class="w-8 h-8 bg-[#252530] border border-[#3a3a48] rounded-full flex items-center justify-center hover:border-[#e8783a] transition text-white">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
                 </div>
@@ -311,17 +311,17 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
         </div>
 
         <div id="chapter-discussion" class="w-full max-w-[800px] mx-auto pb-28 pt-8 px-4" onclick="event.stopPropagation();">
-            <div class="flex flex-col h-[500px] md:h-[600px] bg-[#121212] border border-[#333] rounded-2xl shadow-2xl overflow-hidden">
-                <div class="p-3 md:p-4 border-b border-[#222] bg-[#1a1a1a] shrink-0 flex items-center justify-between">
+            <div class="flex flex-col h-[500px] md:h-[600px] bg-[#1a1a22] border border-[#3a3a48] rounded-2xl shadow-2xl overflow-hidden">
+                <div class="p-3 md:p-4 border-b border-[#2a2a35] bg-[#252530] shrink-0 flex items-center justify-between">
                     <h2 class="text-[14px] font-black text-white tracking-tight uppercase flex items-center gap-2">
                         <span class="w-1.5 h-4 bg-[#3b82f6] rounded-full"></span> 
                         Chapter <?php echo (float)$chapter_num; ?> Chat
                     </h2>
-                    <span class="text-[9px] font-black uppercase text-gray-500 tracking-widest px-2 py-1 bg-[#222] rounded border border-[#333] shadow-inner">
+                    <span class="text-[9px] font-black uppercase text-gray-500 tracking-widest px-2 py-1 bg-[#2a2a35] rounded border border-[#3a3a48] shadow-inner">
                         <?php echo count($chapter_chats); ?> Comments
                     </span>
                 </div>
-                <div class="flex-1 overflow-y-auto chat-scroll p-4 md:p-6 space-y-2 flex flex-col-reverse relative bg-[#09090b]" id="chat-feed-container">
+                <div class="flex-1 overflow-y-auto chat-scroll p-4 md:p-6 space-y-2 flex flex-col-reverse relative bg-[#0f0f13]" id="chat-feed-container">
                     <?php if (empty($chapter_chats)) { ?>
                         <div class="text-center py-10"><span class="text-gray-500 font-bold text-[12px]">No comments yet. Start the discussion!</span></div>
                     <?php } else { foreach($chapter_chats as $chat) { xcomix_chapter_chat_render($chat, $is_logged_in, $current_user); } } ?>
@@ -329,46 +329,46 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                 <button id="jump-bottom-btn" type="button" onclick="window.scrollChatToBottom()" class="absolute bottom-28 right-4 z-50 w-10 h-10 bg-[#3b82f6] text-white rounded-full shadow-xl hidden items-center justify-center transition-all hover:scale-110 border border-[#2563eb]">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
                 </button>
-                <div class="bg-[#09090b] border-t border-[#222] shrink-0 flex flex-col relative z-20">
+                <div class="bg-[#0f0f13] border-t border-[#2a2a35] shrink-0 flex flex-col relative z-20">
                     <?php if ($is_logged_in) { ?>
-                    <div class="flex gap-3 px-3 py-2 bg-[#121212] border-b border-[#222] overflow-x-auto flex-nowrap no-scrollbar items-center">
+                    <div class="flex gap-3 px-3 py-2 bg-[#1a1a22] border-b border-[#2a2a35] overflow-x-auto flex-nowrap no-scrollbar items-center">
                         <span class="text-[9px] font-black uppercase text-gray-600 tracking-widest mr-1 shrink-0">Quick</span>
                         <button type="button" onclick="window.insertText(String.fromCodePoint(128514))" class="hover:scale-125 transition shrink-0 text-base">&#128514;</button>
                         <button type="button" onclick="window.insertText(String.fromCodePoint(128293))" class="hover:scale-125 transition shrink-0 text-base">&#128293;</button>
                         <button type="button" onclick="window.insertText(String.fromCodePoint(128064))" class="hover:scale-125 transition shrink-0 text-base">&#128064;</button>
                         <button type="button" onclick="window.insertText(String.fromCodePoint(128128))" class="hover:scale-125 transition shrink-0 text-base">&#128128;</button>
-                        <div class="w-px h-4 bg-[#333] mx-1 shrink-0"></div>
-                        <button type="button" onclick="window.toggleGifPicker()" class="text-gray-400 hover:text-[#3b82f6] font-black text-[10px] uppercase tracking-wider shrink-0 transition bg-[#1a1a1a] px-2 py-1 rounded border border-[#333]">GIF</button>
+                        <div class="w-px h-4 bg-[#3a3a48] mx-1 shrink-0"></div>
+                        <button type="button" onclick="window.toggleGifPicker()" class="text-gray-400 hover:text-[#3b82f6] font-black text-[10px] uppercase tracking-wider shrink-0 transition bg-[#252530] px-2 py-1 rounded border border-[#3a3a48]">GIF</button>
                         <button type="button" onclick="window.insertText('**bold**')" class="text-gray-400 hover:text-white font-bold text-[10px] uppercase tracking-wider shrink-0 transition">Bold</button>
                         <button type="button" onclick="window.insertText('||spoiler||')" class="text-gray-400 hover:text-white font-bold text-[10px] uppercase tracking-wider shrink-0 transition">Spoiler</button>
                     </div>
-                    <div id="gif-picker" class="hidden bg-[#09090b] border-b border-[#222] p-2 shrink-0">
+                    <div id="gif-picker" class="hidden bg-[#0f0f13] border-b border-[#2a2a35] p-2 shrink-0">
                         <div class="flex overflow-x-auto gap-2 pb-1 snap-x no-scrollbar">
-                            <img src="https://i.imgur.com/YwOaaPz.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#333] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
-                            <img src="https://i.imgur.com/Z4Ond85.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#333] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
-                            <img src="https://i.imgur.com/1mO7e.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#333] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
-                            <img src="https://i.imgur.com/Fw5ZJ.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#333] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
-                            <img src="https://i.imgur.com/L1d4P.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#333] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
-                            <img src="https://i.imgur.com/5O29D.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#333] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
-                            <img src="https://i.imgur.com/M9y4v.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#333] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
+                            <img src="https://i.imgur.com/YwOaaPz.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#3a3a48] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
+                            <img src="https://i.imgur.com/Z4Ond85.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#3a3a48] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
+                            <img src="https://i.imgur.com/1mO7e.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#3a3a48] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
+                            <img src="https://i.imgur.com/Fw5ZJ.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#3a3a48] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
+                            <img src="https://i.imgur.com/L1d4P.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#3a3a48] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
+                            <img src="https://i.imgur.com/5O29D.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#3a3a48] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
+                            <img src="https://i.imgur.com/M9y4v.gif" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#3a3a48] hover:border-[#3b82f6]" onclick="window.selectGif(this.src)">
                         </div>
                     </div>
-                    <div id="reply-preview" class="hidden px-4 pt-2 pb-1 flex justify-between items-center text-[10px] text-gray-400 font-bold bg-[#09090b]">
+                    <div id="reply-preview" class="hidden px-4 pt-2 pb-1 flex justify-between items-center text-[10px] text-gray-400 font-bold bg-[#0f0f13]">
                         <span>Replying to <span id="reply-username" class="text-[#3b82f6]"></span></span>
                         <button type="button" onclick="window.cancelReply()" class="hover:text-white">Cancel</button>
                     </div>
                     <div id="upload-preview" class="hidden px-4 pt-2 relative inline-block">
-                        <div class="relative inline-block border-2 border-dashed border-[#3b82f6] rounded-lg p-1 bg-[#1a1a1a]">
+                        <div class="relative inline-block border-2 border-dashed border-[#3b82f6] rounded-lg p-1 bg-[#252530]">
                             <img id="upload-preview-img" src="" class="h-14 rounded object-cover">
-                            <button type="button" onclick="window.removeUpload()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-lg font-bold border-2 border-[#121212]">X</button>
+                            <button type="button" onclick="window.removeUpload()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-lg font-bold border-2 border-[#1a1a22]">X</button>
                         </div>
                     </div>
-                    <form id="ajax-chat-form" onsubmit="event.preventDefault(); window.submitChat();" class="relative flex items-end bg-[#1a1a1a] m-2 border border-[#333] rounded-2xl overflow-hidden focus-within:border-[#3b82f6] transition shadow-inner">
+                    <form id="ajax-chat-form" onsubmit="event.preventDefault(); window.submitChat();" class="relative flex items-end bg-[#252530] m-2 border border-[#3a3a48] rounded-2xl overflow-hidden focus-within:border-[#3b82f6] transition shadow-inner">
                         <input type="file" id="chat-image-upload" accept="image/*" class="hidden" onchange="window.uploadChatImage(this)">
                         <input type="hidden" id="hidden_image_url" value="">
                         <input type="hidden" id="chat_comment_post_ID" value="<?php echo $current_post_id; ?>" />
                         <input type="hidden" id="chat_comment_parent" value="0" />
-                        <label for="chat-image-upload" id="upload-btn-label" class="cursor-pointer m-1.5 w-10 h-10 rounded-xl bg-[#222] hover:bg-[#333] text-gray-400 hover:text-[#3b82f6] flex items-center justify-center shrink-0 transition" title="Attach Image">
+                        <label for="chat-image-upload" id="upload-btn-label" class="cursor-pointer m-1.5 w-10 h-10 rounded-xl bg-[#2a2a35] hover:bg-[#3a3a48] text-gray-400 hover:text-[#3b82f6] flex items-center justify-center shrink-0 transition" title="Attach Image">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         </label>
                         <textarea id="chat-input-box" rows="1" placeholder="Share your thoughts..." class="w-full bg-transparent text-white text-[14px] py-3 pr-3 focus:outline-none resize-none no-scrollbar max-h-24 font-medium" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
@@ -377,7 +377,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                         </button>
                     </form>
                 <?php } else { ?>
-                    <div class="m-4 bg-[#1a1a1a] border border-[#333] rounded-2xl p-4 flex items-center justify-between shadow-inner">
+                    <div class="m-4 bg-[#252530] border border-[#3a3a48] rounded-2xl p-4 flex items-center justify-between shadow-inner">
                         <span class="text-gray-400 text-[12px] font-medium">Log in to join the discussion.</span>
                         <a href="/auth" class="bg-[#3b82f6] text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md">Sign In</a>
                     </div>
@@ -386,51 +386,51 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
             </div>
         </div>
 
-        <div id="reader-bottom-toolbar" class="fixed bottom-0 left-0 w-full z-[9999] bg-[#121212]/95 backdrop-blur-md border-t border-[#333] transition-transform duration-300 pb-safe">
+        <div id="reader-bottom-toolbar" class="fixed bottom-0 left-0 w-full z-[9999] bg-[#1a1a22]/95 backdrop-blur-md border-t border-[#3a3a48] transition-transform duration-300 pb-safe">
             <div class="max-w-[600px] mx-auto px-4 h-16 flex items-center justify-between gap-3 md:gap-4">
                 <?php if($prev_chap) { ?>
-                    <a href="<?php echo get_permalink($prev_chap->ID); ?>" class="flex-1 bg-[#1a1a1a] border border-[#333] hover:border-gray-500 text-center py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-300 hover:text-white transition shadow-sm">Prev</a>
+                    <a href="<?php echo get_permalink($prev_chap->ID); ?>" class="flex-1 bg-[#252530] border border-[#3a3a48] hover:border-gray-500 text-center py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-300 hover:text-white transition shadow-sm">Prev</a>
                 <?php } else { ?>
-                    <div class="flex-1 bg-[#09090b] border border-[#222] text-center py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-700 cursor-not-allowed">Prev</div>
+                    <div class="flex-1 bg-[#0f0f13] border border-[#2a2a35] text-center py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-700 cursor-not-allowed">Prev</div>
                 <?php } ?>
-                <button type="button" onclick="window.scrollToChat();" class="bg-[#1a1a1a] border border-[#333] hover:border-[#3b82f6] hover:text-[#3b82f6] w-12 h-12 rounded-xl flex items-center justify-center text-gray-400 transition shadow-sm shrink-0" title="Comments">
+                <button type="button" onclick="window.scrollToChat();" class="bg-[#252530] border border-[#3a3a48] hover:border-[#3b82f6] hover:text-[#3b82f6] w-12 h-12 rounded-xl flex items-center justify-center text-gray-400 transition shadow-sm shrink-0" title="Comments">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                 </button>
-                <a href="<?php echo get_permalink($manga_id); ?>" class="bg-[#ea580c] hover:bg-[#c2410c] px-5 py-3 rounded-xl flex items-center justify-center text-white font-black text-[11px] uppercase tracking-widest transition shadow-[0_4px_15px_rgba(234,88,12,0.3)] shrink-0">
+                <a href="<?php echo get_permalink($manga_id); ?>" class="bg-[#e8783a] hover:bg-[#d06a30] px-5 py-3 rounded-xl flex items-center justify-center text-white font-black text-[11px] uppercase tracking-widest transition shadow-[0_4px_15px_rgba(234,88,12,0.3)] shrink-0">
                     <svg class="w-4 h-4 md:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                     <span class="hidden md:inline">Info</span>
                 </a>
                 <?php if($next_chap) { ?>
-                    <a href="<?php echo get_permalink($next_chap->ID); ?>" class="flex-1 bg-[#1a1a1a] border border-[#333] hover:border-[#ea580c] text-center py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-300 hover:text-white transition shadow-sm">Next</a>
+                    <a href="<?php echo get_permalink($next_chap->ID); ?>" class="flex-1 bg-[#252530] border border-[#3a3a48] hover:border-[#e8783a] text-center py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-300 hover:text-white transition shadow-sm">Next</a>
                 <?php } else { ?>
-                    <div class="flex-1 bg-[#09090b] border border-[#222] text-center py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-700 cursor-not-allowed">Next</div>
+                    <div class="flex-1 bg-[#0f0f13] border border-[#2a2a35] text-center py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-700 cursor-not-allowed">Next</div>
                 <?php } ?>
             </div>
         </div>
 
         <div id="reader-overlay" onclick="window.toggleReaderDrawer()" class="overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999]"></div>
         
-        <div id="reader-drawer" class="drawer fixed top-0 right-0 h-full w-[280px] bg-[#09090b] border-l border-[#333] z-[9999] flex flex-col shadow-2xl">
-            <div class="p-5 border-b border-[#333] flex items-center justify-between bg-[#121212]">
+        <div id="reader-drawer" class="drawer fixed top-0 right-0 h-full w-[280px] bg-[#0f0f13] border-l border-[#3a3a48] z-[9999] flex flex-col shadow-2xl">
+            <div class="p-5 border-b border-[#3a3a48] flex items-center justify-between bg-[#1a1a22]">
                 <h3 class="font-black text-white uppercase tracking-widest text-[11px] flex items-center gap-2">
-                    <span class="w-1.5 h-4 bg-[#ea580c] rounded-full"></span> Options
+                    <span class="w-1.5 h-4 bg-[#e8783a] rounded-full"></span> Options
                 </h3>
-                <button type="button" onclick="window.toggleReaderDrawer()" class="w-7 h-7 bg-[#1a1a1a] border border-[#333] rounded-full flex items-center justify-center hover:border-gray-500 text-white transition">
+                <button type="button" onclick="window.toggleReaderDrawer()" class="w-7 h-7 bg-[#252530] border border-[#3a3a48] rounded-full flex items-center justify-center hover:border-gray-500 text-white transition">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div class="p-5 border-b border-[#333]">
+            <div class="p-5 border-b border-[#3a3a48]">
                 <span class="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-3 block">Reading Mode</span>
-                <div class="flex bg-[#121212] rounded-xl p-1.5 border border-[#333] shadow-inner">
-                    <button type="button" onclick="window.setReaderMode('webtoon')" id="btn-webtoon" class="flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg bg-[#ea580c] text-white transition shadow-sm">Webtoon</button>
+                <div class="flex bg-[#1a1a22] rounded-xl p-1.5 border border-[#3a3a48] shadow-inner">
+                    <button type="button" onclick="window.setReaderMode('webtoon')" id="btn-webtoon" class="flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg bg-[#e8783a] text-white transition shadow-sm">Webtoon</button>
                     <button type="button" onclick="window.setReaderMode('page')" id="btn-page" class="flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg text-gray-500 hover:text-white transition">Page</button>
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto no-scrollbar p-3 space-y-1">
                 <span class="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-2 block px-2 mt-2">Chapter List</span>
                 <?php foreach($all_chaps as $ch) { $is_active = ($ch->ID === $current_post_id); ?>
-                    <a href="<?php echo get_permalink($ch->ID); ?>" class="flex items-center gap-2 px-4 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-wider transition <?php echo $is_active ? 'bg-[#ea580c] text-white shadow-md' : 'hover:bg-[#121212] border border-transparent hover:border-[#333] text-gray-400 hover:text-white'; ?>">
-                        <svg class="w-3.5 h-3.5 <?php echo $is_active ? 'text-white' : 'text-[#ea580c]'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <a href="<?php echo get_permalink($ch->ID); ?>" class="flex items-center gap-2 px-4 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-wider transition <?php echo $is_active ? 'bg-[#e8783a] text-white shadow-md' : 'hover:bg-[#1a1a22] border border-transparent hover:border-[#3a3a48] text-gray-400 hover:text-white'; ?>">
+                        <svg class="w-3.5 h-3.5 <?php echo $is_active ? 'text-white' : 'text-[#e8783a]'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Chapter <?php echo mvx_chapter_number($ch->ID); ?>
                     </a>
                 <?php } ?>
@@ -438,12 +438,12 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
         </div>
 
         <div id="custom-modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-            <div id="custom-modal-box" class="bg-[#121212] border border-[#333] rounded-2xl p-6 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
+            <div id="custom-modal-box" class="bg-[#1a1a22] border border-[#3a3a48] rounded-2xl p-6 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
                 <h3 id="custom-modal-title" class="text-white font-black text-xl mb-2 italic tracking-tight">Title</h3>
                 <p id="custom-modal-text" class="text-gray-400 text-[13px] mb-5 leading-relaxed">Text goes here.</p>
-                <input type="text" id="custom-modal-input" class="hidden w-full bg-[#09090b] border border-[#333] rounded-xl px-4 py-3 text-white text-[13px] mb-5 focus:outline-none focus:border-[#3b82f6] transition" />
+                <input type="text" id="custom-modal-input" class="hidden w-full bg-[#0f0f13] border border-[#3a3a48] rounded-xl px-4 py-3 text-white text-[13px] mb-5 focus:outline-none focus:border-[#3b82f6] transition" />
                 <div class="flex gap-3 justify-end">
-                    <button type="button" id="custom-modal-cancel" class="px-5 py-2.5 rounded-xl font-bold text-[13px] text-gray-400 hover:text-white hover:bg-[#1a1a1a] transition">Cancel</button>
+                    <button type="button" id="custom-modal-cancel" class="px-5 py-2.5 rounded-xl font-bold text-[13px] text-gray-400 hover:text-white hover:bg-[#252530] transition">Cancel</button>
                     <button type="button" id="custom-modal-confirm" class="px-5 py-2.5 rounded-xl font-bold text-[13px] bg-[#3b82f6] text-white hover:bg-[#2563eb] shadow-md transition">Confirm</button>
                 </div>
             </div>
@@ -474,7 +474,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                             extractAndSave(data.contents);
                         })
                         .catch(err => {
-                            if(statusText) statusText.innerHTML = "<span class='text-[#ea580c]'>Switching to fallback bridge...</span>";
+                            if(statusText) statusText.innerHTML = "<span class='text-[#e8783a]'>Switching to fallback bridge...</span>";
                             // Try Route 2: CodeTabs Fallback
                             fetch("https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(mgekoUrl))
                                 .then(res => res.text())
@@ -550,12 +550,12 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                 localStorage.setItem('xcomix_reader_mode', mode);
                 if (mode === 'page') {
                     container.className = 'mode-page w-full';
-                    btnPage.classList.add('bg-[#ea580c]', 'text-white', 'shadow-sm'); btnPage.classList.remove('text-gray-500');
-                    btnWebtoon.classList.remove('bg-[#ea580c]', 'text-white', 'shadow-sm'); btnWebtoon.classList.add('text-gray-500');
+                    btnPage.classList.add('bg-[#e8783a]', 'text-white', 'shadow-sm'); btnPage.classList.remove('text-gray-500');
+                    btnWebtoon.classList.remove('bg-[#e8783a]', 'text-white', 'shadow-sm'); btnWebtoon.classList.add('text-gray-500');
                 } else {
                     container.className = 'mode-webtoon w-full';
-                    btnWebtoon.classList.add('bg-[#ea580c]', 'text-white', 'shadow-sm'); btnWebtoon.classList.remove('text-gray-500');
-                    btnPage.classList.remove('bg-[#ea580c]', 'text-white', 'shadow-sm'); btnPage.classList.add('text-gray-500');
+                    btnWebtoon.classList.add('bg-[#e8783a]', 'text-white', 'shadow-sm'); btnWebtoon.classList.remove('text-gray-500');
+                    btnPage.classList.remove('bg-[#e8783a]', 'text-white', 'shadow-sm'); btnPage.classList.add('text-gray-500');
                 }
             };
 

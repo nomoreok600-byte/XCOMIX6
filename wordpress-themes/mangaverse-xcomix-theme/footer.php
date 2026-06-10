@@ -69,7 +69,7 @@
                         <li class="text-sm text-gray-600">
                             <span class="flex items-center gap-2">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                Supercharged by MangaVerse Pro v<?php echo MV_VERSION; ?>
+                                Supercharged by MangaVerse XCOMIX v<?php echo MV_VERSION; ?>
                             </span>
                         </li>
                     </ul>
@@ -84,7 +84,7 @@
                     <?php echo esc_html(get_option('mv_footer_copyright', date('Y') . ' ' . get_bloginfo('name') . '. All rights reserved.')); ?>
                 </p>
                 <p class="text-xs text-gray-700">
-                    MangaVerse Pro - Built for speed
+                    MangaVerse XCOMIX - Built for speed
                 </p>
             </div>
         </div>
