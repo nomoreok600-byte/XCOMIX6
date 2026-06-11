@@ -97,10 +97,15 @@ export function normalizeManga(raw = {}) {
 
 export function normalizeChapter(raw = {}) {
   const id = firstValue(raw, ["id", "ID", "chapter_id", "slug"], "");
+  const title =
+    typeof raw.title === "object"
+      ? raw.title.rendered || raw.title.name || `Chapter ${firstValue(raw, ["number", "chapter_number"], "")}`
+      : firstValue(raw, ["title", "name", "post_title"], `Chapter ${firstValue(raw, ["number", "chapter_number"], "")}`);
+
   return {
     id: String(id),
     mangaId: String(firstValue(raw, ["mangaId", "manga_id", "parent", "post_parent"], "")),
-    title: firstValue(raw, ["title", "name", "post_title"], `Chapter ${firstValue(raw, ["number", "chapter_number"], "")}`),
+    title,
     number: firstValue(raw, ["number", "chapter_number", "chapterNum"], ""),
     url: firstValue(raw, ["url", "permalink", "link"], id ? `/read/${id}` : "#"),
     image: firstValue(raw, ["image", "thumbnail", "cover"], ""),
