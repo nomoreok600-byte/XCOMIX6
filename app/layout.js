@@ -16,7 +16,6 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Manga Headless",
   description: "Fast headless manga reader powered by WordPress",
-  themeColor: "#000000",
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
@@ -27,6 +26,10 @@ export const metadata = {
     statusBarStyle: "black-translucent",
     title: "Manga Headless",
   },
+};
+
+export const viewport = {
+  themeColor: "#000000",
 };
 
 export default function RootLayout({ children }) {

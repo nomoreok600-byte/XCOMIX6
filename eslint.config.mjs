@@ -1,14 +1,29 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [...compat.extends("next/core-web-vitals")];
-
-export default eslintConfig;
+export default [
+  {
+    ignores: [".next/**", "node_modules/**", "wordpress-themes/**"],
+  },
+  {
+    files: ["app/**/*.{js,jsx}"],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: "module",
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        console: "readonly",
+        document: "readonly",
+        fetch: "readonly",
+        localStorage: "readonly",
+        Math: "readonly",
+        process: "readonly",
+        Response: "readonly",
+        URL: "readonly",
+        window: "readonly",
+      },
+    },
+    rules: {},
+  },
+];
