@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import AnimeCard from "./AnimeCard";
-import AnimeCardSkeleton from "./AnimeCardSkeleton";
+import AnimeCard from "./AnimeCard"; 
+import AnimeCardSkeleton from "./AnimeCardSkeleton";  
 
 const Top = () => {
   const [animeData, setAnimeData] = useState([]);

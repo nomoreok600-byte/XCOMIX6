@@ -1,4 +1,4 @@
-<?php
+<?php 
 /* Template Name: Auth */
 if (is_user_logged_in()) { wp_redirect(home_url('/profile')); exit; }
 get_header();
@@ -30,12 +30,12 @@ $redirect = home_url('/profile');
                 <input type="hidden" name="redirect_to" value="<?php echo esc_url($redirect); ?>">
                 <div>
                     <label class="block text-sm font-medium text-gray-400 mb-1.5">Username or Email</label>
-                    <input type="text" name="log" required
+                    <input type="text" name="log" required 
                         class="w-full h-11 px-4 bg-[#252530] border border-[#2a2a35] rounded-xl text-white placeholder-gray-600 focus:border-mv-accent transition outline-none">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-400 mb-1.5">Password</label>
-                    <input type="password" name="pwd" required
+                    <input type="password" name="pwd" required 
                         class="w-full h-11 px-4 bg-[#252530] border border-[#2a2a35] rounded-xl text-white placeholder-gray-600 focus:border-mv-accent transition outline-none">
                 </div>
                 <div class="flex items-center justify-between">
@@ -54,12 +54,12 @@ $redirect = home_url('/profile');
                 <input type="hidden" name="redirect_to" value="<?php echo esc_url($redirect); ?>">
                 <div>
                     <label class="block text-sm font-medium text-gray-400 mb-1.5">Display Name</label>
-                    <input type="text" name="user_login" required
+                    <input type="text" name="user_login" required 
                         class="w-full h-11 px-4 bg-[#252530] border border-[#2a2a35] rounded-xl text-white placeholder-gray-600 focus:border-mv-accent transition outline-none">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-400 mb-1.5">Email</label>
-                    <input type="email" name="user_email" required
+                    <input type="email" name="user_email" required 
                         class="w-full h-11 px-4 bg-[#252530] border border-[#2a2a35] rounded-xl text-white placeholder-gray-600 focus:border-mv-accent transition outline-none">
                 </div>
                 <div>

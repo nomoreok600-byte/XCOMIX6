@@ -112,4 +112,4 @@ export default function ConnectToAnilistButton() {
       {status === 'connected' ? 'Connected!' : status === 'connecting' ? 'Connecting...' : 'Connect to AniList'}
     </button>
   )
-}
+} 

@@ -14,7 +14,7 @@ if (isset($_COOKIE['skip_landing']) && $_COOKIE['skip_landing'] === '1') {
 $manga_counts = wp_count_posts('manga');
 $published_manga = isset($manga_counts->publish) ? $manga_counts->publish : 0;
 
-$total_categories = wp_count_terms(array('taxonomy' => 'category', 'hide_empty' => true));
+$total_categories = wp_count_terms(array('taxonomy' => 'category', 'hide_empty' => true)); 
 if (is_wp_error($total_categories)) {
     $total_categories = 0;
 }
@@ -45,17 +45,17 @@ $site_url = home_url();
 
 // Comprehensive tracking list from EverythingMoe for total indexing capture
 $alt_platforms = array(
-    "Comix", "MangaFire", "Mangaball", "Atsumaru", "Weeb Central", "OniSaga", "Mangago", "MKissa Manga",
-    "Bookwalker", "Rakuten Kobo", "MangaTaro", "VyManga", "MangaCloud", "MangaKatana", "MangaK", "Cubari Proxy",
-    "KaliScan", "MangaHub", "Scans.gg", "Dynasty Reader", "LikeManga", "MANGA Plus", "Coolmic", "Omoi",
-    "NineManga", "Manganato.gg", "Zinmanga", "ComiKuro", "Mangafox", "MangaFreak", "MangaTown", "MangaHome",
-    "Mangalink", "ReiManga", "MangaBTT", "Ninekon", "ManhuaPlus", "Mangapill", "Mangakawaii", "mangageko",
-    "MangaDE", "GodaComic", "JP Book Store", "K MANGA", "Pixiv Comics", "INKR", "Lunar Animes", "Kissmanga.in",
-    "Yaoiscan", "YomiManga", "MangaBay", "MangaDex", "RawOtaku", "KT9", "Hachiraw", "MangaRaw4u", "Nicomanga",
-    "Rawdevart", "RawSakura", "BilingualManga", "NihonKuni", "Raw Manga", "Rawkuma", "漫画 raw", "WeLoMa", "Spoilerplus",
-    "RawLazy", "raw1001", "Happymh", "Baozi Manhua", "Twmanga", "SenManga", "RawFree", "MangaPlaza",
-    "Manga Mirai", "MangaMikan", "MangaBerri", "MangaCherri", "Danke fürs Lesen", "Hachirumi", "KDT Scans",
-    "Akari Manga", "Nine Anime", "ManhuaBuddy", "ReadManga", "PAWMANGA", "Mangaclash", "Lilymanga",
+    "Comix", "MangaFire", "Mangaball", "Atsumaru", "Weeb Central", "OniSaga", "Mangago", "MKissa Manga", 
+    "Bookwalker", "Rakuten Kobo", "MangaTaro", "VyManga", "MangaCloud", "MangaKatana", "MangaK", "Cubari Proxy", 
+    "KaliScan", "MangaHub", "Scans.gg", "Dynasty Reader", "LikeManga", "MANGA Plus", "Coolmic", "Omoi", 
+    "NineManga", "Manganato.gg", "Zinmanga", "ComiKuro", "Mangafox", "MangaFreak", "MangaTown", "MangaHome", 
+    "Mangalink", "ReiManga", "MangaBTT", "Ninekon", "ManhuaPlus", "Mangapill", "Mangakawaii", "mangageko", 
+    "MangaDE", "GodaComic", "JP Book Store", "K MANGA", "Pixiv Comics", "INKR", "Lunar Animes", "Kissmanga.in", 
+    "Yaoiscan", "YomiManga", "MangaBay", "MangaDex", "RawOtaku", "KT9", "Hachiraw", "MangaRaw4u", "Nicomanga", 
+    "Rawdevart", "RawSakura", "BilingualManga", "NihonKuni", "Raw Manga", "Rawkuma", "漫画 raw", "WeLoMa", "Spoilerplus", 
+    "RawLazy", "raw1001", "Happymh", "Baozi Manhua", "Twmanga", "SenManga", "RawFree", "MangaPlaza", 
+    "Manga Mirai", "MangaMikan", "MangaBerri", "MangaCherri", "Danke fürs Lesen", "Hachirumi", "KDT Scans", 
+    "Akari Manga", "Nine Anime", "ManhuaBuddy", "ReadManga", "PAWMANGA", "Mangaclash", "Lilymanga", 
     "Comicless", "MangaDoom", "MangaPanda", "MangaRead", "Mangago.io"
 );
 $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", manwha, mahwa, magna, manua, free manga online, read manhwa free, scanlations, raw manga reader";
@@ -66,9 +66,9 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
     <meta charset="<?php bloginfo( 'charset' ); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a0a0c">
-
+    
     <title><?php echo $site_name; ?> - Read Free Manga, Manhwa & Manhua Online</title>
-
+    
     <link rel="preload" as="image" href="<?php echo esc_url($random_bg); ?>">
     <link rel="prerender" href="<?php echo esc_url(home_url('/home')); ?>">
 
@@ -76,7 +76,7 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
     <meta name="keywords" content="<?php echo esc_attr($keywords_string); ?>">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <link rel="canonical" href="<?php echo esc_url($site_url); ?>" />
-
+    
     <meta property="og:locale" content="<?php echo get_locale(); ?>" />
     <meta property="og:type" content="website">
     <meta property="og:title" content="<?php echo $site_name; ?> - Read Free Manga & Manhwa Online">
@@ -150,7 +150,7 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
         /* Modern Reset */
         *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html { text-size-adjust: 100%; }
-
+        
         body {
             margin: 0; padding: 0;
             background-color: var(--bg-dark);
@@ -159,7 +159,7 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
             min-height: 100vh; overflow-x: hidden; overflow-y: auto;
             line-height: 1.5;
         }
-
+        
         a { text-decoration: none; color: inherit; }
         img { max-width: 100%; height: auto; display: block; }
 
@@ -194,8 +194,8 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
             font-size: clamp(2rem, 8vw, 5rem); font-weight: 900; line-height: 1.1; margin: 0 0 16px 0;
             text-transform: uppercase; letter-spacing: -0.5px; text-shadow: 0 4px 20px rgba(0,0,0,0.95);
         }
-
-        .text-accent {
+        
+        .text-accent { 
             color: #fb3b5a; background: linear-gradient(to right, var(--accent-start), var(--accent-end));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 15px rgba(217, 4, 41, 0.4));
@@ -208,9 +208,9 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
 
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-            color: #fff; font-size: clamp(1rem, 3vw, 1.15rem); font-weight: 800;
-            padding: clamp(14px, 3vw, 18px) clamp(40px, 8vw, 60px);
-            border-radius: 50px; text-transform: uppercase; letter-spacing: 1.5px;
+            color: #fff; font-size: clamp(1rem, 3vw, 1.15rem); font-weight: 800; 
+            padding: clamp(14px, 3vw, 18px) clamp(40px, 8vw, 60px); 
+            border-radius: 50px; text-transform: uppercase; letter-spacing: 1.5px; 
             display: inline-block; border: none;
             box-shadow: 0 8px 25px rgba(217, 4, 41, 0.4), inset 0 2px 0 rgba(255,255,255,0.2);
             transition: all 0.3s ease; cursor: pointer;
@@ -219,13 +219,13 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
         .btn-primary:active { opacity: 0.9; box-shadow: 0 0 20px rgba(251, 59, 90, 0.9); transform: translateY(1px); }
 
         .bottom-section { position: relative; z-index: 10; padding: 0 20px 30px 20px; width: 100%; max-width: 1000px; margin: 0 auto; }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px; margin-bottom: 30px;
+        
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 15px; margin-bottom: 30px; 
         }
-
+        
         .stat-card {
             background: var(--card-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid var(--card-border); border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -262,7 +262,7 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
             .stat-card { padding: 15px 5px; }
             .stat-icon { margin-bottom: 8px; width: 20px; height: 20px; }
         }
-
+        
         /* Short screen adjustments (Landscape mobile) */
         @media (max-height: 600px) {
             .content-area { padding-top: 30px; }
@@ -284,7 +284,7 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
 
             <h1 class="hero-title">Worlds Drawn By<br><span class="text-accent">Imagination</span></h1>
             <p class="hero-subtitle">Follow your favorite series, track new chapters, and dive into worlds created by talented artists. Read high-quality manga online entirely for free.</p>
-
+            
             <a href="<?php echo home_url('/home'); ?>" id="start-reading-btn" class="btn-primary">Start Reading</a>
         </main>
 
@@ -297,7 +297,7 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
                     <h3 class="stat-value"><?php echo $display_chapters; ?></h3>
                     <p class="stat-label">Total Chapters_</p>
                 </div>
-
+                
                 <div class="stat-card">
                     <svg class="stat-icon" viewBox="0 0 24 24">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -307,7 +307,7 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
                     <h3 class="stat-value"><?php echo $display_series; ?></h3>
                     <p class="stat-label">Active Series_</p>
                 </div>
-
+                
                 <div class="stat-card">
                     <svg class="stat-icon" viewBox="0 0 24 24">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -323,8 +323,8 @@ $keywords_string = implode(", ", array_map('strtolower', $alt_platforms)) . ", m
             <div class="sr-only">
                 <h2><?php echo esc_html($site_name); ?> Global Scanlation Catalog Directory Index</h2>
                 <p>
-                    Optimized internal database router system serving matches for queries tracking:
-                    <?php echo esc_html(implode(', ', $alt_platforms)); ?>
+                    Optimized internal database router system serving matches for queries tracking: 
+                    <?php echo esc_html(implode(', ', $alt_platforms)); ?> 
                     plus typos including manwha, mahwa, magna, manua, mangha, and raw comic updates.
                 </p>
             </div>

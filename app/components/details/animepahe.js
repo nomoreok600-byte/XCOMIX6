@@ -14,7 +14,7 @@ export default function AnimePahe({ anilistId }) {
       setError(null);
 
       try {
-
+      
         const mappingRes = await fetch(`/api/provider/animepahe/mapper?id=${anilistId}`);
         if (!mappingRes.ok) throw new Error("Failed to get AnimePahe mapping");
         const mappingData = await mappingRes.json();

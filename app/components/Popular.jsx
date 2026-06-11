@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import AnimeCard from "./AnimeCard";
-import AnimeCardSkeleton from "./AnimeCardSkeleton";
+import AnimeCard from "./AnimeCard";  
+import AnimeCardSkeleton from "./AnimeCardSkeleton";  
 
 const Popular = () => {
   const [animeData, setAnimeData] = useState([]);
@@ -21,7 +21,7 @@ const Popular = () => {
           status: anime.status,
           releaseDate: anime.releaseDate,
           totalEpisodes: anime.totalEpisodes,
-          rating: anime.rating / 10,
+          rating: anime.rating / 10, 
         }));
         setAnimeData(transformedData);
       } catch (error) {

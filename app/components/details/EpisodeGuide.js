@@ -21,7 +21,7 @@ const EpisodeGuide = ({ animeId, epnum, progress }) => {
           const mapped = data.episodes.map((ep) => {
             const idParts = ep.id.split("$episode$");
             const slug = idParts[0];
-            const episodeStr = idParts[1]?.split("$")[0] ?? "";
+            const episodeStr = idParts[1]?.split("$")[0] ?? ""; 
             return {
               episodeId: `${slug}?ep=${episodeStr}`,
               title: ep.title || `Episode ${ep.number}`,

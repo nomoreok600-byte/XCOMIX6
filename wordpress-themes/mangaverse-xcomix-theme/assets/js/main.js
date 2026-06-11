@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ========== BOOKMARKS ==========
 function toggleBookmark(mangaId) {
     if (!mvData.isLogged) { window.location.href = mvData.siteUrl + '/auth'; return; }
-
+    
     fetch(mvData.ajaxUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -133,7 +133,7 @@ function sendChat(e) {
 function loadChats(silent) {
     const postId = document.body.dataset.postId;
     if (!postId) return;
-
+    
     fetch(mvData.ajaxUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

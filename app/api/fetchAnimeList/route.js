@@ -65,7 +65,7 @@ export async function GET(req) {
 
     const animeLists = data.data.MediaListCollection.lists.reduce((acc, list) => {
       acc[list.status] = list.entries.map((entry) => ({
-        id: entry.media.id,
+        id: entry.media.id, 
         title:
           entry.media.title.romaji ||
           entry.media.title.english ||

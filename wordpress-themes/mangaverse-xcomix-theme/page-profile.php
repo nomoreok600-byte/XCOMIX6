@@ -20,13 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['xcomix_inline_ajax'])
         $manga_id = intval($_POST['manga_id']);
         $f_id = sanitize_text_field($_POST['folder_id']);
         $manga_folders = get_user_meta($user_id, '_xcomix_manga_folders', true) ?: [];
-
+        
         if ($f_id === 'none') {
             unset($manga_folders[$manga_id]);
         } else {
             $manga_folders[$manga_id] = $f_id;
         }
-
+        
         update_user_meta($user_id, '_xcomix_manga_folders', $manga_folders);
         echo json_encode(['success' => true]);
         exit;
@@ -42,7 +42,7 @@ $error_msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['xcomix_folder_action'])) {
     $action = $_POST['xcomix_folder_action'];
     $existing_custom = get_user_meta($user_id, '_xcomix_custom_folders', true) ?: [];
-
+    
     if ($action === 'add') {
         $folder_name = sanitize_text_field($_POST['folder_name']);
         if (!empty($folder_name)) {
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['xcomix_folder_action'
         if (isset($existing_custom[$folder_id])) {
             unset($existing_custom[$folder_id]);
             update_user_meta($user_id, '_xcomix_custom_folders', $existing_custom);
-
+            
             // Clean up manga that were assigned to the deleted folder
             $manga_folders = get_user_meta($user_id, '_xcomix_manga_folders', true) ?: [];
             $changed = false;
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['xcomix_folder_action'
                 }
             }
             if ($changed) update_user_meta($user_id, '_xcomix_manga_folders', $manga_folders);
-
+            
             wp_redirect(get_permalink() . '#settings');
             exit;
         }
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile']) && w
         update_user_meta($user_id, '_xcomix_pref_notifications', isset($_POST['pref_notifications']) ? '1' : '0');
         update_user_meta($user_id, '_xcomix_pref_datasaver', isset($_POST['pref_datasaver']) ? '1' : '0');
         update_user_meta($user_id, '_xcomix_pref_zenmode', isset($_POST['pref_zenmode']) ? '1' : '0');
-
+        
         if (!empty($_POST['new_password'])) {
             if ($_POST['new_password'] === $_POST['confirm_password']) {
                 wp_set_password($_POST['new_password'], $user_id);
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile']) && w
             }
         }
     }
-    $current_user = wp_get_current_user();
+    $current_user = wp_get_current_user(); 
 }
 
 // =========================================================================
@@ -129,7 +129,7 @@ $email = $current_user->user_email;
 $days_active = max(1, floor((time() - strtotime($current_user->user_registered)) / (60 * 60 * 24)));
 
 $pref_nsfw = get_user_meta($user_id, '_xcomix_pref_nsfw', true) === '1';
-$pref_notifications = get_user_meta($user_id, '_xcomix_pref_notifications', true) !== '0';
+$pref_notifications = get_user_meta($user_id, '_xcomix_pref_notifications', true) !== '0'; 
 $pref_datasaver = get_user_meta($user_id, '_xcomix_pref_datasaver', true) === '1';
 $pref_zenmode = get_user_meta($user_id, '_xcomix_pref_zenmode', true) === '1';
 
@@ -181,15 +181,15 @@ $xp_next_tier = 3 * pow($user_level, 2);
 $xp_progress_percent = (($total_xp - $xp_current_tier) / max(1, ($xp_next_tier - $xp_current_tier))) * 100;
 $xp_progress_percent = min(100, max(0, $xp_progress_percent));
 
-if ($user_level < 10) {
+if ($user_level < 10) { 
     $unified_rank = "Novice Reader"; $rank_color = "from-gray-400 to-gray-600"; $rank_icon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>';
-} elseif ($user_level < 25) {
+} elseif ($user_level < 25) { 
     $unified_rank = "Adept Scroller"; $rank_color = "from-blue-400 to-blue-600"; $rank_icon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>';
-} elseif ($user_level < 50) {
+} elseif ($user_level < 50) { 
     $unified_rank = "Elite Weeb"; $rank_color = "from-[#ea580c] to-[#f59e0b]"; $rank_icon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>';
-} elseif ($user_level < 80) {
+} elseif ($user_level < 80) { 
     $unified_rank = "Manga Lord"; $rank_color = "from-purple-500 to-pink-500"; $rank_icon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>';
-} else {
+} else { 
     $unified_rank = "God Tier"; $rank_color = "from-yellow-400 to-yellow-600"; $rank_icon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>';
 }
 
@@ -210,11 +210,11 @@ if (!empty($bookmark_ids)) {
     $new_updates_count = $recent_chapters->found_posts > 5 ? '5+' : $recent_chapters->found_posts;
 }
 
-get_header();
+get_header(); 
 ?>
 
     <main class="max-w-[1050px] mx-auto px-4 pt-[85px] pb-24 relative bg-[#09090b] min-h-screen selection:bg-[#ea580c] selection:text-white">
-
+        
         <?php if (!empty($success_msg)) : ?>
             <div class="bg-[#22c55e]/10 border border-[#22c55e]/20 text-[#22c55e] text-[11px] font-black uppercase tracking-widest p-4 rounded-xl mb-6 text-center shadow-lg flex items-center justify-center gap-2 animate-[fadeIn_0.3s_ease] z-50 relative">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -274,7 +274,7 @@ get_header();
                 <span class="w-1.5 h-4 bg-[#ea580c] rounded-full shadow-[0_0_10px_#ea580c]"></span> New Chapter Alerts
             </h2>
             <div class="bg-[#1a1a1a] rounded-2xl border border-white/5 p-2 shadow-xl">
-                <?php
+                <?php 
                 if (!empty($bookmark_ids) && $recent_chapters && $recent_chapters->have_posts()) {
                     while ($recent_chapters->have_posts()) : $recent_chapters->the_post(); ?>
                         <a href="<?php the_permalink(); ?>" class="flex items-center gap-4 p-3 hover:bg-[#222] rounded-xl transition group">
@@ -305,10 +305,10 @@ get_header();
         <div id="tab-content-history" class="tab-content block animate-[fadeIn_0.3s_ease]">
             <?php if (!empty($history_data)) : ?>
                 <div class="flex flex-col gap-3">
-                    <?php foreach ($history_data as $m_id => $data) :
+                    <?php foreach ($history_data as $m_id => $data) : 
                         $manga_post = get_post($m_id);
                         if (!$manga_post || $manga_post->post_type !== 'manga') continue;
-                        $progress = rand(40, 95);
+                        $progress = rand(40, 95); 
                     ?>
                         <div class="history-item flex items-center gap-4 bg-[#1a1a1a] p-3 rounded-2xl border border-white/5 hover:border-[#ea580c]/50 transition-all duration-300 group" data-id="<?php echo $m_id; ?>">
                             <a href="<?php echo get_permalink($m_id); ?>" class="w-16 h-24 shrink-0 rounded-xl overflow-hidden bg-[#121212] relative shadow-md">
@@ -322,7 +322,7 @@ get_header();
                                 <p class="text-[10px] text-gray-500 font-bold mb-3 uppercase tracking-widest flex items-center gap-1">
                                     <svg class="w-3 h-3 text-[#ea580c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Read: Ch. <?php echo esc_html($data['chapter_num']); ?>
                                 </p>
-
+                                
                                 <div class="flex items-center justify-between gap-2 pr-2">
                                     <?php $chapter_link = !empty($data['url']) ? esc_url($data['url']) : (isset($data['chapter_id']) ? get_permalink($data['chapter_id']) : get_permalink($m_id)); ?>
                                     <a href="<?php echo $chapter_link; ?>" class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white bg-[#121212] border border-white/10 hover:border-[#ea580c] hover:bg-[#ea580c] px-4 py-2 rounded-lg transition">
@@ -347,18 +347,18 @@ get_header();
         </div>
 
         <div id="tab-content-bookmarks" class="tab-content hidden animate-[fadeIn_0.3s_ease]">
-
+            
             <?php if ($bookmarks_query && $bookmarks_query->have_posts()) : ?>
-
+            
             <div class="flex items-center gap-2 overflow-x-auto no-scrollbar mb-4 pb-1">
                 <button onclick="window.filterLibrary('all', 'all', this)" class="lib-filter-btn active px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-[#ea580c] to-[#f59e0b] shadow-[0_4px_10px_rgba(234,88,12,0.3)] shrink-0 transition">All Saved</button>
-
+                
                 <div class="w-px h-5 bg-white/10 shrink-0 mx-1"></div>
-
+                
                 <?php foreach($base_plan_labels as $val => $label): ?>
                     <button onclick="window.filterLibrary('status', '<?php echo esc_attr($val); ?>', this)" class="lib-filter-btn px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest text-gray-400 bg-[#1a1a1a] border border-white/5 hover:text-white shrink-0 transition shadow-sm"><?php echo esc_html($label); ?></button>
                 <?php endforeach; ?>
-
+                
                 <?php if(!empty($custom_folders)): ?>
                     <div class="w-px h-5 bg-white/10 shrink-0 mx-1"></div>
                     <?php foreach($custom_folders as $fid => $fname): ?>
@@ -368,7 +368,7 @@ get_header();
                         </button>
                     <?php endforeach; ?>
                 <?php endif; ?>
-
+                
                 <div class="w-px h-5 bg-white/10 shrink-0 mx-1"></div>
                 <button onclick="document.getElementById('new-folder-modal').style.display='flex'" class="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest text-gray-400 bg-[#121212] border border-dashed border-white/20 hover:text-white hover:border-white/50 shrink-0 transition flex items-center gap-1">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
@@ -384,8 +384,8 @@ get_header();
 
             <?php if ($bookmarks_query && $bookmarks_query->have_posts()) : ?>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-6" id="library-grid">
-                    <?php while ($bookmarks_query->have_posts()) : $bookmarks_query->the_post();
-                        $m_id = get_the_ID();
+                    <?php while ($bookmarks_query->have_posts()) : $bookmarks_query->the_post(); 
+                        $m_id = get_the_ID(); 
                         $title = get_the_title();
                         $current_status = isset($reading_plans[$m_id]) ? $reading_plans[$m_id] : 'reading';
                         $status_label = isset($base_plan_labels[$current_status]) ? $base_plan_labels[$current_status] : 'Reading';
@@ -394,16 +394,16 @@ get_header();
                         $is_18 = mvx_manga_meta($m_id, 'is_18_plus');
                     ?>
                         <div class="bookmark-item flex flex-col group relative" data-id="<?php echo $m_id; ?>" data-title="<?php echo esc_attr(strtolower($title)); ?>" data-status="<?php echo esc_attr($current_status); ?>" data-folder="<?php echo esc_attr($current_folder); ?>">
-
+                            
                             <div class="relative aspect-[3/4] block overflow-hidden rounded-[16px] mb-2.5 bg-[#121212] border border-white/5 shadow-md">
                                 <a href="<?php echo get_permalink(); ?>" class="absolute inset-0 z-10"></a>
                                 <img src="<?php echo xcomix_get_cover($m_id); ?>" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 z-10 pointer-events-none"></div>
-
+                                
                                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 z-20 pointer-events-none">
                                     <span class="bg-[#ea580c] text-white text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition duration-300">Read Now</span>
                                 </div>
-
+                                
                                 <div class="absolute top-2 right-2 flex flex-col gap-1.5 items-end z-20 pointer-events-none">
                                     <span class="bg-black/60 backdrop-blur-md text-gray-100 text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest border border-white/10"><?php echo esc_html($type); ?></span>
                                     <?php if($is_18) : ?>
@@ -411,19 +411,19 @@ get_header();
                                     <?php endif; ?>
                                 </div>
                             </div>
-
+                            
                             <h3 class="text-[13px] font-bold text-gray-200 line-clamp-1 group-hover:text-[#ea580c] transition px-1 mb-2 tracking-tight">
                                 <a href="<?php echo get_permalink(); ?>"><?php echo $title; ?></a>
                             </h3>
-
+                            
                             <div class="px-1 pb-1 relative flex gap-1.5">
-
+                                
                                 <div class="relative flex-1 custom-dropdown" data-manga-id="<?php echo $m_id; ?>">
                                     <button type="button" onclick="window.toggleDropdownMenu(this)" class="dropdown-trigger flex items-center justify-between w-full h-[34px] bg-[#1a1a1a] border border-white/5 hover:border-[#ea580c] text-gray-200 text-[9px] font-black uppercase tracking-widest rounded-lg px-2.5 transition shadow-inner">
                                         <span class="selected-text truncate mr-1"><?php echo esc_html($status_label); ?></span>
                                         <svg class="w-3 h-3 text-gray-500 shrink-0 pointer-events-none transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                                     </button>
-
+                                    
                                     <div class="dropdown-menu absolute hidden bottom-full mb-1 left-0 w-[140px] bg-[#121212] border border-[#333] rounded-xl shadow-2xl z-50 overflow-hidden text-[10px] font-black uppercase tracking-widest origin-bottom">
                                         <div class="px-3 py-2 bg-[#1a1a1a] text-gray-500 text-[8px] border-b border-[#222]">Set Status</div>
                                         <?php foreach($base_plan_labels as $val => $label): ?>
@@ -436,12 +436,12 @@ get_header();
                                         <?php endforeach; ?>
                                     </div>
                                 </div>
-
+                                
                                 <div class="relative folder-dropdown" data-manga-id="<?php echo $m_id; ?>">
                                     <button type="button" onclick="window.toggleDropdownMenu(this)" class="dropdown-trigger w-8 h-[34px] bg-[#1a1a1a] rounded-lg flex items-center justify-center transition border border-white/5 shadow-sm shrink-0 <?php echo ($current_folder !== 'none') ? 'text-[#a855f7] border-[#a855f7]/30 bg-[#a855f7]/10' : 'text-gray-500 hover:text-white hover:border-white/20'; ?>" title="Add to Folder">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                                     </button>
-
+                                    
                                     <div class="dropdown-menu absolute hidden bottom-full mb-1 right-0 w-[160px] bg-[#121212] border border-[#333] rounded-xl shadow-2xl z-50 overflow-hidden text-[10px] font-black uppercase tracking-widest origin-bottom">
                                         <div class="px-3 py-2 bg-[#1a1a1a] text-gray-500 text-[8px] border-b border-[#222]">Move to Folder</div>
                                         <div onclick="window.setFolderOption(this, 'none')" class="px-3 py-2.5 text-gray-400 hover:text-white hover:bg-[#a855f7] cursor-pointer transition flex items-center justify-between <?php echo ($current_folder == 'none') ? 'text-white bg-white/5' : ''; ?>">
@@ -479,12 +479,12 @@ get_header();
             <form method="POST" class="space-y-6">
                 <input type="hidden" name="update_profile" value="1">
                 <?php wp_nonce_field('update_profile_action', 'profile_nonce'); ?>
-
+                
                 <div class="bg-[#1a1a1a] border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl">
                     <h3 class="text-white font-black uppercase tracking-widest text-[13px] flex items-center gap-2 mb-6">
                         <span class="w-1.5 h-4 bg-[#a855f7] rounded-full"></span> Custom Folders
                     </h3>
-
+                    
                     <?php if(empty($custom_folders)): ?>
                         <p class="text-[11px] text-gray-500 font-bold uppercase tracking-widest">You haven't created any custom folders yet. Go to your Library tab to create one.</p>
                     <?php else: ?>
@@ -557,7 +557,7 @@ get_header();
                                 <div class="w-11 h-6 bg-[#1a1a1a] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#ea580c]"></div>
                             </div>
                         </label>
-
+                        
                         <label class="flex items-center justify-between cursor-pointer p-4 bg-[#09090b] rounded-2xl border border-white/5 hover:border-white/10 transition">
                             <div>
                                 <span class="text-[12px] font-black text-white uppercase tracking-wider block mb-1">Data Saver Mode</span>
@@ -568,7 +568,7 @@ get_header();
                                 <div class="w-11 h-6 bg-[#1a1a1a] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#ea580c]"></div>
                             </div>
                         </label>
-
+                        
                         <label class="flex items-center justify-between cursor-pointer p-4 bg-[#09090b] rounded-2xl border border-white/5 hover:border-white/10 transition">
                             <div>
                                 <span class="text-[12px] font-black text-white uppercase tracking-wider block mb-1">Zen Mode Reader</span>
@@ -581,7 +581,7 @@ get_header();
                         </label>
 
                     </div>
-
+                    
                     <div class="mt-8 pt-6 border-t border-white/5">
                         <div class="flex items-center justify-between">
                             <div>
@@ -638,7 +638,7 @@ get_header();
 
                 const targetContent = document.getElementById('tab-content-' + tabName);
                 if (targetContent) targetContent.classList.replace('hidden', 'block');
-
+                
                 const targetBtn = document.getElementById('tab-btn-' + tabName);
                 if (targetBtn) {
                     targetBtn.className = "tab-btn flex-1 py-3 rounded-full text-[11px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-[#ea580c] to-[#f59e0b] shadow-[0_4px_10px_rgba(234,88,12,0.3)] transition-all z-10 text-center";
@@ -659,38 +659,38 @@ get_header();
             window.filterLibrary = function(type, value, btnEl) {
                 window.currentFilterType = type;
                 window.currentFilterValue = value;
-
+                
                 document.querySelectorAll('.lib-filter-btn').forEach(btn => {
                     btn.className = 'lib-filter-btn px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest text-gray-400 bg-[#1a1a1a] border border-white/5 hover:text-white shrink-0 transition shadow-sm';
                 });
-
+                
                 if (type === 'folder') {
                     btnEl.className = 'lib-filter-btn active px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-[#a855f7] to-[#9333ea] shadow-[0_4px_10px_rgba(168,85,247,0.3)] shrink-0 transition flex items-center gap-1';
                 } else {
                     btnEl.className = 'lib-filter-btn active px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-[#ea580c] to-[#f59e0b] shadow-[0_4px_10px_rgba(234,88,12,0.3)] shrink-0 transition';
                 }
-
+                
                 window.applyLibraryFilters();
             };
 
             window.applyLibraryFilters = function() {
                 let searchInput = document.getElementById('library-search') ? document.getElementById('library-search').value.toLowerCase() : '';
                 let items = document.querySelectorAll('.bookmark-item');
-
+                
                 items.forEach(item => {
                     let title = item.getAttribute('data-title');
                     let status = item.getAttribute('data-status');
                     let folder = item.getAttribute('data-folder');
-
+                    
                     let matchesSearch = title.includes(searchInput);
                     let matchesFilter = true;
-
+                    
                     if (window.currentFilterType === 'status' && window.currentFilterValue !== 'all') {
                         matchesFilter = (status === window.currentFilterValue);
                     } else if (window.currentFilterType === 'folder') {
                         matchesFilter = (folder === window.currentFilterValue);
                     }
-
+                    
                     if(matchesSearch && matchesFilter) {
                         item.style.display = 'flex';
                     } else {

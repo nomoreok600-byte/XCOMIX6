@@ -11,9 +11,9 @@ if (!function_exists('xcomix_chapter_chat_render')) {
         $author_name = $chat->comment_author;
         $author_avatar = get_user_meta($chat->user_id, '_xcomix_avatar', true) ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($author_name);
         $user_obj = get_userdata($chat->user_id);
-        $role_badge = '';
+        $role_badge = ''; 
         $name_color = 'text-gray-200';
-
+        
         if ($user_obj) {
             if (in_array('administrator', $user_obj->roles)) {
                 $role_badge = '<span class="bg-accent/20 text-accent text-[8px] font-black uppercase px-1.5 py-0.5 rounded ml-1">Admin</span>';
@@ -23,7 +23,7 @@ if (!function_exists('xcomix_chapter_chat_render')) {
                 $name_color = 'text-purple-400';
             }
         }
-
+        
         $raw_content = nl2br(esc_html($chat->comment_content));
         ?>
         <div class="flex gap-3 p-4 border-b border-white/5 hover:bg-white/5 transition" id="chat-msg-<?php echo $chat->comment_ID; ?>">
@@ -49,22 +49,22 @@ if (!function_exists('xcomix_chapter_chat_render')) {
 if (isset($_POST['fetch_live_chats']) && isset($_POST['chapter_id'])) {
     while (ob_get_level()) ob_end_clean();
     $chap_chats = get_comments(['post_id' => intval($_POST['chapter_id']), 'status' => 'approve', 'number' => 50]);
-    foreach($chap_chats as $chat) { xcomix_chapter_chat_render($chat, is_user_logged_in(), wp_get_current_user()); }
+    foreach($chap_chats as $chat) { xcomix_chapter_chat_render($chat, is_user_logged_in(), wp_get_current_user()); } 
     exit;
 }
 if (isset($_POST['custom_chat_submit']) && is_user_logged_in()) {
     while (ob_get_level()) ob_end_clean();
     $user = wp_get_current_user();
     $inserted = wp_insert_comment([
-        'comment_post_ID'      => intval($_POST['comment_post_ID']),
-        'comment_author'       => $user->display_name,
+        'comment_post_ID'      => intval($_POST['comment_post_ID']), 
+        'comment_author'       => $user->display_name, 
         'comment_author_email' => $user->user_email,
-        'comment_content'      => sanitize_text_field($_POST['comment_content']),
-        'user_id'              => $user->ID,
-        'comment_date'         => current_time('mysql'),
+        'comment_content'      => sanitize_text_field($_POST['comment_content']), 
+        'user_id'              => $user->ID, 
+        'comment_date'         => current_time('mysql'), 
         'comment_approved'     => 1
     ]);
-    echo wp_json_encode(['success' => (bool)$inserted]);
+    echo wp_json_encode(['success' => (bool)$inserted]); 
     exit;
 }
 
@@ -72,7 +72,7 @@ if (isset($_POST['custom_chat_submit']) && is_user_logged_in()) {
 // 3. WP HEADER & PREP
 // =========================================================================
 add_filter('show_admin_bar', '__return_false');
-get_header();
+get_header(); 
 the_post();
 
 $current_post_id = get_the_ID();
@@ -81,7 +81,7 @@ $manga_id = wp_get_post_parent_id($current_post_id);
 // Fetched extra data for the chapter list modal
 $manga_title = get_the_title($manga_id);
 $manga_permalink = get_permalink($manga_id);
-$manga_thumb = get_the_post_thumbnail_url($manga_id, 'medium') ?: '';
+$manga_thumb = get_the_post_thumbnail_url($manga_id, 'medium') ?: ''; 
 $katana_url = trim(get_post_meta($current_post_id, '_katana_url', true));
 $chapter_num = mvx_chapter_number($current_post_id);
 
@@ -105,8 +105,8 @@ $total_chapters = count($all_chaps);
 $prev_chap = null; $next_chap = null;
 foreach ($all_chaps as $i => $c) {
     if ($c->ID === $current_post_id) {
-        $next_chap = isset($all_chaps[$i - 1]) ? $all_chaps[$i - 1] : null;
-        $prev_chap = isset($all_chaps[$i + 1]) ? $all_chaps[$i + 1] : null;
+        $next_chap = isset($all_chaps[$i - 1]) ? $all_chaps[$i - 1] : null; 
+        $prev_chap = isset($all_chaps[$i + 1]) ? $all_chaps[$i + 1] : null; 
         break;
     }
 }
@@ -115,10 +115,10 @@ foreach ($all_chaps as $i => $c) {
 $images = []; $diagnostic_error = ''; $force_rescan = isset($_GET['clear_cache']);
 $cached_images = get_post_meta($current_post_id, '_xcomix_cached_images', true);
 
-if (!empty($cached_images) && is_array($cached_images) && !$force_rescan) {
-    $images = $cached_images;
+if (!empty($cached_images) && is_array($cached_images) && !$force_rescan) { 
+    $images = $cached_images; 
 } else if ($katana_url) {
-    if (strpos($katana_url, 'http') !== 0) $katana_url = 'https://' . ltrim($katana_url, '/');
+    if (strpos($katana_url, 'http') !== 0) $katana_url = 'https://' . ltrim($katana_url, '/'); 
     $ch = curl_init($katana_url);
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_TIMEOUT => 15, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_HTTPHEADER => ['User-Agent: Mozilla/5.0']]);
     $html = curl_exec($ch); curl_close($ch);
@@ -142,25 +142,25 @@ $comment_count = get_comments_number($current_post_id);
 
 <style>
     /* NATIVE BODY SCROLLING */
-    html, body {
-        background: var(--reader-bg, #0f0f13);
-        margin: 0!important;
-        padding: 0!important;
-        width: 100%;
+    html, body { 
+        background: var(--reader-bg, #0f0f13); 
+        margin: 0!important; 
+        padding: 0!important; 
+        width: 100%; 
         min-height: 100vh;
         overscroll-behavior-y: none;
         padding-bottom: calc(60px + env(safe-area-inset-bottom)) !important; /* Space for Bottom Nav */
     }
     #wpadminbar, header, footer { display: none !important; }
-
+    
     :root { --reader-zoom: 100%; --reader-max-width: 800px; --reader-brightness: 100%; }
-
+    
     #kagane-app { min-height: 100vh; position: relative; }
-
+    
     #reader-content { width: var(--reader-zoom); max-width: var(--reader-max-width); margin: 0 auto; display: flex; flex-direction: column; align-items: center; filter: brightness(var(--reader-brightness)); transition: width 0.2s, max-width 0.2s; }
     .image-wrapper { width: 100%; min-height: 300px; position: relative; display: flex; justify-content: center; }
     .reader-img { display: block; height: auto; object-fit: contain; width: 100%; }
-
+    
     .base-screen .reader-img { width: 100%; max-width: 100%; }
     .base-image .reader-img { width: var(--reader-zoom); max-width: none; }
     .base-image #reader-content { width: 100%; max-width: none; }
@@ -192,7 +192,7 @@ $comment_count = get_comments_number($current_post_id);
 
     .drawer-side { position: fixed; top: 0; right: 0; width: 100%; max-width: 380px; height: 100%; background: #12121a; z-index: 110; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; border-left: 1px solid rgba(255,255,255,0.05); }
     .drawer-side.open { transform: translateX(0); }
-
+    
     .drawer-bottom { position: fixed; bottom: 0; left: 0; width: 100%; height: 80vh; max-height: 700px; background: #12121a; z-index: 110; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; border-top-left-radius: 24px; border-top-right-radius: 24px; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
     @media (min-width: 768px) {
         .drawer-bottom { height: 100%; max-height: 100%; width: 450px; left: auto; right: 0; border-radius: 0; border-left: 1px solid rgba(255,255,255,0.05); transform: translateX(100%); }
@@ -218,7 +218,7 @@ $comment_count = get_comments_number($current_post_id);
 </style>
 
 <div id="kagane-app" class="font-sans text-gray-200 base-screen no-gap-mode fit-contain">
-
+    
     <div id="reader-content">
         <?php if(empty($images)): ?>
             <div class="mt-32 text-center p-8 bg-surface border border-white/5 rounded-2xl max-w-sm mx-auto shadow-2xl relative z-20">
@@ -279,7 +279,7 @@ $comment_count = get_comments_number($current_post_id);
             <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             <span class="text-[12px] font-bold uppercase tracking-wider hidden sm:block">Prev</span>
         </a>
-
+        
         <button onclick="window.openModal('drawer-comments')" class="flex-[1.5] flex items-center justify-center gap-2 text-white hover:text-accent transition h-full relative">
             <div class="flex items-center gap-2">
                 <svg style="width:22px;height:22px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -287,7 +287,7 @@ $comment_count = get_comments_number($current_post_id);
             </div>
             <?php if($comment_count > 0): ?><span class="bg-accent text-white text-[10px] font-black px-2 py-0.5 rounded-full ml-1 shadow-md"><?php echo $comment_count; ?></span><?php endif; ?>
         </button>
-
+        
         <a href="<?php echo $next_chap ? get_permalink($next_chap->ID) : '#'; ?>" class="flex-1 flex items-center justify-center gap-2 text-gray-400 hover:text-white transition h-full <?php echo !$next_chap ? 'opacity-30 pointer-events-none' : ''; ?>">
             <span class="text-[12px] font-bold uppercase tracking-wider hidden sm:block">Next</span>
             <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -302,9 +302,9 @@ $comment_count = get_comments_number($current_post_id);
             <h2 class="font-bold text-white flex items-center gap-2">Comments <span class="bg-surface text-gray-400 text-xs px-2 py-0.5 rounded-full"><?php echo $comment_count; ?></span></h2>
             <button onclick="window.closeAllModals()" class="p-2 bg-surface rounded-full text-gray-400 hover:text-white"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
-
+        
         <div id="chat-feed-container" class="flex-1 overflow-y-auto no-scrollbar bg-bg p-2 overscroll-contain"></div>
-
+        
         <div class="p-3 bg-surface2 border-t border-white/5 shrink-0 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] w-full">
             <?php if (is_user_logged_in()) { ?>
                 <form id="ajax-chat-form" onsubmit="event.preventDefault(); window.submitChat();" class="flex gap-2">
@@ -325,14 +325,14 @@ $comment_count = get_comments_number($current_post_id);
             <button onclick="window.closeAllModals()" class="absolute top-4 right-4 p-2 bg-surface rounded-full text-gray-400 hover:text-white z-10">
                 <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
-
+            
             <div class="flex gap-4 items-center mt-2">
                 <?php if($manga_thumb): ?>
                     <img src="<?php echo esc_url($manga_thumb); ?>" class="w-16 h-24 object-cover rounded shadow-md border border-white/10 shrink-0" alt="Cover">
                 <?php else: ?>
                     <div class="w-16 h-24 bg-surface rounded shadow-md border border-white/10 shrink-0 flex items-center justify-center text-xs text-gray-500">No Img</div>
                 <?php endif; ?>
-
+                
                 <div class="flex flex-col">
                     <h2 class="font-bold text-white text-sm line-clamp-2 mb-1"><?php echo esc_html($manga_title); ?></h2>
                     <span class="text-[11px] text-accent font-bold mb-2"><?php echo $total_chapters; ?> Chapters Total</span>
@@ -358,7 +358,7 @@ $comment_count = get_comments_number($current_post_id);
             <h2 class="font-bold text-white text-lg">Reader Settings</h2>
             <button onclick="window.closeAllModals()" class="p-2 text-gray-400 hover:text-white bg-surface rounded-full"><svg style="width:24px;height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
-
+        
         <div class="flex px-4 border-b border-white/5 text-[13px] font-bold text-gray-400 overflow-x-auto no-scrollbar shrink-0 bg-surface2">
             <button onclick="window.switchTab('tab-main')" id="btn-tab-main" class="px-5 py-4 border-b-2 border-accent text-white whitespace-nowrap transition-colors">Main</button>
             <button onclick="window.switchTab('tab-style')" id="btn-tab-style" class="px-5 py-4 border-b-2 border-transparent hover:text-white whitespace-nowrap transition-colors">Style</button>
@@ -423,7 +423,7 @@ $comment_count = get_comments_number($current_post_id);
                         <button onclick="window.setBg('#ffffff')" id="bg-btn-2" class="w-16 h-16 rounded-full bg-[#ffffff] border-2 border-gray-300 hover:border-gray-400 transition"></button>
                     </div>
                 </div>
-
+                
                 <div class="space-y-3">
                     <div class="flex justify-between items-center bg-surface2 p-5 rounded-2xl border border-white/5">
                         <div><span class="text-sm font-bold text-white block">Grayscale</span><span class="text-[10px] text-gray-500">Remove colors</span></div>
@@ -461,14 +461,14 @@ $comment_count = get_comments_number($current_post_id);
     const slider = document.getElementById('page-slider');
     const currentPageText = document.getElementById('page-current');
     const root = document.documentElement;
-
+    
     let uiVisible = true;
     let autoScrollInterval = null;
     let totalImages = imagesList.length;
 
-    let readerSettings = JSON.parse(localStorage.getItem('kagane_settings')) || {
-        mode: 'scroll', fit: 'contain', zoomBase: 'screen', zoom: 100, brightness: 100,
-        gaps: false, bg: '#0f0f13', grayscale: false, invert: false, dataSaver: false
+    let readerSettings = JSON.parse(localStorage.getItem('kagane_settings')) || { 
+        mode: 'scroll', fit: 'contain', zoomBase: 'screen', zoom: 100, brightness: 100, 
+        gaps: false, bg: '#0f0f13', grayscale: false, invert: false, dataSaver: false 
     };
     function saveSettings() { localStorage.setItem('kagane_settings', JSON.stringify(readerSettings)); }
 
@@ -515,7 +515,7 @@ $comment_count = get_comments_number($current_post_id);
             preloader.src = targetUrl;
         }
     }
-    if(totalImages > 0) window.readerEngine = new ReaderEngine(imagesList);
+    if(totalImages > 0) window.readerEngine = new ReaderEngine(imagesList); 
 
     // --- UI TOGGLING ---
     window.toggleUI = () => {
@@ -524,20 +524,20 @@ $comment_count = get_comments_number($current_post_id);
         const scrubberNav = document.getElementById('scrubber-nav');
         const sideFabs = document.getElementById('side-fabs');
         const bottomNav = document.getElementById('persistent-bottom-nav');
-
-        if (uiVisible) {
+        
+        if (uiVisible) { 
             topNav.classList.remove('ui-hidden'); scrubberNav.classList.remove('ui-hidden'); sideFabs.classList.remove('ui-hidden'); bottomNav.classList.remove('ui-hidden');
-        } else {
+        } else { 
             topNav.classList.add('ui-hidden'); scrubberNav.classList.add('ui-hidden'); sideFabs.classList.add('ui-hidden'); bottomNav.classList.add('ui-hidden');
         }
     };
 
     document.body.addEventListener('click', (e) => {
-        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input') ||
-            e.target.closest('.modal-panel') || e.target.closest('.drawer-bottom') ||
-            e.target.closest('.drawer-side') || e.target.closest('#persistent-bottom-nav') ||
+        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input') || 
+            e.target.closest('.modal-panel') || e.target.closest('.drawer-bottom') || 
+            e.target.closest('.drawer-side') || e.target.closest('#persistent-bottom-nav') || 
             e.target.closest('#scrubber-nav') || e.target.closest('#top-nav') || e.target.closest('#end-chapter-flow')) return;
-        window.toggleUI();
+        window.toggleUI(); 
     });
 
     // --- MODALS & DRAWERS ---
@@ -556,7 +556,7 @@ $comment_count = get_comments_number($current_post_id);
     window.scrollToPage = (pageNum) => {
         pageNum = parseInt(pageNum); if(pageNum < 1) pageNum = 1; if(pageNum > totalImages) pageNum = totalImages;
         if(slider) slider.value = pageNum; if(currentPageText) currentPageText.innerText = pageNum;
-
+        
         if (readerSettings.mode === 'scroll') {
             const target = document.getElementById(`wrapper-page-${pageNum}`);
             if(target) window.scrollTo({ top: target.offsetTop, behavior: 'smooth' });
@@ -569,7 +569,7 @@ $comment_count = get_comments_number($current_post_id);
 
     // --- APPLY FULL SETTINGS ---
     const appWrapper = document.getElementById('kagane-app');
-
+    
     window.setMode = (mode) => {
         readerSettings.mode = mode; saveSettings();
         document.getElementById('btn-mode-scroll').className = mode==='scroll' ? 'flex-1 py-3 text-sm font-bold bg-accent text-white rounded-lg' : 'flex-1 py-3 text-sm font-bold text-gray-400';
@@ -577,7 +577,7 @@ $comment_count = get_comments_number($current_post_id);
         if (mode === 'single') { document.body.classList.add('single-mode'); document.getElementById('single-mode-options').classList.remove('hidden'); } else { document.body.classList.remove('single-mode'); document.getElementById('single-mode-options').classList.add('hidden'); }
         window.scrollToPage(slider.value);
     };
-
+    
     window.setFit = (fit) => {
         readerSettings.fit = fit; saveSettings();
         document.body.classList.remove('fit-contain', 'fit-width', 'fit-height'); document.body.classList.add(`fit-${fit}`);
@@ -590,7 +590,7 @@ $comment_count = get_comments_number($current_post_id);
         document.getElementById('btn-base-screen').className = base === 'screen' ? 'flex-1 py-3 text-sm font-bold bg-accent text-white rounded-lg' : 'flex-1 py-3 text-sm font-bold text-gray-400';
         document.getElementById('btn-base-image').className = base === 'image' ? 'flex-1 py-3 text-sm font-bold bg-accent text-white rounded-lg' : 'flex-1 py-3 text-sm font-bold text-gray-400';
     };
-
+    
     window.setZoom = (val) => {
         let nZoom = parseInt(val); readerSettings.zoom = nZoom; saveSettings();
         document.getElementById('zoom-val').innerText = nZoom + '%';
@@ -598,7 +598,7 @@ $comment_count = get_comments_number($current_post_id);
     };
     window.zoomReader = (amount) => { let nZoom = Math.max(50, Math.min(250, readerSettings.zoom + amount)); document.getElementById('slider-zoom').value = nZoom; window.setZoom(nZoom); };
     window.resetZoom = () => { document.getElementById('slider-zoom').value = 100; window.setZoom(100); };
-
+    
     window.setBrightness = (val) => {
         readerSettings.brightness = parseInt(val); saveSettings();
         root.style.setProperty('--reader-brightness', `${val}%`); document.getElementById('bright-val').innerText = val + '%';
@@ -621,7 +621,7 @@ $comment_count = get_comments_number($current_post_id);
     window.toggleDataSaver = (state) => { readerSettings.dataSaver = state; saveSettings(); };
 
     window.toggleAutoScroll = () => {
-        if (!autoScrollInterval && readerSettings.mode === 'scroll') { autoScrollInterval = setInterval(() => { window.scrollBy(0, 1.5); }, 15); if(uiVisible) window.toggleUI(); }
+        if (!autoScrollInterval && readerSettings.mode === 'scroll') { autoScrollInterval = setInterval(() => { window.scrollBy(0, 1.5); }, 15); if(uiVisible) window.toggleUI(); } 
         else { clearInterval(autoScrollInterval); autoScrollInterval = null; }
     };
     window.toggleFullscreen = () => { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e=>{}); } else { if (document.exitFullscreen) document.exitFullscreen(); } };
@@ -641,7 +641,7 @@ $comment_count = get_comments_number($current_post_id);
         document.getElementById('toggle-grayscale').checked = readerSettings.grayscale; window.toggleGrayscale(readerSettings.grayscale);
         document.getElementById('toggle-invert').checked = readerSettings.invert; window.toggleInvert(readerSettings.invert);
         document.getElementById('toggle-data-saver').checked = readerSettings.dataSaver; window.toggleDataSaver(readerSettings.dataSaver);
-
+        
         setTimeout(() => { if (uiVisible) window.toggleUI(); }, 2000);
     };
     window.initSettings();

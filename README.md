@@ -9,16 +9,16 @@ Welcome to AniTeams verison 2 ! A modern anime streaming platform built with Nex
 ## Features
 
 - **AniList Integration**: Link your AniList account to view your saved anime .
-- **Bookmarking**: Save your favorite anime from anilist
+- **Bookmarking**: Save your favorite anime from anilist 
 - **Skip Intro/Outro**: Skip anime intros and outros for a smoother experience.
 - **Vidstackk**: Now uses Vidstack player with features like skip intro and outro.
 - **Resume watching**: A new feature implemented , allows you to resume where you last left off.
 - **login and signup**: Allows you login and signup with firebase implementation , customizable avater in the account page.
-
+  
 ## Repositories Used
 
-   - [hianime-mapper](https://github.com/IrfanKhan66/hianime-mapper)- For episode data
-   - [aniwatch](https://www.npmjs.com/package/aniwatch) - For streaming source
+   - [hianime-mapper](https://github.com/IrfanKhan66/hianime-mapper)- For episode data 
+   - [aniwatch](https://www.npmjs.com/package/aniwatch) - For streaming source 
    - [api.consumet.org](https://github.com/consumet/api.consumet.org) - For anime data
 
 ## Installation Steps
@@ -48,12 +48,12 @@ Using npm:
 ```bash
 npm install
 ```
-### 4. make sure you fill up the env . This is required
+### 4. make sure you fill up the env . This is required 
 ```.env
 
 NEXT_PUBLIC_CONSUMET_BASE_URL=
 NEXT_PUBLIC_ANILIST_CLIENT_ID=
-NEXT_PUBLIC_DEPLOYMENT_URL= # your prodoction url
+NEXT_PUBLIC_DEPLOYMENT_URL= # your prodoction url 
 NEXT_PUBLIC_HIANIME_MAPPER_URL= # https://github.com/anime-kun32/hianime-mapper
 
 NEXT_PUBLIC_ANILIST_CLIENT_SECRET=
@@ -83,34 +83,34 @@ npm run dev
 ```
 app should now be running on `http://localhost:3000`.
 
- or
+ or 
 
  ## 🚀 Deploy AniTeams to Vercel
 
-Click the button below to instantly deploy AniTeams to Vercel.
+Click the button below to instantly deploy AniTeams to Vercel.  
 
-make sure you fill the required variables
+make sure you fill the required variables 
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/anime-kun32/AniTeams&env=FIREBASE_API_KEY)
 
 
-
+ 
 
 ## Coming soon !!
 - [x] sign up and registration
-- [x] PWA support
+- [x] PWA support 
 - [x] full anilist integration with anilist
 - [x] Bookmark
 - [x] resume watching
 - [ ] new anime providers  : Animekai , animepahe.ru
 - [ ] based on the name "AniTeams" , community integration , user will be able to comment on episodes and also make posts as well.
-- [ ] settings page
+- [ ] settings page 
 - [ ] And lots more !! Any more features mention in issues or make a pull request.
-
+  
 A  star ⭐ will also be appreciated.
 
 
-### issues and contribution
+### issues and contribution 
 As always any issues or contributions you want to make list them or make a pull request.
 
 #  Enjoy using the app and Welcome to AniTeams-v2 !!

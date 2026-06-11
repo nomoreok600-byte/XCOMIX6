@@ -6,7 +6,7 @@
 $current_post_id = get_queried_object_id();
 $mgeko_url = trim(get_post_meta($current_post_id, '_mgeko_url', true));
 if (!empty($mgeko_url) && strpos($mgeko_url, 'http') !== 0) {
-    $mgeko_url = 'https://' . ltrim($mgeko_url, '/');
+    $mgeko_url = 'https://' . ltrim($mgeko_url, '/'); 
 }
 $chapter_num = mvx_chapter_number($current_post_id);
 $manga_id = wp_get_post_parent_id($current_post_id);
@@ -19,7 +19,7 @@ if (is_user_logged_in() && $manga_id) {
     $current_user = wp_get_current_user();
     $raw_history = get_user_meta($current_user->ID, '_xcomix_history', true);
     if (!is_array($raw_history)) { $raw_history = []; }
-
+    
     $raw_history[$manga_id] = [
         'id' => $manga_id,
         'chapter_num' => $chapter_num,
@@ -47,14 +47,14 @@ if (is_user_logged_in() && $manga_id) {
 </script>
 <?php
 // =========================================================================
-// MGEKO CHAT RENDER FUNCTION
+// MGEKO CHAT RENDER FUNCTION 
 // =========================================================================
 if (!function_exists('xcomix_chapter_chat_render')) {
     function xcomix_chapter_chat_render($chat, $is_logged_in, $current_user) {
         $is_mine = ($is_logged_in && $chat->user_id == $current_user->ID);
         $author_name = $chat->comment_author;
         $author_avatar = get_user_meta($chat->user_id, '_xcomix_avatar', true) ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($author_name);
-
+        
         $user_obj = get_userdata($chat->user_id);
         $role_badge = ''; $name_color = 'text-gray-200';
         if ($user_obj) {
@@ -66,7 +66,7 @@ if (!function_exists('xcomix_chapter_chat_render')) {
                 $name_color = 'text-[#3b82f6]';
             }
         }
-
+        
         $reply_html = '';
         if ($chat->comment_parent > 0) {
             $parent_comment = get_comment($chat->comment_parent);
@@ -84,12 +84,12 @@ if (!function_exists('xcomix_chapter_chat_render')) {
         $raw_content = preg_replace('/\*\*(.*?)\*\*/is', '<strong class="text-white">$1</strong>', $raw_content);
         $raw_content = preg_replace('/\_(.*?)\_/is', '<em class="text-gray-300 italic">$1</em>', $raw_content);
         $raw_content = preg_replace('/\|\|(.*?)\|\|/is', '<span class="spoiler-block" title="Tap to reveal">$1</span>', $raw_content);
-
+        
         $raw_content = preg_replace('/(https?:\/\/[^\s"\'<>]+?\.(?:jpg|jpeg|png|gif|webp))/i', '|||IMG|||$1|||', $raw_content);
-        $raw_content = make_clickable($raw_content);
+        $raw_content = make_clickable($raw_content); 
         $raw_content = str_replace('<a href=', '<a class="text-[#3b82f6] hover:underline break-all" target="_blank" href=', $raw_content);
         $raw_content = preg_replace('/\|\|\|IMG\|\|\|(.*?)\|\|\|/i', '<br><img src="$1" onclick="window.openLightbox(\'$1\')" class="max-w-full md:max-w-[250px] max-h-[200px] w-auto h-auto rounded-xl mt-2 mb-1 border border-[#3a3a48] shadow-md hover:opacity-80 transition object-contain cursor-pointer">', $raw_content);
-
+        
         $raw_content = nl2br($raw_content);
         $likes = (int) get_comment_meta($chat->comment_ID, '_chat_likes', true);
         $exact_time = date('M j, Y g:i A', strtotime($chat->comment_date));
@@ -105,11 +105,11 @@ if (!function_exists('xcomix_chapter_chat_render')) {
                         <?php echo human_time_diff(strtotime($chat->comment_date), current_time('timestamp')); ?> ago
                     </span>
                 </div>
-
+                
                 <div class="text-[14px] text-gray-300 leading-relaxed font-medium break-words pointer-events-auto" id="chat-content-<?php echo $chat->comment_ID; ?>" data-raw="<?php echo esc_attr($chat->comment_content); ?>">
                     <?php echo $raw_content; ?>
                 </div>
-
+                
                 <div class="mt-2 flex items-center gap-2 pointer-events-auto">
                     <button onclick="window.likeChat(<?php echo $chat->comment_ID; ?>)" class="flex items-center gap-1.5 bg-[#252530] border border-[#2a2a35] hover:border-pink-500/50 hover:bg-pink-500/10 px-2 py-1 rounded-md transition group/btn">
                         <svg class="w-3.5 h-3.5 text-gray-500 group-hover/btn:text-pink-500 transition <?php echo ($likes > 0) ? 'text-pink-500' : ''; ?>" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -117,7 +117,7 @@ if (!function_exists('xcomix_chapter_chat_render')) {
                     </button>
                 </div>
             </div>
-
+            
             <div class="absolute right-4 top-4 flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition bg-[#1a1a22]/90 backdrop-blur-sm md:bg-[#1a1a22] rounded-lg shadow-lg border border-[#3a3a48] z-10 p-0.5">
                 <button onclick="window.copyChatText(<?php echo $chat->comment_ID; ?>)" class="hover:bg-[#252530] hover:text-white text-gray-400 p-1.5 rounded-lg transition" title="Copy Text">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -148,10 +148,10 @@ if (is_user_logged_in()) {
     if (isset($_POST['custom_chat_submit'])) {
         while (ob_get_level()) ob_end_clean();
         $user = wp_get_current_user();
-        $post_id = intval($_POST['comment_post_ID']);
+        $post_id = intval($_POST['comment_post_ID']); 
         $parent_id = intval($_POST['comment_parent']);
         $content = sanitize_text_field($_POST['comment_content']);
-
+        
         if (!empty($content)) {
             $inserted = wp_insert_comment(['comment_post_ID' => $post_id, 'comment_author' => $user->display_name, 'comment_author_email' => $user->user_email, 'comment_author_url' => $user->user_url, 'comment_content' => $content, 'comment_parent' => $parent_id, 'user_id' => $user->ID, 'comment_date' => current_time('mysql'), 'comment_approved' => 1]);
             if ($inserted) { echo wp_json_encode(['success' => true]); } else { echo wp_json_encode(['success' => false, 'error' => 'Database failed.']); }
@@ -204,7 +204,7 @@ if (isset($_POST['fetch_live_chats']) && isset($_POST['chapter_id'])) {
 }
 
 add_filter('show_admin_bar', '__return_false');
-get_header();
+get_header(); 
 the_post();
 
 $is_logged_in = is_user_logged_in();
@@ -215,8 +215,8 @@ $all_chaps = mvx_get_chapters($manga_id, 'DESC');
 $prev_chap = null; $next_chap = null;
 foreach ($all_chaps as $i => $c) {
     if ($c->ID === $current_post_id) {
-        $next_chap = isset($all_chaps[$i - 1]) ? $all_chaps[$i - 1] : null;
-        $prev_chap = isset($all_chaps[$i + 1]) ? $all_chaps[$i + 1] : null;
+        $next_chap = isset($all_chaps[$i - 1]) ? $all_chaps[$i - 1] : null; 
+        $prev_chap = isset($all_chaps[$i + 1]) ? $all_chaps[$i + 1] : null; 
         break;
     }
 }
@@ -230,13 +230,13 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
 ?>
 
     <main class="min-h-screen relative w-full bg-[#0f0f13]">
-
+        
         <style>
             #bottom-nav, #global-nav, .site-header { display: none !important; }
-
+            
             .orange-spinner { width: 24px; height: 24px; border: 3px solid #2a2a35; border-top-color: #e8783a; border-radius: 50%; animation: xcomix-spin 1s linear infinite; display: inline-block; vertical-align: middle; }
             @keyframes xcomix-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+            
             .progress-bar { position: fixed; top: 0; left: 0; height: 3px; z-[99999]; background: #e8783a; box-shadow: 0 0 10px #e8783a; transition: width 0.2s; }
             .drawer { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
             .drawer.open { transform: translateX(0); }
@@ -258,7 +258,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
             #pages-container.mode-page .page-wrapper { max-width: 1000px; margin: 0 auto; padding: 0 10px; display: flex; justify-content: center; }
             #pages-container.mode-page .chapter-page { max-height: 90vh; width: auto; max-width: 100%; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border-radius: 8px; margin: 0 auto; }
             .page-wrapper { position: relative; width: 100%; display: block; background: #0f0f13; margin: 0; padding: 0; }
-            .page-wrapper.is-loading { min-height: 400px; }
+            .page-wrapper.is-loading { min-height: 400px; } 
             .spinner-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; justify-content: center; align-items: center; }
             .chapter-page { position: relative; z-index: 20; display: block; width: 100%; }
         </style>
@@ -297,12 +297,12 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                     <?php foreach ($images as $img) { ?>
                         <div class="page-wrapper page-tracker is-loading">
                             <div class="spinner-container"><div class="orange-spinner"></div></div>
-                            <img src="<?php echo esc_url($img); ?>"
-                                 class="chapter-page inline-image"
-                                 loading="lazy"
-                                 decoding="async"
+                            <img src="<?php echo esc_url($img); ?>" 
+                                 class="chapter-page inline-image" 
+                                 loading="lazy" 
+                                 decoding="async" 
                                  referrerpolicy="no-referrer"
-                                 onload="this.parentElement.classList.remove('is-loading'); this.previousElementSibling.style.display='none'; window.updateProgressBar();"
+                                 onload="this.parentElement.classList.remove('is-loading'); this.previousElementSibling.style.display='none'; window.updateProgressBar();" 
                                  onerror="this.parentElement.style.display='none';">
                         </div>
                     <?php } ?>
@@ -314,7 +314,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
             <div class="flex flex-col h-[500px] md:h-[600px] bg-[#1a1a22] border border-[#3a3a48] rounded-2xl shadow-2xl overflow-hidden">
                 <div class="p-3 md:p-4 border-b border-[#2a2a35] bg-[#252530] shrink-0 flex items-center justify-between">
                     <h2 class="text-[14px] font-black text-white tracking-tight uppercase flex items-center gap-2">
-                        <span class="w-1.5 h-4 bg-[#3b82f6] rounded-full"></span>
+                        <span class="w-1.5 h-4 bg-[#3b82f6] rounded-full"></span> 
                         Chapter <?php echo (float)$chapter_num; ?> Chat
                     </h2>
                     <span class="text-[9px] font-black uppercase text-gray-500 tracking-widest px-2 py-1 bg-[#2a2a35] rounded border border-[#3a3a48] shadow-inner">
@@ -409,7 +409,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
         </div>
 
         <div id="reader-overlay" onclick="window.toggleReaderDrawer()" class="overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999]"></div>
-
+        
         <div id="reader-drawer" class="drawer fixed top-0 right-0 h-full w-[280px] bg-[#0f0f13] border-l border-[#3a3a48] z-[9999] flex flex-col shadow-2xl">
             <div class="p-5 border-b border-[#3a3a48] flex items-center justify-between bg-[#1a1a22]">
                 <h3 class="font-black text-white uppercase tracking-widest text-[11px] flex items-center gap-2">
@@ -503,7 +503,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
 
                     if (foundImages.length > 0) {
                         if(statusText) statusText.innerHTML = "<span class='text-green-500'>Images secured. Locking into server database...</span>";
-
+                        
                         const formData = new FormData();
                         formData.append('action', 'xcomix_save_scraped_images');
                         formData.append('post_id', postId);
@@ -546,7 +546,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                 const btnWebtoon = document.getElementById('btn-webtoon');
                 const btnPage = document.getElementById('btn-page');
                 if(!container) return;
-
+                
                 localStorage.setItem('xcomix_reader_mode', mode);
                 if (mode === 'page') {
                     container.className = 'mode-page w-full';
@@ -586,7 +586,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
             window.initChapterReader = function() {
                 window.setReaderMode(localStorage.getItem('xcomix_reader_mode') || 'webtoon');
                 window.addEventListener('scroll', window.updateProgressBar);
-                window.initInstantNavigation();
+                window.initInstantNavigation(); 
                 setTimeout(() => {
                     const topNav = document.getElementById('reader-top-nav');
                     const bottomToolbar = document.getElementById('reader-bottom-toolbar');
@@ -599,13 +599,13 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                 return new Promise((resolve) => {
                     const overlay = document.getElementById('custom-modal-overlay');
                     const box = document.getElementById('custom-modal-box');
-                    document.getElementById('custom-modal-title').innerText = title;
+                    document.getElementById('custom-modal-title').innerText = title; 
                     document.getElementById('custom-modal-text').innerText = text;
-                    document.getElementById('custom-modal-confirm').innerText = confirmText;
+                    document.getElementById('custom-modal-confirm').innerText = confirmText; 
                     document.getElementById('custom-modal-cancel').innerText = cancelText;
 
                     const inputEl = document.getElementById('custom-modal-input');
-                    if (type === 'prompt') { inputEl.style.display = 'block'; inputEl.value = inputValue; }
+                    if (type === 'prompt') { inputEl.style.display = 'block'; inputEl.value = inputValue; } 
                     else { inputEl.style.display = 'none'; }
                     document.getElementById('custom-modal-cancel').style.display = (type === 'alert') ? 'none' : 'block';
 
@@ -646,11 +646,11 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                 document.getElementById('chat-input-box').removeAttribute('required');
             };
             window.openLightbox = function(url) {
-                document.getElementById('lightbox-img').src = url;
+                document.getElementById('lightbox-img').src = url; 
                 document.getElementById('image-lightbox').classList.remove('hidden');
             };
             window.closeLightbox = function() {
-                document.getElementById('image-lightbox').classList.add('hidden');
+                document.getElementById('image-lightbox').classList.add('hidden'); 
                 document.getElementById('lightbox-img').src = '';
             };
             window.copyChatText = function(commentId) {
@@ -662,7 +662,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
             const jumpBtn = document.getElementById('jump-bottom-btn');
             if (chatFeed && jumpBtn) {
                 chatFeed.addEventListener('scroll', () => {
-                    if (Math.abs(chatFeed.scrollTop) > 300) { jumpBtn.classList.remove('hidden'); jumpBtn.classList.add('flex'); }
+                    if (Math.abs(chatFeed.scrollTop) > 300) { jumpBtn.classList.remove('hidden'); jumpBtn.classList.add('flex'); } 
                     else { jumpBtn.classList.add('hidden'); jumpBtn.classList.remove('flex'); }
                 });
             }
@@ -684,7 +684,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                         document.getElementById('chat-input-box').removeAttribute('required');
                     } else await window.showModal({title: 'Upload Failed', text: data.error});
                 } catch(e) { await window.showModal({title: 'Error', text: 'File may be too large.'}); }
-                btnLabel.innerHTML = originalIcon; inputElement.value = "";
+                btnLabel.innerHTML = originalIcon; inputElement.value = ""; 
             };
 
             window.removeUpload = function() {
@@ -700,9 +700,9 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                 let hiddenImg = document.getElementById('hidden_image_url').value;
                 let postId = document.getElementById('chat_comment_post_ID').value;
                 let parentId = document.getElementById('chat_comment_parent').value;
-
+                
                 if (textValue.trim() === '' && hiddenImg === '') return;
-
+                
                 let finalContent = textValue;
                 if (hiddenImg !== '') finalContent += "\n" + hiddenImg;
 
@@ -714,19 +714,19 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
 
                 btn.classList.add('opacity-50', 'pointer-events-none');
                 let formData = new FormData();
-                formData.append('custom_chat_submit', '1');
+                formData.append('custom_chat_submit', '1'); 
                 formData.append('comment_content', finalContent);
-                formData.append('comment_post_ID', postId);
+                formData.append('comment_post_ID', postId); 
                 formData.append('comment_parent', parentId);
 
                 inputBox.value = ''; inputBox.style.height = 'auto'; window.removeUpload(); window.cancelReply();
                 document.getElementById('gif-picker').classList.add('hidden');
 
-                try { await fetch(window.location.pathname + window.location.search, { method: 'POST', body: formData }); }
+                try { await fetch(window.location.pathname + window.location.search, { method: 'POST', body: formData }); } 
                 catch(e) { console.error('Chat submission error:', e); }
-
+                
                 btn.classList.remove('opacity-50', 'pointer-events-none');
-                window.fetchLiveChats();
+                window.fetchLiveChats(); 
             };
 
             window.deleteChat = async function(commentId) {
@@ -734,9 +734,9 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                 if (!confirmDelete) return;
                 let formData = new FormData(); formData.append('delete_chat_id', commentId);
                 await fetch(window.location.pathname + window.location.search, { method: 'POST', body: formData });
-                window.fetchLiveChats();
+                window.fetchLiveChats(); 
             };
-
+            
             window.editChat = async function(commentId) {
                 let el = document.getElementById('chat-content-' + commentId);
                 let rawContent = el.getAttribute('data-raw');
@@ -751,7 +751,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                     window.fetchLiveChats();
                 }
             };
-
+            
             window.likeChat = async function(commentId) {
                 let formData = new FormData(); formData.append('like_chat_id', commentId);
                 let res = await fetch(window.location.pathname + window.location.search, { method: 'POST', body: formData });
@@ -762,7 +762,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
 
             window.fetchLiveChats = async function() {
                 if(!chatFeed) return;
-                let isScrolledBottom = Math.abs(chatFeed.scrollTop) < 50;
+                let isScrolledBottom = Math.abs(chatFeed.scrollTop) < 50; 
                 let formData = new FormData(); formData.append('fetch_live_chats', '1'); formData.append('chapter_id', <?php echo $current_post_id; ?>);
                 try {
                     let res = await fetch(window.location.pathname + window.location.search, { method: 'POST', body: formData });
@@ -771,7 +771,7 @@ $needs_scraping = (false === $images || empty($images)) ? 'true' : 'false';
                 } catch(e) {}
             };
 
-            setInterval(() => { if (document.visibilityState === 'visible') window.fetchLiveChats(); }, 30000);
+            setInterval(() => { if (document.visibilityState === 'visible') window.fetchLiveChats(); }, 30000); 
 
             document.getElementById('chat-input-box')?.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.submitChat(); }

@@ -59,9 +59,9 @@ const WatchPage = () => {
                 allowFullScreen
               />
             )}
-
-
-
+                  
+            
+      
 
             {/* Player Switcher Toolbar */}
             <div className="mt-4 flex gap-2 border border-gray-700 bg-gray-900 rounded-md p-2 w-fit">

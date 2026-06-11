@@ -20,7 +20,7 @@ function xcomix_external_cron_endpoint($wp) {
             while (ob_get_level()) ob_end_clean();
             status_header(200);
             header('Content-Type: application/json; charset=utf-8');
-
+            
             if ($_GET['xcomix_cron'] === 'run') {
                 $logs = xcomix_run_autopilot();
                 echo wp_json_encode(['status' => 'success', 'mode' => 'latest', 'processed' => count($logs), 'logs' => $logs]);
@@ -67,13 +67,13 @@ function xcomix_fetch($url) {
 
     $ch = curl_init($url);
     $options = [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_RETURNTRANSFER => true, 
+        CURLOPT_FOLLOWLOCATION => true, 
         CURLOPT_TIMEOUT => 30,
         CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_ENCODING => '',
+        CURLOPT_ENCODING => '', 
         CURLOPT_HTTPHEADER => [
-            'User-Agent: ' . $custom_ua,
+            'User-Agent: ' . $custom_ua, 
             'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
             'Accept-Language: en-US,en;q=0.9',
             'Referer: https://mangakatana.com/',
@@ -87,7 +87,7 @@ function xcomix_fetch($url) {
     }
 
     curl_setopt_array($ch, $options);
-    $res = curl_exec($ch);
+    $res = curl_exec($ch); 
     curl_close($ch);
     return $res;
 }
@@ -101,7 +101,7 @@ function xcomix_ajax_process_single() {
     set_time_limit(0);
     $url = esc_url_raw($_POST['manga_url']);
     $action_type = isset($_POST['action_type']) ? $_POST['action_type'] : 'standard';
-
+    
     $log = xcomix_process_manga($url, $action_type);
     wp_send_json_success(['log' => $log[0]]);
 }
@@ -110,7 +110,7 @@ function xcomix_process_manga($url, $action_type = 'standard') {
     global $wpdb;
     $url = strtok(esc_url_raw($url), '?');
     $url = rtrim($url, '/');
-
+    
     if (preg_match('/mangakatana\.com\/manga\/([^\/\?#]+)/i', $url, $matches)) {
         $slug = strtolower(trim($matches[1]));
         $url = 'https://mangakatana.com/manga/' . $slug;
@@ -136,13 +136,13 @@ function xcomix_process_manga($url, $action_type = 'standard') {
         }
 
         $all_nuke_ids = array_unique(array_merge($posts_by_url, $posts_by_slug, $children, [$existing_manga_id]));
-
+        
         foreach ($all_nuke_ids as $nid) {
             if (!empty($nid)) wp_delete_post($nid, true);
         }
-
+        
         wp_cache_flush();
-        $existing_manga_id = false;
+        $existing_manga_id = false; 
     }
 
     // Autopilot Optimization
@@ -167,11 +167,11 @@ function xcomix_process_manga($url, $action_type = 'standard') {
     $alt = trim($xpath->query('//div[contains(@class, "alt_name")]')->item(0)->textContent ?? '');
     $author = trim($xpath->query('//div[contains(@class, "author")]')->item(0)->textContent ?? 'Unknown');
     $status = trim($xpath->query('//div[contains(@class, "status")]')->item(0)->textContent ?? 'Ongoing');
-
-    $type = "Manga";
+    
+    $type = "Manga"; 
     $is_18_plus = 0;
     $genres = [];
-
+    
     $gNodes = $xpath->query('//div[contains(@class, "genres")]//a');
     foreach($gNodes as $gn) {
         $g = trim($gn->textContent);
@@ -182,7 +182,7 @@ function xcomix_process_manga($url, $action_type = 'standard') {
         if($g_lower === 'manhua') $type = "Manhua";
         if(in_array($g_lower, ['smut', 'mature', 'adult', 'nsfw', 'erotica'])) $is_18_plus = 1;
     }
-
+    
     $img_node = $xpath->query('//div[contains(@class, "cover")]//img | //div[contains(@class,"media-info")]//img')->item(0);
     $cover = $img_node ? ($img_node->getAttribute('data-src') ?: $img_node->getAttribute('src')) : '';
 
@@ -193,19 +193,19 @@ function xcomix_process_manga($url, $action_type = 'standard') {
     // ==============================================================
     if (!$manga_id) {
         $buddy_check = $wpdb->get_var($wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE post_type = 'manga' AND (post_name = %s OR post_title = %s) LIMIT 1", $slug, $title));
-
+        
         if ($buddy_check && $action_type !== 'override') {
             return ["<span style='color:#eab308; font-weight:bold;'>> ⏭️ Skipped: '{$title}' is already owned by Buddy. Use the Override tool to seize it.</span>"];
         } elseif ($buddy_check && $action_type === 'override') {
-            $manga_id = $buddy_check;
+            $manga_id = $buddy_check; 
             // We do NOT delete Buddy's chapters. We just seize the parent.
         } else {
             $manga_id = wp_insert_post([
                 'post_title' => $title, 'post_content' => $desc, 'post_status' => $import_status, 'post_type' => 'manga', 'post_name' => $slug
             ]);
         }
-    }
-
+    } 
+    
     update_post_meta($manga_id, '_katana_url', $url);
     update_post_meta($manga_id, '_manga_alt_title', $alt);
     update_post_meta($manga_id, '_manga_author', $author);
@@ -225,7 +225,7 @@ function xcomix_process_manga($url, $action_type = 'standard') {
     // CHAPTER EXTRACTION
     $chRows = $xpath->query('//*[contains(@class, "chapters")]//tr | //*[contains(@class, "chapters")]//li | //*[contains(@class, "chapters")]//div[contains(@class, "chapter")]');
     $added = 0;
-
+    
     if ($chRows->length === 0) {
         $chRows = $xpath->query('//*[contains(@class, "chapters")]//a[contains(@href, "/c")]');
         $chArray = array_reverse(iterator_to_array($chRows));
@@ -255,10 +255,10 @@ function xcomix_process_manga($url, $action_type = 'standard') {
         foreach ($chArray as $row) {
             $aNode = $xpath->query('.//a', $row)->item(0);
             if (!$aNode) continue;
-
+            
             $cUrl = strtok($aNode->getAttribute('href'), '?');
             $exists = $wpdb->get_var($wpdb->prepare("SELECT post_id FROM $wpdb->postmeta WHERE meta_key = '_katana_url' AND meta_value = %s", $cUrl));
-
+            
             if (!$exists) {
                 $cTitle = trim($aNode->textContent);
                 preg_match('/([0-9]+(?:\.[0-9]+)?)/', $cTitle, $m);
@@ -267,7 +267,7 @@ function xcomix_process_manga($url, $action_type = 'standard') {
                 $timeNode = $xpath->query('./td[2] | .//*[contains(@class, "up_time")] | .//*[contains(@class, "time")]', $row)->item(0);
                 $dateStr = $timeNode ? trim($timeNode->textContent) : 'now';
                 $timestamp = strtotime($dateStr);
-                if (!$timestamp || $timestamp > time()) $timestamp = time();
+                if (!$timestamp || $timestamp > time()) $timestamp = time(); 
                 $true_post_date = gmdate('Y-m-d H:i:s', $timestamp + ( get_option('gmt_offset') * HOUR_IN_SECONDS ));
 
                 $chap_id = wp_insert_post([
@@ -287,7 +287,7 @@ function xcomix_process_manga($url, $action_type = 'standard') {
     }
 
     if ($added > 0) wp_update_post(['ID' => $manga_id]);
-
+    
     if ($action_type === 'nuke') {
         return ["> [KATANA] <a href='$url' target='_blank' style='color:#a855f7;'><b>[NUKED & REBUILT] $title</b></a> | Added: $added Chapters"];
     } elseif ($action_type === 'override') {
@@ -299,7 +299,7 @@ function xcomix_process_manga($url, $action_type = 'standard') {
 }
 
 // =========================================================================
-// 6. RAW REGEX CATCH-ALL EXTRACTOR
+// 6. RAW REGEX CATCH-ALL EXTRACTOR 
 // =========================================================================
 function xcomix_extract_strict_links($html) {
     $links = [];
@@ -317,7 +317,7 @@ function xcomix_extract_strict_links($html) {
 // 7. AUTOPILOT - LATEST UPDATES
 // =========================================================================
 function xcomix_run_autopilot() {
-    $target_url = 'https://mangakatana.com/latest';
+    $target_url = 'https://mangakatana.com/latest'; 
     $html = xcomix_fetch($target_url);
     $logs = [];
 
@@ -326,19 +326,19 @@ function xcomix_run_autopilot() {
         if (empty($linksFound)) {
              $logs[] = "❌ Autopilot Found 0 links. Target blocked or layout wiped.";
         } else {
-            $to_process = array_slice($linksFound, 0, 15);
+            $to_process = array_slice($linksFound, 0, 15); 
             $delay = (int) get_option('xcomix_stealth_delay', 300000);
-
+            
             foreach ($to_process as $href) {
                 $result = xcomix_process_manga($href, 'standard');
                 $logs[] = $result[0];
-                usleep($delay);
+                usleep($delay); 
             }
         }
     } else {
         $logs[] = "❌ Autopilot Failed: Blocked by Cloudflare JS Challenge. Please update Cookie in Settings.";
     }
-
+    
     return $logs;
 }
 
@@ -353,22 +353,22 @@ add_action('wp_ajax_xcomix_run_autopilot_manual', function() {
 // 8. AUTOPILOT - DEEP BACKLOG CRAWLER
 // =========================================================================
 function xcomix_run_deep_scraper() {
-    $page = (int) get_option('xcomix_deep_page', 2);
+    $page = (int) get_option('xcomix_deep_page', 2); 
     $target_url = "https://mangakatana.com/latest/page/$page";
     $html = xcomix_fetch($target_url);
     $logs = [];
 
     if ($html && strpos($html, 'Cloudflare') === false && strpos($html, 'Just a moment') === false) {
         $linksFound = xcomix_extract_strict_links($html);
-
+        
         if (!empty($linksFound)) {
-            $to_process = array_slice($linksFound, 0, 15);
+            $to_process = array_slice($linksFound, 0, 15); 
             $delay = (int) get_option('xcomix_stealth_delay', 300000);
 
             foreach ($to_process as $href) {
-                $result = xcomix_process_manga($href, 'standard');
+                $result = xcomix_process_manga($href, 'standard'); 
                 $logs[] = $result[0];
-                usleep($delay);
+                usleep($delay); 
             }
             update_option('xcomix_deep_page', $page + 1);
             $logs[] = "<span style='color:#eab308;'>✅ Page $page Backlog processed. Moving to Page " . ($page + 1) . " next run.</span>";
@@ -378,7 +378,7 @@ function xcomix_run_deep_scraper() {
     } else {
         $logs[] = "❌ Failed to connect to page $page (Cloudflare Block). Please update Cookie in Settings.";
     }
-
+    
     return $logs;
 }
 
@@ -390,7 +390,7 @@ add_action('wp_ajax_xcomix_run_deep_manual', function() {
 });
 
 // =========================================================================
-// 9. AJAX CATEGORY FETCHER
+// 9. AJAX CATEGORY FETCHER 
 // =========================================================================
 add_action('wp_ajax_xcomix_fetch_category', 'xcomix_ajax_fetch_category');
 function xcomix_ajax_fetch_category() {
@@ -398,7 +398,7 @@ function xcomix_ajax_fetch_category() {
     set_time_limit(0);
     $url = esc_url_raw($_POST['cat_url']);
     $html = xcomix_fetch($url);
-
+    
     if (!$html || strpos($html, 'Cloudflare') !== false || strpos($html, 'Just a moment') !== false) {
         wp_send_json_success(['links' => [], 'error' => 'Blocked by Cloudflare Anti-Bot. Update Cookie.']);
     }
@@ -436,14 +436,14 @@ function xcomix_scraper_page_html() {
     $opt_cookie = get_option('xcomix_cf_cookie', '');
     $opt_ua = get_option('xcomix_user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0 Safari/537.36');
     $current_deep_page = get_option('xcomix_deep_page', 2);
-
+    
     $cron_latest = site_url() . '/?xcomix_cron=run&secret=' . $opt_secret;
     $cron_deep = site_url() . '/?xcomix_cron=deep&secret=' . $opt_secret;
     ?>
     <div class="wrap" style="font-family: system-ui, -apple-system, sans-serif; max-width: 1200px;">
         <h1 style="font-weight:900; color:#ea580c; font-size: 28px; margin-bottom: 5px;">MANGAKATANA ENGINE V9.11</h1>
         <p style="font-size: 14px; color: #666; font-weight: 600;">Cloudflare Cookie Support | Buddy Override Tool</p>
-
+        
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:30px;">
 
             <div style="background:#09090b; padding:25px; border-radius:12px; border:1px solid #ef4444; grid-column: span 2;">
@@ -454,7 +454,7 @@ function xcomix_scraper_page_html() {
                     <input type="hidden" name="xcomix_post_status" value="<?php echo esc_attr($opt_status); ?>">
                     <input type="hidden" name="xcomix_stealth_delay" value="<?php echo esc_attr($opt_delay); ?>">
                     <input type="hidden" name="xcomix_cron_secret" value="<?php echo esc_attr($opt_secret); ?>">
-
+                    
                     <div style="flex: 1 1 100%;">
                         <label style="color:#ef4444; font-weight:bold; display:block; margin-bottom:5px;">Clearance Cookie (cf_clearance)</label>
                         <input type="text" name="xcomix_cf_cookie" value="<?php echo esc_attr($opt_cookie); ?>" placeholder="e.g. cf_clearance=xYz123..." style="width:100%; padding:10px; border-radius:6px; background:#121212; border:1px solid #444; color:white;">
@@ -468,7 +468,7 @@ function xcomix_scraper_page_html() {
                     </div>
                 </form>
             </div>
-
+            
             <div style="background:#09090b; padding:25px; border-radius:12px; border:1px solid #333; grid-column: span 1; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
                 <h2 style="margin-top:0; color:white; border-bottom: 2px solid #ea580c; padding-bottom: 10px;">🎯 Standard Importer</h2>
                 <form onsubmit="startSingleScrape(event, 'standard', 'standard-btn', 'standard-terminal')">
@@ -539,7 +539,7 @@ function xcomix_scraper_page_html() {
                     <input type="hidden" name="save_xcomix_settings" value="1">
                     <input type="hidden" name="xcomix_cf_cookie" value="<?php echo esc_attr($opt_cookie); ?>">
                     <input type="hidden" name="xcomix_user_agent" value="<?php echo esc_attr($opt_ua); ?>">
-
+                    
                     <select name="xcomix_post_status" style="width:100%; padding:8px; border-radius:6px; margin-bottom: 15px;"><option value="publish" <?php selected($opt_status, 'publish'); ?>>Auto-Publish</option><option value="draft" <?php selected($opt_status, 'draft'); ?>>Draft</option></select>
                     <select name="xcomix_stealth_delay" style="width:100%; padding:8px; border-radius:6px; margin-bottom: 15px;"><option value="100000" <?php selected($opt_delay, 100000); ?>>Fast (0.1s)</option><option value="300000" <?php selected($opt_delay, 300000); ?>>Normal (0.3s)</option><option value="1000000" <?php selected($opt_delay, 1000000); ?>>Safe (1.0s)</option></select>
                     <input type="number" name="xcomix_deep_page" value="<?php echo esc_attr($current_deep_page); ?>" style="width:100%; padding:8px; border-radius:6px; margin-bottom: 15px;">
@@ -552,7 +552,7 @@ function xcomix_scraper_page_html() {
                     <button type="submit" class="button" style="background:#ef4444; color:white; border:none; height:40px; width:100%; font-weight:bold;">🗑️ NUKE ALL KATANA DATA</button>
                 </form>
             </div>
-
+            
         </div>
     </div>
 
@@ -566,7 +566,7 @@ function xcomix_scraper_page_html() {
             try {
                 let fd = new FormData(); fd.append('action', actionName);
                 let res = await fetch(ajaxurl, { method: 'POST', body: fd }); let data = await res.json();
-
+                
                 if (data.success && data.data.logs) {
                     term.innerHTML = '';
                     data.data.logs.forEach(log => { term.innerHTML += `<div>${log}</div>`; });
@@ -582,24 +582,24 @@ function xcomix_scraper_page_html() {
             let urlInputId = actionType === 'nuke' ? 'nuke_manga_url' : (actionType === 'override' ? 'override_manga_url' : 'standard_manga_url');
             const url = document.getElementById(urlInputId).value;
 
-            btn.disabled = true; btn.style.opacity = '0.5';
+            btn.disabled = true; btn.style.opacity = '0.5'; 
             btn.innerText = 'Processing...';
-            term.style.display = 'block';
+            term.style.display = 'block'; 
             term.innerHTML = '<div style="color:#ea580c;">> 🚀 Executing ' + actionType + ' process...</div>';
 
             try {
-                let mFd = new FormData();
-                mFd.append('action', 'xcomix_process_single');
+                let mFd = new FormData(); 
+                mFd.append('action', 'xcomix_process_single'); 
                 mFd.append('manga_url', url);
                 mFd.append('action_type', actionType);
-
+                
                 let mRes = await fetch(ajaxurl, { method: 'POST', body: mFd }); let mData = await mRes.json();
-
-                if (mData.success) { term.innerHTML += `<div style="margin-top:10px;">${mData.data.log}</div>`; }
+                
+                if (mData.success) { term.innerHTML += `<div style="margin-top:10px;">${mData.data.log}</div>`; } 
                 else { term.innerHTML += `<div style="color:#ef4444; margin-top:10px;">> ❌ Error processing manga.</div>`; }
             } catch (err) { term.innerHTML += `<div style="color:#ef4444; margin-top:10px;">> [FATAL] Server connection error.</div>`; }
 
-            btn.disabled = false; btn.style.opacity = '1';
+            btn.disabled = false; btn.style.opacity = '1'; 
             btn.innerText = 'Run Tool';
             document.getElementById(urlInputId).value = ''; term.scrollTop = term.scrollHeight;
         }
@@ -607,10 +607,10 @@ function xcomix_scraper_page_html() {
         async function startDeepScrape(e) {
             e.preventDefault();
             const btn = document.getElementById('deep-scrape-btn'); const term = document.getElementById('deep-terminal');
-
+            
             let rawUrl = document.getElementById('deep_url').value;
             let baseUrl = rawUrl.replace(/\/page\/[0-9]+/, '').replace(/\/$/, '');
-
+            
             const startPage = parseInt(document.getElementById('deep_start').value);
             const endPage = parseInt(document.getElementById('deep_end').value);
             const delay = parseInt(document.getElementById('deep_delay').value);
@@ -622,32 +622,32 @@ function xcomix_scraper_page_html() {
                 let pageUrl = p === 1 ? baseUrl : `${baseUrl}/page/${p}`;
                 term.innerHTML += `<div style="color:#fff; margin-top:20px; padding-top:10px; border-top:1px dashed #444;">> <strong>[PAGE ${p} OF ${endPage}]</strong> Fetching Catalog: <a href="${pageUrl}" target="_blank" style="color:#3b82f6;">${pageUrl}</a></div>`;
                 term.scrollTop = term.scrollHeight;
-
+                
                 try {
                     let fd = new FormData(); fd.append('action', 'xcomix_fetch_category'); fd.append('cat_url', pageUrl);
                     let res = await fetch(ajaxurl, { method: 'POST', body: fd }); let data = await res.json();
-
+                    
                     if (data.success && data.data.links && data.data.links.length > 0) {
                         term.innerHTML += `<div style="color:#3b82f6;">> Found ${data.data.links.length} strict manga entries.</div>`;
                         term.scrollTop = term.scrollHeight;
-
+                        
                         for (let i = 0; i < data.data.links.length; i++) {
                             let mangaUrl = data.data.links[i];
                             term.innerHTML += `<div style="color:#888;">> Extracting [${i+1}/${data.data.links.length}]: ${mangaUrl}</div>`;
                             term.scrollTop = term.scrollHeight;
-
+                            
                             let mFd = new FormData(); mFd.append('action', 'xcomix_process_single'); mFd.append('manga_url', mangaUrl); mFd.append('action_type', 'standard');
                             let mRes = await fetch(ajaxurl, { method: 'POST', body: mFd }); let mData = await mRes.json();
-
-                            if (mData.success) { term.innerHTML += `<div style="color:#22c55e;">${mData.data.log}</div>`; }
+                            
+                            if (mData.success) { term.innerHTML += `<div style="color:#22c55e;">${mData.data.log}</div>`; } 
                             else { term.innerHTML += `<div style="color:#ef4444;">> ❌ Error processing manga.</div>`; }
                             term.scrollTop = term.scrollHeight;
-
+                            
                             await new Promise(r => setTimeout(r, delay));
                         }
                     } else {
                         let errMsg = data.data && data.data.error ? data.data.error : `Reached end of category.`;
-                        term.innerHTML += `<div style="color:#ef4444;">> [STOP] ${errMsg}</div>`; break;
+                        term.innerHTML += `<div style="color:#ef4444;">> [STOP] ${errMsg}</div>`; break; 
                     }
                 } catch(err) { term.innerHTML += `<div style="color:#ef4444;">> [FATAL] Error on page ${p}.</div>`; }
 

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Top from "./Top";
 import Trending from "./Trending";
 import Popular from "./Popular";
-import Latest from "./Latest";
+import Latest from "./Latest"; 
 
 const AnimeSelector = () => {
   const [selectedTab, setSelectedTab] = useState("top");
@@ -18,7 +18,7 @@ const AnimeSelector = () => {
       case "popular":
         return <Popular />;
       case "latest":
-        return <Latest />;
+        return <Latest />;  
       default:
         return <Top />;
     }

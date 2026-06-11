@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { fetchAnimeData } from '../actions/aniListFetch';
+import { fetchAnimeData } from '../actions/aniListFetch'; 
 
 export default function CharacterVoiceStaff({ animeId }) {
   const defaultId = 16498;
