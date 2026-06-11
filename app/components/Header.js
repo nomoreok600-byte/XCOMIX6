@@ -299,6 +299,9 @@ export default function Header() {
           <NavbarItem>
             <Link href="/search" className="text-white">Search</Link>
           </NavbarItem>
+          <NavbarItem>
+            <Link href="/manga" className="text-white">Manga</Link>
+          </NavbarItem>
         </NavbarContent>
         <NavbarContent justify="end">
           <NavbarItem>

@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 import Header from "../Header";
 import Footer from "../Footer";
 import FloatingIcon from "../FloatingIcon";
 import PageTransition from "../page_transition";
 
 export default function ClientLayoutWrapper({ children }) {
+  const pathname = usePathname();
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const isHeadlessReader = pathname?.startsWith("/read/");
 
   useEffect(() => {
     const hasDismissed = localStorage.getItem("installDismissed");
@@ -50,12 +53,12 @@ export default function ClientLayoutWrapper({ children }) {
 
   return (
     <>
-      <Header />
-      <PageTransition>{children}</PageTransition>
-      <FloatingIcon />
-      <Footer />
+      {!isHeadlessReader && <Header />}
+      {isHeadlessReader ? children : <PageTransition>{children}</PageTransition>}
+      {!isHeadlessReader && <FloatingIcon />}
+      {!isHeadlessReader && <Footer />}
 
-      <AnimatePresence>
+      {!isHeadlessReader && <AnimatePresence>
         {showInstallBanner && (
           <motion.div
             className="fixed bottom-0 left-0 right-0 bg-black text-white py-3 px-4 flex justify-between items-center z-50"
@@ -81,7 +84,7 @@ export default function ClientLayoutWrapper({ children }) {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>}
     </>
   );
 }
