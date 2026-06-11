@@ -27,7 +27,7 @@ async function fetchJson(path, { revalidate = DEFAULT_REVALIDATE_SECONDS } = {})
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "AniTeams-Headless-Frontend/1.0",
+        "User-Agent": "Manga-Headless-Frontend/1.0",
       },
       next: { revalidate },
     });

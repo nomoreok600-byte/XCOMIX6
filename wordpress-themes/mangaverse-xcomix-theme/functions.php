@@ -15,6 +15,7 @@ define('MV_DIR', get_template_directory());
 define('MV_URI', get_template_directory_uri());
 
 require_once MV_DIR . '/inc/xcomix-integration.php';
+require_once MV_DIR . '/inc/headless-api.php';
 require_once MV_DIR . '/scraper.php';
 
 // ============================================================================

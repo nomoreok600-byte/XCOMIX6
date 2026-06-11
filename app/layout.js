@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "AniTeams",
-  description: "Watch anime for free",
+  title: "Manga Headless",
+  description: "Fast headless manga reader powered by WordPress",
   themeColor: "#000000",
   manifest: "/manifest.json",
   icons: {
@@ -25,7 +25,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "AniTeams",
+    title: "Manga Headless",
   },
 };
 
