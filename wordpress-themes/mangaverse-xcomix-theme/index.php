@@ -5,7 +5,7 @@
 <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
     <!-- Background -->
     <div class="absolute inset-0 z-0">
-        <img src="<?php echo esc_url(get_option('mv_hero_bg', 'https://images.unsplash.com/photo-1541562232579-512a21360020?auto=format&fit=crop&w=2000&q=80')); ?>" 
+        <img src="<?php echo esc_url(get_option('mv_hero_bg', 'https://images.unsplash.com/photo-1541562232579-512a21360020?auto=format&fit=crop&w=2000&q=80')); ?>"
              alt="" class="w-full h-full object-cover opacity-30" fetchpriority="high">
         <div class="absolute inset-0 bg-gradient-to-b from-[#0f0f13]/60 via-[#0f0f13]/80 to-[#0f0f13]"></div>
         <div class="absolute inset-0 bg-gradient-to-r from-[#0f0f13] via-transparent to-[#0f0f13]"></div>
@@ -98,15 +98,15 @@
         </div>
         <div class="swiper featuredSwiper !overflow-visible">
             <div class="swiper-wrapper">
-                <?php foreach ($featured_mangas as $manga): 
+                <?php foreach ($featured_mangas as $manga):
                     $genres = wp_get_post_terms($manga->ID, 'genre', ['fields' => 'names']);
                     $score = get_post_meta($manga->ID, '_mv_score', true) ?: 'N/A';
                 ?>
                 <div class="swiper-slide !w-[200px] lg:!w-[220px]">
                     <a href="<?php echo esc_url(get_permalink($manga->ID)); ?>" class="group block card-hover">
                         <div class="relative rounded-xl overflow-hidden bg-[#1a1a22] aspect-[2/3] mb-3">
-                            <img src="<?php echo mv_get_cover($manga->ID, 'medium'); ?>" 
-                                 alt="<?php echo esc_attr($manga->post_title); ?>" 
+                            <img src="<?php echo mv_get_cover($manga->ID, 'medium'); ?>"
+                                 alt="<?php echo esc_attr($manga->post_title); ?>"
                                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                  loading="lazy">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -147,27 +147,27 @@
                 <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-4">
                     <?php
                     $recent = get_posts([
-                        'post_type' => 'manga', 
+                        'post_type' => 'manga',
                         'posts_per_page' => get_option('mv_recent_count', 12),
-                        'orderby' => 'date', 
+                        'orderby' => 'date',
                         'order' => 'DESC'
                     ]);
                     foreach ($recent as $manga):
                         $genres = wp_get_post_terms($manga->ID, 'genre', ['fields' => 'names']);
                         $score = get_post_meta($manga->ID, '_mv_score', true) ?: 'N/A';
                         $last_ch = get_posts([
-                            'post_type' => 'chapter', 
+                            'post_type' => 'chapter',
                             'post_parent' => $manga->ID,
-                            'posts_per_page' => 1, 
-                            'orderby' => 'date', 
+                            'posts_per_page' => 1,
+                            'orderby' => 'date',
                             'order' => 'DESC'
                         ]);
                         $chap_num = $last_ch ? mvx_chapter_number($last_ch[0]->ID) : '';
                     ?>
                     <a href="<?php echo esc_url(get_permalink($manga->ID)); ?>" class="group block card-hover">
                         <div class="relative rounded-xl overflow-hidden bg-[#1a1a22] aspect-[2/3] mb-2">
-                            <img src="<?php echo mv_get_cover($manga->ID, 'medium'); ?>" 
-                                 alt="<?php echo esc_attr($manga->post_title); ?>" 
+                            <img src="<?php echo mv_get_cover($manga->ID, 'medium'); ?>"
+                                 alt="<?php echo esc_attr($manga->post_title); ?>"
                                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                  loading="lazy">
                             <div class="absolute top-2 right-2 bg-mv-accent/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -200,11 +200,11 @@
                         if ($period === 'day') $date_query = ['after' => '1 day ago'];
                         elseif ($period === 'week') $date_query = ['after' => '7 days ago'];
                         elseif ($period === 'month') $date_query = ['after' => '30 days ago'];
-                        
+
                         $popular = get_posts([
-                            'post_type' => 'chapter', 
+                            'post_type' => 'chapter',
                             'posts_per_page' => 8,
-                            'orderby' => 'comment_count', 
+                            'orderby' => 'comment_count',
                             'order' => 'DESC',
                             'date_query' => $date_query ?: null,
                         ]);
@@ -214,7 +214,7 @@
                             $ch_num = mvx_chapter_number($ch->ID);
                         ?>
                         <a href="<?php echo esc_url(get_permalink($ch->ID)); ?>" class="flex items-center gap-3 group hover:bg-white/[0.03] -mx-2 px-2 py-2 rounded-lg transition">
-                            <img src="<?php echo $manga ? mv_get_cover($manga->ID, 'mv_cover_small') : ''; ?>" 
+                            <img src="<?php echo $manga ? mv_get_cover($manga->ID, 'mv_cover_small') : ''; ?>"
                                  class="w-10 h-14 rounded-md object-cover shrink-0" loading="lazy">
                             <div class="min-w-0 flex-1">
                                 <p class="text-[13px] font-semibold truncate group-hover:text-mv-accent transition">

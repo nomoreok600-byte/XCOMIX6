@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Aniwatch from "./aniwatch/aniwatch"; 
+import Aniwatch from "./aniwatch/aniwatch";
 import AnimePahe from "./animepahe";
 
 const providers = ["Aniwatch" , "AnimePahe", ]
@@ -9,7 +9,7 @@ export default function List({ id }) {
 
   return (
     <div className="w-full">
-   
+
       <div className="flex space-x-6 px-4 border-b border-zinc-700 relative">
         {providers.map((provider) => (
           <button
@@ -29,7 +29,7 @@ export default function List({ id }) {
         ))}
       </div>
 
-     
+
       <div className="mt-4">
         {active === "Aniwatch" && <Aniwatch anilistId={id} />}
         { active === "AnimePahe" && <AnimePahe anilistId={id} />}

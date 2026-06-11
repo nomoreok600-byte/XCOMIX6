@@ -1,4 +1,4 @@
-<?php 
+<?php
 /* Template Name: Public Profile */
 $user_login = sanitize_text_field(get_query_var('author_name') ?? $_GET['username'] ?? '');
 if (!$user_login) { wp_redirect(home_url()); exit; }
@@ -37,7 +37,7 @@ $is_self = ($user->ID === get_current_user_id());
                         </span>
                     </div>
                     <p class="text-sm text-gray-400 mb-1">@<?php echo esc_html($user->user_login); ?> &middot; Level <?php echo $lvl['level']; ?> &middot; Joined <?php echo date('M Y', strtotime($user->user_registered)); ?></p>
-                    
+
                     <div class="w-full max-w-xs mb-4">
                         <div class="flex justify-between text-[10px] text-gray-500 mb-1">
                             <span>XP Progress</span>

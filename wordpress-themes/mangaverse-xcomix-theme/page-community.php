@@ -1,4 +1,4 @@
-<?php 
+<?php
 /* Template Name: Community */
 get_header();
 
@@ -46,7 +46,7 @@ $online_threshold = time() - 300; // 5 minutes
 
                     <!-- Messages -->
                     <div id="chatMessages" class="h-[500px] overflow-y-auto chat-scroll px-4 py-3 flex flex-col-reverse gap-1">
-                        <?php if ($comments): 
+                        <?php if ($comments):
                             foreach ($comments as $c) echo mv_render_chat_message($c);
                         else: ?>
                         <div id="emptyChat" class="flex-1 flex flex-col items-center justify-center text-gray-500">
@@ -89,7 +89,7 @@ $online_threshold = time() - 300; // 5 minutes
                         Top Readers
                     </h3>
                     <div class="space-y-2.5">
-                        <?php foreach (array_slice($leaderboard, 0, 5) as $i => $u): 
+                        <?php foreach (array_slice($leaderboard, 0, 5) as $i => $u):
                             $rank_colors = ['text-yellow-400', 'text-gray-300', 'text-amber-600', 'text-gray-500', 'text-gray-500'];
                         ?>
                         <div class="flex items-center gap-3">
@@ -113,7 +113,7 @@ $online_threshold = time() - 300; // 5 minutes
                         Members
                     </h3>
                     <div class="flex flex-wrap gap-2">
-                        <?php $all_users = get_users(['number' => 30]); 
+                        <?php $all_users = get_users(['number' => 30]);
                         foreach ($all_users as $u): ?>
                         <a href="<?php echo esc_url(home_url('/user/' . $u->user_login)); ?>" title="<?php echo esc_attr($u->display_name); ?>">
                             <img src="<?php echo get_avatar_url($u->ID); ?>" class="w-8 h-8 rounded-full object-cover border border-[#2a2a35] hover:border-mv-accent transition">

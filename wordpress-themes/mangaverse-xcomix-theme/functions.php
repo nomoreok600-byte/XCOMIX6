@@ -28,13 +28,13 @@ function mv_theme_setup() {
     add_theme_support('custom-logo');
     add_theme_support('automatic-feed-links');
     add_theme_support('responsive-embeds');
-    
+
     // Disable Gutenberg for manga CPTs
     add_filter('use_block_editor_for_post_type', function($use, $type) {
         if (in_array($type, ['manga', 'chapter'])) return false;
         return $use;
     }, 10, 2);
-    
+
     // Image sizes
     add_image_size('mv_cover_small', 150, 225, true);
     add_image_size('mv_cover_medium', 300, 450, true);
@@ -49,17 +49,17 @@ add_action('wp_enqueue_scripts', 'mv_enqueue_assets');
 function mv_enqueue_assets() {
     // Google Fonts
     wp_enqueue_style('mv-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap', [], null);
-    
+
     // Tailwind CSS via CDN
     wp_enqueue_script('mv-tailwind', 'https://cdn.tailwindcss.com', [], null);
-    
+
     // Swiper for sliders
     wp_enqueue_style('mv-swiper-css', 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css', [], '11');
     wp_enqueue_script('mv-swiper', 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js', [], '11', true);
-    
+
     // Main theme script
     wp_enqueue_script('mv-main', MV_URI . '/assets/js/main.js', ['jquery'], MV_VERSION, true);
-    
+
     // Localize script for AJAX
     wp_localize_script('mv-main', 'mvData', [
         'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -90,7 +90,7 @@ function mv_register_cpts() {
         'rewrite' => ['slug' => 'manga', 'with_front' => false],
         'show_in_rest' => true,
     ]);
-    
+
     // Chapter CPT
     register_post_type('chapter', [
         'labels' => [
@@ -121,7 +121,7 @@ function mv_register_taxonomies() {
         'query_var' => true, 'show_in_rest' => true,
         'rewrite' => ['slug' => 'genre'],
     ]);
-    
+
     // Type (Manga/Manhwa/Manhua)
     register_taxonomy('manga_type', ['manga'], [
         'labels' => [
@@ -131,7 +131,7 @@ function mv_register_taxonomies() {
         'query_var' => true, 'show_in_rest' => true,
         'rewrite' => ['slug' => 'type'],
     ]);
-    
+
     // Status
     register_taxonomy('manga_status', ['manga'], [
         'labels' => [
@@ -181,7 +181,7 @@ function mv_chapter_meta_box($post) {
     $manga_id = get_post_meta($post->ID, '_mv_parent_manga', true);
     $chap_num = get_post_meta($post->ID, '_mv_chapter_number', true);
     $source_url = get_post_meta($post->ID, '_mv_source_url', true);
-    
+
     // Parent manga dropdown
     $mangas = get_posts(['post_type' => 'manga', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC']);
     echo '<p><label><strong>Parent Manga:</strong></label><br>';
@@ -192,10 +192,10 @@ function mv_chapter_meta_box($post) {
         echo '<option value="' . $m->ID . '" ' . $selected . '>' . esc_html($m->post_title) . '</option>';
     }
     echo '</select></p>';
-    
+
     echo '<p><label><strong>Chapter Number:</strong></label><br>';
     echo '<input type="number" step="0.1" name="_mv_chapter_number" value="' . esc_attr($chap_num) . '" style="width:100%;padding:6px;background:#1a1a22;border:1px solid #333;color:#fff;border-radius:4px;" /></p>';
-    
+
     echo '<p><label><strong>Source URL:</strong></label><br>';
     echo '<input type="url" name="_mv_source_url" value="' . esc_attr($source_url) . '" style="width:100%;padding:6px;background:#1a1a22;border:1px solid #333;color:#fff;border-radius:4px;" /></p>';
 }
@@ -205,17 +205,17 @@ function mv_save_meta_boxes($post_id) {
     if (!isset($_POST['mv_meta_nonce']) || !wp_verify_nonce($_POST['mv_meta_nonce'], 'mv_meta_box')) return;
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
-    
+
     $fields = ['_mv_author', '_mv_artist', '_mv_alt_title', '_mv_release_year', '_mv_score', '_mv_cover_url', '_mv_parent_manga', '_mv_chapter_number', '_mv_source_url'];
     foreach ($fields as $field) {
         if (isset($_POST[$field])) {
             update_post_meta($post_id, $field, sanitize_text_field($_POST[$field]));
         }
     }
-    
+
     // Checkbox
     update_post_meta($post_id, '_mv_is_18_plus', isset($_POST['_mv_is_18_plus']) ? '1' : '0');
-    
+
     // Auto-set chapter parent
     if (get_post_type($post_id) === 'chapter') {
         $parent_manga = get_post_meta($post_id, '_mv_parent_manga', true);
@@ -236,10 +236,10 @@ if (!function_exists('mv_get_cover')) {
         if (!empty($cover_url)) {
             return function_exists('mvx_proxy_image_url') ? mvx_proxy_image_url($cover_url, 'katana') : esc_url($cover_url);
         }
-        
+
         $thumb = get_the_post_thumbnail_url($post_id, $size);
         if (!empty($thumb)) return esc_url($thumb);
-        
+
         return MV_URI . '/assets/img/placeholder-cover.jpg';
     }
 }
@@ -254,7 +254,7 @@ function mv_ajax_toggle_bookmark() {
     $user_id = get_current_user_id();
     $manga_id = intval($_POST['manga_id']);
     if (!$user_id || !$manga_id) wp_send_json_error('Invalid data');
-    
+
     $bookmarks = get_user_meta($user_id, '_mv_bookmarks', true) ?: [];
     if (in_array($manga_id, $bookmarks)) {
         $bookmarks = array_diff($bookmarks, [$manga_id]);
@@ -278,7 +278,7 @@ function mv_ajax_log_history() {
     $chapter_id = intval($_POST['chapter_id']);
     $chapter_num = sanitize_text_field($_POST['chapter_num']);
     if (!$user_id || !$manga_id) wp_send_json_error('Invalid data');
-    
+
     $history = get_user_meta($user_id, '_mv_history', true) ?: [];
     $entry = [
         'id' => $manga_id,
@@ -319,7 +319,7 @@ function mv_ajax_update_reading_plan() {
     $manga_id = intval($_POST['manga_id']);
     $status = sanitize_text_field($_POST['status']);
     if (!$user_id || !$manga_id) wp_send_json_error('Invalid');
-    
+
     $plans = get_user_meta($user_id, '_mv_reading_plans', true) ?: [];
     $plans[$manga_id] = $status;
     update_user_meta($user_id, '_mv_reading_plans', $plans);
@@ -337,7 +337,7 @@ function mv_ajax_send_chat() {
     $content = sanitize_textarea_field($_POST['content']);
     $parent = intval($_POST['parent'] ?? 0);
     if (!$post_id || empty($content)) wp_send_json_error('Invalid');
-    
+
     $comment_id = wp_insert_comment([
         'comment_post_ID' => $post_id,
         'comment_author' => $user->display_name,
@@ -347,7 +347,7 @@ function mv_ajax_send_chat() {
         'user_id' => $user->ID,
         'comment_approved' => 1,
     ]);
-    
+
     // Award XP for chatting
     mv_add_user_xp($user->ID, 2);
     wp_send_json_success(['id' => $comment_id]);
@@ -357,7 +357,7 @@ add_action('wp_ajax_mv_get_chats', 'mv_ajax_get_chats');
 function mv_ajax_get_chats() {
     $post_id = intval($_POST['post_id']);
     if (!$post_id) wp_send_json_error('Invalid');
-    
+
     $comments = get_comments(['post_id' => $post_id, 'status' => 'approve', 'number' => 50, 'orderby' => 'comment_date', 'order' => 'DESC']);
     $html = '';
     foreach ($comments as $c) $html .= mv_render_chat_message($c);
@@ -392,7 +392,7 @@ function mv_ajax_send_message() {
     $recipient_id = intval($_POST['recipient_id']);
     $content = sanitize_textarea_field($_POST['content']);
     if (!$sender_id || !$recipient_id || empty($content)) wp_send_json_error('Invalid');
-    
+
     global $wpdb;
     $wpdb->insert($wpdb->prefix . 'mv_messages', [
         'sender_id' => $sender_id,
@@ -409,21 +409,21 @@ function mv_ajax_get_messages() {
     check_ajax_referer('mv_nonce', 'nonce');
     $user_id = get_current_user_id();
     $other_id = intval($_POST['user_id']);
-    
+
     global $wpdb;
     $messages = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}mv_messages 
+        "SELECT * FROM {$wpdb->prefix}mv_messages
         WHERE (sender_id = %d AND recipient_id = %d) OR (sender_id = %d AND recipient_id = %d)
         ORDER BY created_at DESC LIMIT 50",
         $user_id, $other_id, $other_id, $user_id
     ));
-    
+
     // Mark as read
     $wpdb->query($wpdb->prepare(
         "UPDATE {$wpdb->prefix}mv_messages SET is_read = 1 WHERE recipient_id = %d AND sender_id = %d",
         $user_id, $other_id
     ));
-    
+
     wp_send_json_success(array_reverse($messages));
 }
 
@@ -431,19 +431,19 @@ add_action('wp_ajax_mv_get_conversations', 'mv_ajax_get_conversations');
 function mv_ajax_get_conversations() {
     check_ajax_referer('mv_nonce', 'nonce');
     $user_id = get_current_user_id();
-    
+
     global $wpdb;
     $conversations = $wpdb->get_results($wpdb->prepare(
-        "SELECT 
+        "SELECT
             CASE WHEN sender_id = %d THEN recipient_id ELSE sender_id END as other_id,
             MAX(created_at) as last_message_time,
-            (SELECT content FROM {$wpdb->prefix}mv_messages m2 
-             WHERE ((m2.sender_id = m1.sender_id AND m2.recipient_id = m1.recipient_id) 
+            (SELECT content FROM {$wpdb->prefix}mv_messages m2
+             WHERE ((m2.sender_id = m1.sender_id AND m2.recipient_id = m1.recipient_id)
              OR (m2.sender_id = m1.recipient_id AND m2.recipient_id = m1.sender_id))
              ORDER BY m2.created_at DESC LIMIT 1) as last_message,
-            (SELECT COUNT(*) FROM {$wpdb->prefix}mv_messages m3 
-             WHERE m3.recipient_id = %d AND m3.sender_id = 
-             CASE WHEN m1.sender_id = %d THEN m1.recipient_id ELSE m1.sender_id END 
+            (SELECT COUNT(*) FROM {$wpdb->prefix}mv_messages m3
+             WHERE m3.recipient_id = %d AND m3.sender_id =
+             CASE WHEN m1.sender_id = %d THEN m1.recipient_id ELSE m1.sender_id END
              AND m3.is_read = 0) as unread_count
         FROM {$wpdb->prefix}mv_messages m1
         WHERE sender_id = %d OR recipient_id = %d
@@ -485,16 +485,16 @@ function mv_ajax_get_conversations_with_data() {
     $user_id = get_current_user_id();
     global $wpdb;
     $conversations = $wpdb->get_results($wpdb->prepare(
-        "SELECT 
+        "SELECT
             CASE WHEN sender_id = %d THEN recipient_id ELSE sender_id END as other_id,
             MAX(created_at) as last_message_time,
-            (SELECT content FROM {$wpdb->prefix}mv_messages m2 
-             WHERE ((m2.sender_id = m1.sender_id AND m2.recipient_id = m1.recipient_id) 
+            (SELECT content FROM {$wpdb->prefix}mv_messages m2
+             WHERE ((m2.sender_id = m1.sender_id AND m2.recipient_id = m1.recipient_id)
              OR (m2.sender_id = m1.recipient_id AND m2.recipient_id = m1.sender_id))
              ORDER BY m2.created_at DESC LIMIT 1) as last_message,
-            (SELECT COUNT(*) FROM {$wpdb->prefix}mv_messages m3 
-             WHERE m3.recipient_id = %d AND m3.sender_id = 
-             CASE WHEN m1.sender_id = %d THEN m1.recipient_id ELSE m1.sender_id END 
+            (SELECT COUNT(*) FROM {$wpdb->prefix}mv_messages m3
+             WHERE m3.recipient_id = %d AND m3.sender_id =
+             CASE WHEN m1.sender_id = %d THEN m1.recipient_id ELSE m1.sender_id END
              AND m3.is_read = 0) as unread_count
         FROM {$wpdb->prefix}mv_messages m1
         WHERE sender_id = %d OR recipient_id = %d
@@ -502,7 +502,7 @@ function mv_ajax_get_conversations_with_data() {
         ORDER BY last_message_time DESC",
         $user_id, $user_id, $user_id, $user_id, $user_id
     ));
-    
+
     $result = [];
     foreach ($conversations as $conv) {
         $user = get_userdata($conv->other_id);
@@ -527,7 +527,7 @@ add_action('after_switch_theme', 'mv_create_tables');
 function mv_create_tables() {
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
-    
+
     $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}mv_messages (
         id bigint(20) NOT NULL AUTO_INCREMENT,
         sender_id bigint(20) NOT NULL,
@@ -539,10 +539,10 @@ function mv_create_tables() {
         KEY sender_id (sender_id),
         KEY recipient_id (recipient_id)
     ) $charset_collate;";
-    
+
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
-    
+
     // Store db version
     update_option('mv_db_version', '2.0.0');
 }
@@ -558,16 +558,16 @@ if (!function_exists('mv_render_chat_message')) {
         $badge = '';
         if ($role === 'administrator') $badge = '<span class="text-[9px] bg-[#e8783a]/20 text-[#e8783a] px-1.5 py-0.5 rounded ml-1">Admin</span>';
         elseif ($role === 'author' || $role === 'editor') $badge = '<span class="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded ml-1">Mod</span>';
-        
+
         $avatar = get_avatar_url($chat->user_id) ?: MV_URI . '/assets/img/default-avatar.png';
         $likes = intval(get_comment_meta($chat->comment_ID, '_mv_likes', true));
         $time = human_time_diff(strtotime($chat->comment_date), current_time('timestamp')) . ' ago';
-        
+
         $content = esc_html($chat->comment_content);
         $content = make_clickable($content);
         $content = preg_replace('/\*\*(.*?)\*\*/is', '<strong class="text-white">$1</strong>', $content);
         $content = preg_replace('/\|\|(.*?)⁠\|\|/is', '<span class="spoiler-block" onclick="this.style.color=\'#fff\';this.style.background=\'transparent\'">$1</span>', $content);
-        
+
         ob_start();
         ?>
         <div class="flex gap-3 group hover:bg-[#16161e] -mx-3 px-3 py-2.5 rounded-lg transition" id="chat-<?php echo $chat->comment_ID; ?>">
@@ -602,7 +602,7 @@ function mv_add_user_xp($user_id, $amount) {
     $xp = intval(get_user_meta($user_id, '_mv_xp', true));
     $xp += $amount;
     update_user_meta($user_id, '_mv_xp', $xp);
-    
+
     // Check level up
     $new_level = floor(sqrt($xp / 10)) + 1;
     $old_level = intval(get_user_meta($user_id, '_mv_level', true)) ?: 1;
@@ -617,7 +617,7 @@ function mv_get_user_level_data($user_id) {
     $xp_for_level = 10 * pow($level, 2);
     $xp_for_prev = 10 * pow($level - 1, 2);
     $progress = min(100, max(0, (($xp - $xp_for_prev) / max(1, $xp_for_level - $xp_for_prev)) * 100));
-    
+
     $ranks = [
         1 => ['Novice Reader', 'from-gray-400 to-gray-600'],
         10 => ['Adept Scroller', 'from-blue-400 to-blue-600'],
@@ -630,7 +630,7 @@ function mv_get_user_level_data($user_id) {
     foreach ($ranks as $lvl => $data) {
         if ($level >= $lvl) { $rank_name = $data[0]; $rank_color = $data[1]; }
     }
-    
+
     return compact('xp', 'level', 'progress', 'rank_name', 'rank_color', 'xp_for_level');
 }
 
@@ -638,7 +638,7 @@ function mv_get_leaderboard($limit = 20, $period = 'all') {
     global $wpdb;
     $where = '';
     if ($period === 'week') $where = "AND um.meta_key = '_mv_xp' AND u.user_registered > DATE_SUB(NOW(), INTERVAL 7 DAY)";
-    
+
     return $wpdb->get_results($wpdb->prepare(
         "SELECT u.ID, u.display_name, u.user_login,
             MAX(CASE WHEN um.meta_key = '_mv_xp' THEN um.meta_value END) as xp,
@@ -670,7 +670,7 @@ function mv_get_user_stats($user_id) {
     ));
     $comment_count = get_comments(['user_id' => $user_id, 'count' => true]);
     $days = max(1, floor((time() - strtotime(get_userdata($user_id)->user_registered)) / 86400));
-    
+
     return [
         'chapters_read' => count($history),
         'bookmarks' => count($bookmarks),
@@ -721,14 +721,14 @@ add_filter('query_vars', function($vars) { $vars[] = 'mv_sitemap'; return $vars;
 add_action('template_redirect', 'mv_output_sitemap');
 function mv_output_sitemap() {
     if (!get_query_var('mv_sitemap')) return;
-    
+
     header('Content-Type: text/xml; charset=UTF-8');
     header('X-Robots-Tag: noindex, follow');
-    
+
     $cache_key = 'mv_sitemap_xml';
     $cached = get_transient($cache_key);
     if ($cached) { echo $cached; exit; }
-    
+
     ob_start();
     echo '<?xml version="1.0" encoding="UTF-8"?>';
     ?>
@@ -783,7 +783,7 @@ function mv_structured_data() {
     $genres = wp_get_post_terms($manga_id, 'genre', ['fields' => 'names']);
     $author = function_exists('mvx_manga_meta') ? mvx_manga_meta($manga_id, 'author', 'Unknown') : (get_post_meta($manga_id, '_mv_author', true) ?: 'Unknown');
     $chapters = function_exists('mvx_get_chapters') ? mvx_get_chapters($manga_id) : get_posts(['post_type' => 'chapter', 'post_parent' => $manga_id, 'posts_per_page' => -1]);
-    
+
     $schema = [
         '@context' => 'https://schema.org',
         '@type' => 'ComicSeries',
@@ -805,7 +805,7 @@ add_action('wp_head', 'mv_seo_meta_tags');
 function mv_seo_meta_tags() {
     $desc = '';
     $og_image = '';
-    
+
     if (is_singular('manga')) {
         $desc = wp_trim_words(get_the_content(), 30);
         $og_image = mv_get_cover(get_the_ID(), 'large');
@@ -816,7 +816,7 @@ function mv_seo_meta_tags() {
     } elseif (is_home() || is_front_page()) {
         $desc = get_bloginfo('description');
     }
-    
+
     if ($desc) echo '<meta name="description" content="' . esc_attr($desc) . '">' . "\n";
     if ($og_image) {
         echo '<meta property="og:image" content="' . esc_url($og_image) . '">' . "\n";
@@ -1054,7 +1054,7 @@ function mv_get_notifications($user_id, $limit = 10) {
         get_user_meta($user_id, '_xcomix_bookmarks', true) ?: []
     ));
     if (empty($bookmarks)) return [];
-    
+
     $recent = get_posts([
         'post_type' => 'chapter',
         'posts_per_page' => $limit,
@@ -1062,7 +1062,7 @@ function mv_get_notifications($user_id, $limit = 10) {
         'order' => 'DESC',
         'post_parent__in' => array_map('intval', $bookmarks),
     ]);
-    
+
     $notifications = [];
     foreach ($recent as $ch) {
         $manga_id = function_exists('mvx_parent_manga_id') ? mvx_parent_manga_id($ch->ID) : get_post_meta($ch->ID, '_mv_parent_manga', true);

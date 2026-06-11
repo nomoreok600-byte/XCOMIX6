@@ -1,4 +1,4 @@
-<?php 
+<?php
 /* Template Name: Messages */
 if (!is_user_logged_in()) { wp_redirect(home_url('/auth')); exit; }
 get_header();

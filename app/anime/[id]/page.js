@@ -266,11 +266,11 @@ const AnimeContent = ({ anime, id, handleSelectList, selectedList, submitting, d
             ></iframe>
           </div>
         )}
-         
+
 <div className="mt-6">
   <RelatedAndRecommendations animeId={id} />
 </div>
-         
+
       </div>
     </>
   )

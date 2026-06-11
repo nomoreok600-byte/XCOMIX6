@@ -1,4 +1,4 @@
-<?php 
+<?php
 /* Template Name: Leaderboard */
 get_header();
 
@@ -24,7 +24,7 @@ $rank_styles = [
 
         <!-- Period Filter -->
         <div class="flex items-center gap-2 mb-6">
-            <?php foreach (['all' => 'All Time', 'week' => 'This Week'] as $k => $v): 
+            <?php foreach (['all' => 'All Time', 'week' => 'This Week'] as $k => $v):
                 $active = ($period === $k) ? 'bg-mv-accent text-white' : 'bg-[#1a1a22] text-gray-400 hover:text-white border border-[#2a2a35]';
             ?>
             <a href="?period=<?php echo $k; ?>" class="px-4 py-2 rounded-full text-sm font-semibold transition <?php echo $active; ?>"><?php echo $v; ?></a>
@@ -33,7 +33,7 @@ $rank_styles = [
 
         <?php if ($leaderboard): ?>
         <div class="space-y-2">
-            <?php foreach ($leaderboard as $i => $u): 
+            <?php foreach ($leaderboard as $i => $u):
                 $u_lvl = mv_get_user_level_data($u->ID);
                 $style = $rank_styles[$i] ?? ['border-[#2a2a35] bg-transparent', 'text-gray-500', '#'];
             ?>

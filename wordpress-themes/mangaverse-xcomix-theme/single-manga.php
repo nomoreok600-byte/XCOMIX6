@@ -16,11 +16,11 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
         while (ob_get_level()) ob_end_clean();
         $status = sanitize_text_field($_POST['plan_status']);
         $f_id = sanitize_text_field($_POST['folder_id']);
-        
+
         $plans = get_user_meta($user_id, '_xcomix_reading_plans', true) ?: [];
         $bookmarks = get_user_meta($user_id, '_xcomix_bookmarks', true) ?: [];
         $manga_folders = get_user_meta($user_id, '_xcomix_manga_folders', true) ?: [];
-        
+
         $plans[$manga_id] = $status; update_user_meta($user_id, '_xcomix_reading_plans', $plans); update_user_meta($user_id, '_mv_reading_plans', $plans);
         if (!in_array($manga_id, $bookmarks)) { $bookmarks[] = $manga_id; update_user_meta($user_id, '_xcomix_bookmarks', $bookmarks); update_user_meta($user_id, '_mv_bookmarks', $bookmarks); }
         if ($f_id === 'none') { unset($manga_folders[$manga_id]); } else { $manga_folders[$manga_id] = $f_id; }
@@ -85,21 +85,21 @@ if (!function_exists('xcomix_get_cover')) {
 }
 
 // =========================================================================
-// CHAT RENDER FUNCTION 
+// CHAT RENDER FUNCTION
 // =========================================================================
 if (!function_exists('xcomix_manga_chat_render')) {
     function xcomix_manga_chat_render($chat, $is_logged_in, $current_user) {
         $is_mine = ($is_logged_in && $chat->user_id == $current_user->ID);
         $author_name = $chat->comment_author;
         $author_avatar = get_user_meta($chat->user_id, '_xcomix_avatar', true) ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($author_name);
-        
+
         $user_obj = get_userdata($chat->user_id);
         $role_badge = ''; $name_color = 'text-gray-200';
         if ($user_obj) {
-            if (in_array('administrator', $user_obj->roles)) { $role_badge = '<span class="bg-[#ea580c]/20 text-[#ea580c] text-[8px] font-black uppercase px-1.5 py-0.5 rounded ml-1">Admin</span>'; $name_color = 'text-[#ea580c]'; } 
+            if (in_array('administrator', $user_obj->roles)) { $role_badge = '<span class="bg-[#ea580c]/20 text-[#ea580c] text-[8px] font-black uppercase px-1.5 py-0.5 rounded ml-1">Admin</span>'; $name_color = 'text-[#ea580c]'; }
             elseif (in_array('author', $user_obj->roles) || in_array('editor', $user_obj->roles)) { $role_badge = '<span class="bg-[#3b82f6]/20 text-[#3b82f6] text-[8px] font-black uppercase px-1.5 py-0.5 rounded ml-1">Uploader</span>'; $name_color = 'text-[#3b82f6]'; }
         }
-        
+
         $reply_html = '';
         if ($chat->comment_parent > 0) {
             $parent_comment = get_comment($chat->comment_parent);
@@ -116,11 +116,11 @@ if (!function_exists('xcomix_manga_chat_render')) {
         $raw_content = preg_replace('/\_(.*?)\_/is', '<em class="text-gray-300 italic">$1</em>', $raw_content);
         $raw_content = preg_replace('/\|\|(.*?)\|\|/is', '<span class="spoiler-block" title="Tap to reveal">$1</span>', $raw_content);
         $raw_content = preg_replace('/(https?:\/\/[^\s"\'<>]+?\.(?:jpg|jpeg|png|gif|webp))/i', '|||IMG|||$1|||', $raw_content);
-        $raw_content = make_clickable($raw_content); 
+        $raw_content = make_clickable($raw_content);
         $raw_content = str_replace('<a href=', '<a class="text-[#3b82f6] hover:underline break-all" target="_blank" href=', $raw_content);
         $raw_content = preg_replace('/\|\|\|IMG\|\|\|(.*?)\|\|\|/i', '<br><img src="$1" onclick="openLightbox(\'$1\')" class="max-w-full md:max-w-[250px] max-h-[200px] w-auto h-auto rounded-xl mt-2 mb-1 border border-[#333] shadow-md hover:opacity-80 transition object-contain cursor-pointer">', $raw_content);
         $raw_content = nl2br($raw_content);
-        
+
         $likes = (int) get_comment_meta($chat->comment_ID, '_chat_likes', true);
         $exact_time = date('M j, Y g:i A', strtotime($chat->comment_date));
         ?>
@@ -160,7 +160,7 @@ if (!function_exists('xcomix_manga_chat_render')) {
     }
 }
 
-get_header(); 
+get_header();
 the_post();
 
 $manga_title = get_the_title();
@@ -206,7 +206,7 @@ if ($is_logged_in) {
     if (isset($raw_history[$manga_id])) {
         $last_data = $raw_history[$manga_id]; $last_num = (float) $last_data['chapter_num'];
         $continue_reading_url = esc_url($last_data['url']); $continue_reading_text = 'Resume Ch. ' . $last_num;
-        $chapters_read_count = $last_num; $read_chapter_nums[] = $last_num; 
+        $chapters_read_count = $last_num; $read_chapter_nums[] = $last_num;
     }
 }
 
@@ -244,7 +244,7 @@ if ($score) {
         "@type" => "AggregateRating",
         "ratingValue" => $score,
         "bestRating" => "100",
-        "ratingCount" => "100" 
+        "ratingCount" => "100"
     ];
 }
 echo '<script type="application/ld+json">' . wp_json_encode($schema_data) . '</script>';
@@ -265,7 +265,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
 
 <!-- ADDED SAFE AREA PADDING (pt-20 md:pt-28) TO CLEAR THE FIXED HEADER -->
 <article itemscope itemtype="https://schema.org/ComicSeries" class="relative min-h-screen bg-[#09090b] font-sans text-gray-200 overflow-hidden pb-24 pt-20 md:pt-28">
-    
+
     <!-- 1. ZERO-GAP BACKGROUND BANNER -->
     <div class="absolute top-0 left-0 w-full h-[60vh] md:h-[500px] z-0 pointer-events-none opacity-40 md:opacity-30">
         <img src="<?php echo $cover; ?>" alt="Banner" class="w-full h-full object-cover blur-[30px] scale-110">
@@ -274,7 +274,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
 
     <!-- 2. MAIN MANGA INFO (Responsive Stacked/Row) -->
     <div class="relative z-10 max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start">
-        
+
         <!-- Poster / Cover Image -->
         <div class="w-[180px] sm:w-[200px] md:w-[250px] shrink-0 mt-2 md:mt-0">
             <div class="aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.8)] border border-white/10 bg-[#121212] relative group">
@@ -285,14 +285,14 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
                 </div>
             </div>
         </div>
-        
+
         <!-- Meta Information -->
         <div class="flex-1 flex flex-col w-full text-center md:text-left mt-2 md:mt-6">
-            
+
             <h1 itemprop="name" class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight mb-2 drop-shadow-md">
                 <?php echo $manga_title; ?>
             </h1>
-            
+
             <?php if ($alt_names): ?>
                 <p class="text-[#ea580c] font-medium text-[13px] md:text-[14px] mb-4 italic leading-relaxed opacity-90 line-clamp-2 md:line-clamp-none">
                     <?php echo esc_html($alt_names); ?>
@@ -305,7 +305,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
                     <span class="w-1.5 h-1.5 rounded-full <?php echo (strtolower($manga_status) == 'completed') ? 'bg-blue-500' : 'bg-[#22c55e] animate-pulse'; ?>"></span>
                     <span class="text-[11px] font-bold text-gray-300 uppercase tracking-widest"><?php echo esc_html($manga_status); ?></span>
                 </div>
-                
+
                 <div class="flex items-center bg-[#121212] border border-white/5 px-3 py-1.5 rounded-full shadow-sm">
                     <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest"><?php echo $total_chapters; ?> Chapters</span>
                 </div>
@@ -329,7 +329,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
                 <div class="bg-[#121212] border border-white/5 py-3 px-6 rounded-2xl w-full max-w-[400px] md:max-w-none md:w-auto shadow-sm">
                     <div class="text-[9px] uppercase tracking-widest text-gray-500 font-black mb-1">Author / Story</div>
                     <div itemprop="author" class="text-gray-200 font-bold text-[14px]">
-                        <?php echo esc_html($author); ?> 
+                        <?php echo esc_html($author); ?>
                         <?php if($artist && $artist !== $author) echo ' <span class="text-gray-500 font-normal px-1">|</span> ' . esc_html($artist); ?>
                     </div>
                 </div>
@@ -349,9 +349,9 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
 
             <!-- Call To Actions (Stacked cleanly on mobile) -->
             <div class="flex flex-col sm:flex-row gap-3 w-full max-w-[400px] md:max-w-[500px] mx-auto md:mx-0">
-                <?php if ($chapters->have_posts()) { 
+                <?php if ($chapters->have_posts()) {
                     $ch_array = $chapters->posts;
-                    $first_chap = end($ch_array); 
+                    $first_chap = end($ch_array);
                     $default_url = get_permalink($first_chap->ID);
                 ?>
                     <a href="<?php echo !empty($continue_reading_url) ? $continue_reading_url : $default_url; ?>" id="dynamic-resume-btn" data-default-url="<?php echo $default_url; ?>" class="flex-1 bg-[#ea580c] hover:bg-[#c2410c] text-white text-center py-4 rounded-2xl font-black text-[13px] uppercase tracking-widest transition-all shadow-md flex flex-col justify-center leading-tight">
@@ -376,10 +376,10 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
 
     <!-- 3. BODY CONTENT (Genres, Synopsis, Chapters, Chat) -->
     <div class="relative z-10 max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         <!-- Left Column -->
         <div class="lg:col-span-2 space-y-8">
-            
+
             <!-- Genres (NOW CLICKABLE LINKS) -->
             <?php if (!empty($genres)) { ?>
                 <section aria-label="Genres">
@@ -415,19 +415,19 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
                         <span>Latest</span>
                     </button>
                 </div>
-                
+
                 <div class="bg-[#121212] border border-[#222] rounded-3xl shadow-xl overflow-hidden">
                     <?php if (!$chapters->have_posts()) { ?>
                         <div class="p-8 text-center text-gray-500 font-bold uppercase tracking-widest text-[11px]">No chapters found.</div>
                     <?php } else { ?>
                         <div id="chapter-list" class="flex flex-col max-h-[500px] overflow-y-auto chat-scroll">
-                            <?php 
-                            while ($chapters->have_posts()) : $chapters->the_post(); 
+                            <?php
+                            while ($chapters->have_posts()) : $chapters->the_post();
                                 $chap_id = get_the_ID();
                                 $chap_num = (float) mvx_chapter_number($chap_id);
                                 $post_date = get_the_time('U');
-                                $is_new = (current_time('timestamp') - $post_date) < (3 * 24 * 60 * 60); 
-                                
+                                $is_new = (current_time('timestamp') - $post_date) < (3 * 24 * 60 * 60);
+
                                 $has_read_class = '';
                                 if ($is_logged_in && !empty($read_chapter_nums) && $chap_num <= max($read_chapter_nums)) {
                                     $has_read_class = 'opacity-50 struck-through';
@@ -486,7 +486,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
                         <img src="https://i.imgur.com/Z4Ond85.gif" alt="GIF" class="w-16 md:w-20 h-16 md:h-20 object-cover rounded shrink-0 snap-center cursor-pointer border border-[#333] hover:border-[#3b82f6]" onclick="selectGif(this.src)">
                     </div>
                 </div>
-                
+
                 <div id="reply-preview" class="hidden px-5 pt-3 pb-1 flex justify-between items-center text-[11px] text-gray-400 font-bold bg-[#09090b]">
                     <span>Replying to <span id="reply-username" class="text-[#3b82f6]"></span></span>
                     <button type="button" onclick="cancelReply()" class="hover:text-white bg-[#1a1a1a] px-2 py-0.5 rounded">Cancel</button>
@@ -508,7 +508,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
                     </label>
 
                     <textarea id="chat-input-box" rows="1" placeholder="Join the discussion..." class="w-full bg-transparent text-white text-[14px] py-3 pr-3 focus:outline-none resize-none no-scrollbar max-h-24 font-medium" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
-                    
+
                     <button type="submit" id="chat-submit-btn" class="m-1.5 w-10 h-10 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white flex items-center justify-center shrink-0 transition shadow-md">
                         <svg class="w-5 h-5 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                     </button>
@@ -530,8 +530,8 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
             <span class="w-1.5 h-6 bg-[#eab308] rounded-full"></span> Similar Series
         </h2>
         <div class="flex overflow-x-auto gap-5 pb-4 snap-x no-scrollbar">
-            <?php while ($related->have_posts()) : $related->the_post(); 
-                $rel_id = get_the_ID(); 
+            <?php while ($related->have_posts()) : $related->the_post();
+                $rel_id = get_the_ID();
                 $rel_type = mvx_manga_meta($rel_id, 'type', 'Manga');
                 $rel_status = mvx_manga_meta($rel_id, 'status', 'Ongoing');
                 $rel_is_18 = mvx_manga_meta($rel_id, 'is_18_plus');
@@ -540,7 +540,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
                 <div class="relative aspect-[2/3] block overflow-hidden rounded-[16px] mb-3 bg-[#121212] border border-white/5 shadow-lg">
                     <img src="<?php echo mv_get_cover($rel_id, 'medium'); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" loading="lazy" decoding="async">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-300"></div>
-                    
+
                     <div class="absolute top-2 right-2 flex flex-col gap-1.5 items-end">
                         <span class="bg-black/70 backdrop-blur-md text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest"><?php echo esc_html($rel_type); ?></span>
                         <?php if($rel_is_18) : ?>
@@ -559,7 +559,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
     <?php if ($is_logged_in) { ?>
     <div id="library-modal" class="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4 transition-opacity">
         <div class="bg-[#121212] border border-[#333] w-full max-w-[400px] rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[80vh]">
-            
+
             <div class="flex border-b border-[#222] shrink-0 bg-[#09090b]">
                 <button onclick="window.switchLibTab('plans')" id="tab-plans" class="flex-1 py-4 text-[12px] font-black uppercase tracking-widest text-white border-b-2 border-[#ea580c] transition">Status</button>
                 <button onclick="window.switchLibTab('folders')" id="tab-folders" class="flex-1 py-4 text-[12px] font-black uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition">Folders</button>
@@ -592,7 +592,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
                     </div>
                 </div>
             </div>
-            
+
             <div class="flex gap-3 p-5 border-t border-[#222] bg-[#09090b] shrink-0">
                 <button onclick="window.closeLibraryModal()" class="flex-1 py-3.5 text-gray-400 hover:text-white bg-[#1a1a1a] hover:bg-[#222] rounded-xl text-[12px] font-black uppercase tracking-widest transition border border-[#333]">Close</button>
                 <button onclick="window.saveLibrarySettings(this)" class="flex-1 py-3.5 text-white bg-gradient-to-r from-[#ea580c] to-[#f97316] hover:from-[#c2410c] hover:to-[#ea580c] rounded-xl text-[12px] font-black uppercase tracking-widest transition shadow-[0_4px_15px_rgba(234,88,12,0.3)] hover:-translate-y-0.5">Save</button>
@@ -669,7 +669,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
         window.switchLibTab = (tab) => {
             document.getElementById('tab-content-plans').classList.toggle('hidden', tab !== 'plans'); document.getElementById('tab-content-folders').classList.toggle('hidden', tab !== 'folders'); document.getElementById('tab-content-folders').classList.toggle('flex', tab === 'folders');
             let btnPlans = document.getElementById('tab-plans'); let btnFolders = document.getElementById('tab-folders');
-            if (tab === 'plans') { btnPlans.className = 'flex-1 py-4 text-[12px] font-black uppercase tracking-widest text-white border-b-2 border-[#ea580c] transition'; btnFolders.className = 'flex-1 py-4 text-[12px] font-black uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'; } 
+            if (tab === 'plans') { btnPlans.className = 'flex-1 py-4 text-[12px] font-black uppercase tracking-widest text-white border-b-2 border-[#ea580c] transition'; btnFolders.className = 'flex-1 py-4 text-[12px] font-black uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'; }
             else { btnFolders.className = 'flex-1 py-4 text-[12px] font-black uppercase tracking-widest text-white border-b-2 border-[#a855f7] transition'; btnPlans.className = 'flex-1 py-4 text-[12px] font-black uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'; }
         };
         window.selectStatus = function(status, el) {
@@ -707,7 +707,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
         async function uploadChatImage(inputElement) {
             if (!inputElement.files || inputElement.files.length === 0) return;
             let formData = new FormData(); formData.append('chat_image', inputElement.files[0]); let btnLabel = document.getElementById('upload-btn-label'); let originalIcon = btnLabel.innerHTML; btnLabel.innerHTML = `<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`;
-            try { let res = await fetch(window.location.href, { method: 'POST', body: formData }); let data = await res.json(); if (data.success) { document.getElementById('hidden_image_url').value = data.url; document.getElementById('upload-preview-img').src = data.url; document.getElementById('upload-preview').classList.remove('hidden'); document.getElementById('chat-input-box').removeAttribute('required'); } } catch(e) { } btnLabel.innerHTML = originalIcon; inputElement.value = ""; 
+            try { let res = await fetch(window.location.href, { method: 'POST', body: formData }); let data = await res.json(); if (data.success) { document.getElementById('hidden_image_url').value = data.url; document.getElementById('upload-preview-img').src = data.url; document.getElementById('upload-preview').classList.remove('hidden'); document.getElementById('chat-input-box').removeAttribute('required'); } } catch(e) { } btnLabel.innerHTML = originalIcon; inputElement.value = "";
         }
         function removeUpload() { document.getElementById('hidden_image_url').value = ''; document.getElementById('upload-preview').classList.add('hidden'); document.getElementById('chat-input-box').setAttribute('required', 'required'); }
         document.getElementById('ajax-chat-form')?.addEventListener('submit', async function(e) {
@@ -716,7 +716,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
             let finalContent = textValue; if (hiddenImg !== '') finalContent += "\n" + hiddenImg; let replyingTo = document.getElementById('reply-username').innerText; if (parentId !== '0' && replyingTo !== '' && !finalContent.includes(replyingTo)) finalContent = replyingTo + " " + finalContent;
             btn.classList.add('opacity-50', 'pointer-events-none'); let formData = new FormData(); formData.append('custom_chat_submit', '1'); formData.append('comment_content', finalContent); formData.append('comment_post_ID', postId); formData.append('comment_parent', parentId);
             inputBox.value = ''; inputBox.style.height = 'auto'; removeUpload(); cancelReply(); document.getElementById('gif-picker').classList.add('hidden');
-            await fetch(window.location.href, { method: 'POST', body: formData }); btn.classList.remove('opacity-50', 'pointer-events-none'); fetchLiveChats(); 
+            await fetch(window.location.href, { method: 'POST', body: formData }); btn.classList.remove('opacity-50', 'pointer-events-none'); fetchLiveChats();
         });
         async function deleteChat(commentId) { if(!confirm("Delete message?")) return; let formData = new FormData(); formData.append('delete_chat_id', commentId); await fetch(window.location.href, { method: 'POST', body: formData }); fetchLiveChats(); }
         async function likeChat(commentId) { let formData = new FormData(); formData.append('like_chat_id', commentId); let res = await fetch(window.location.href, { method: 'POST', body: formData }); let countSpan = document.getElementById('like-count-' + commentId); if(countSpan) countSpan.innerText = await res.text(); countSpan.previousElementSibling.classList.add('text-pink-500'); }
@@ -725,7 +725,7 @@ $btn_text = $is_bookmarked ? 'In Library' : 'Save Manga';
             let isScrolledBottom = Math.abs(chatContainer.scrollTop) < 50; let formData = new FormData(); formData.append('fetch_live_chats', '1'); formData.append('manga_id', <?php echo $manga_id; ?>);
             try { let res = await fetch(window.location.href, { method: 'POST', body: formData }); chatContainer.innerHTML = await res.text(); if(isScrolledBottom) chatContainer.scrollTop = 0; } catch(e) {}
         }
-        setInterval(fetchLiveChats, 15000); 
+        setInterval(fetchLiveChats, 15000);
         document.getElementById('chat-input-box')?.addEventListener('keypress', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('ajax-chat-form').dispatchEvent(new Event('submit')); } });
     </script>
 </article>

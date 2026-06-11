@@ -14,7 +14,7 @@ $mgeko_url  = trim(get_post_meta($current_post_id, '_mgeko_url', true));
 if (!empty($katana_url)) {
     // ROUTE TO KATANA ENGINE
     require_once locate_template('single-chapter2.php');
-    exit; 
+    exit;
 } elseif (!empty($mgeko_url)) {
     // ROUTE TO MGEKO ENGINE
     require_once locate_template('single-chapter3.php');
@@ -32,7 +32,7 @@ if (!function_exists('xcomix_chapter_chat_render')) {
         $is_mine = ($is_logged_in && $chat->user_id == $current_user->ID);
         $author_name = $chat->comment_author;
         $author_avatar = get_user_meta($chat->user_id, '_xcomix_avatar', true) ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($author_name);
-        
+
         $user_obj = get_userdata($chat->user_id);
         $role_badge = ''; $name_color = 'text-gray-200';
         if ($user_obj) {
@@ -44,7 +44,7 @@ if (!function_exists('xcomix_chapter_chat_render')) {
                 $name_color = 'text-[#3b82f6]';
             }
         }
-        
+
         $reply_html = '';
         if ($chat->comment_parent > 0) {
             $parent_comment = get_comment($chat->comment_parent);
@@ -66,12 +66,12 @@ if (!function_exists('xcomix_chapter_chat_render')) {
         $raw_content = preg_replace('/\*\*(.*?)\*\*/is', '<strong class="text-white">$1</strong>', $raw_content);
         $raw_content = preg_replace('/\_(.*?)\_/is', '<em class="text-gray-300 italic">$1</em>', $raw_content);
         $raw_content = preg_replace('/\|\|(.*?)\|\|/is', '<span class="spoiler-block" title="Tap to reveal">$1</span>', $raw_content);
-        
+
         $raw_content = preg_replace('/(https?:\/\/[^\s"\'<>]+?\.(?:jpg|jpeg|png|gif|webp))/i', '|||IMG|||$1|||', $raw_content);
-        $raw_content = make_clickable($raw_content); 
+        $raw_content = make_clickable($raw_content);
         $raw_content = str_replace('<a href=', '<a class="text-[#3b82f6] hover:underline break-all" target="_blank" href=', $raw_content);
         $raw_content = preg_replace('/\|\|\|IMG\|\|\|(.*?)\|\|\|/i', '<br><img src="$1" onclick="window.openLightbox(\'$1\')" class="max-w-full md:max-w-[250px] max-h-[200px] w-auto h-auto rounded-xl mt-2 mb-1 border border-[#3a3a48] shadow-md hover:opacity-80 transition object-contain cursor-pointer">', $raw_content);
-        
+
         $raw_content = nl2br($raw_content);
         $likes = (int) get_comment_meta($chat->comment_ID, '_chat_likes', true);
         $exact_time = date('M j, Y g:i A', strtotime($chat->comment_date));
@@ -87,11 +87,11 @@ if (!function_exists('xcomix_chapter_chat_render')) {
                         <?php echo human_time_diff(strtotime($chat->comment_date), current_time('timestamp')); ?> ago
                     </span>
                 </div>
-                
+
                 <div class="text-[14px] text-gray-300 leading-relaxed font-medium break-words pointer-events-auto" id="chat-content-<?php echo $chat->comment_ID; ?>" data-raw="<?php echo esc_attr($chat->comment_content); ?>">
                     <?php echo $raw_content; ?>
                 </div>
-                
+
                 <div class="mt-2 flex items-center gap-2 pointer-events-auto">
                     <button onclick="window.likeChat(<?php echo $chat->comment_ID; ?>)" class="flex items-center gap-1.5 bg-[#252530] border border-[#2a2a35] hover:border-pink-500/50 hover:bg-pink-500/10 px-2 py-1 rounded-md transition group/btn">
                         <svg class="w-3.5 h-3.5 text-gray-500 group-hover/btn:text-pink-500 transition <?php echo ($likes > 0) ? 'text-pink-500' : ''; ?>" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -99,7 +99,7 @@ if (!function_exists('xcomix_chapter_chat_render')) {
                     </button>
                 </div>
             </div>
-            
+
             <div class="absolute right-4 top-4 flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition bg-[#1a1a22]/90 backdrop-blur-sm md:bg-[#1a1a22] rounded-lg shadow-lg border border-[#3a3a48] z-10 p-0.5">
                 <button onclick="window.copyChatText(<?php echo $chat->comment_ID; ?>)" class="hover:bg-[#252530] hover:text-white text-gray-400 p-1.5 rounded-lg transition" title="Copy Text">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -130,10 +130,10 @@ if (is_user_logged_in()) {
     if (isset($_POST['custom_chat_submit'])) {
         while (ob_get_level()) ob_end_clean();
         $user = wp_get_current_user();
-        $post_id = intval($_POST['comment_post_ID']); 
+        $post_id = intval($_POST['comment_post_ID']);
         $parent_id = intval($_POST['comment_parent']);
         $content = sanitize_text_field($_POST['comment_content']);
-        
+
         if (!empty($content)) {
             $inserted = wp_insert_comment(['comment_post_ID' => $post_id, 'comment_author' => $user->display_name, 'comment_author_email' => $user->user_email, 'comment_author_url' => $user->user_url, 'comment_content' => $content, 'comment_parent' => $parent_id, 'user_id' => $user->ID, 'comment_date' => current_time('mysql'), 'comment_approved' => 1]);
             if ($inserted) { echo wp_json_encode(['success' => true]); } else { echo wp_json_encode(['success' => false, 'error' => 'Database failed.']); }
@@ -186,7 +186,7 @@ if (isset($_POST['fetch_live_chats']) && isset($_POST['chapter_id'])) {
 }
 
 add_filter('show_admin_bar', '__return_false');
-get_header(); 
+get_header();
 the_post();
 
 $buddy_url = trim(get_post_meta($current_post_id, '_buddy_url', true));
@@ -204,8 +204,8 @@ $all_chaps = mvx_get_chapters($manga_id, 'DESC');
 $prev_chap = null; $next_chap = null;
 foreach ($all_chaps as $i => $c) {
     if ($c->ID === $current_post_id) {
-        $next_chap = isset($all_chaps[$i - 1]) ? $all_chaps[$i - 1] : null; 
-        $prev_chap = isset($all_chaps[$i + 1]) ? $all_chaps[$i + 1] : null; 
+        $next_chap = isset($all_chaps[$i - 1]) ? $all_chaps[$i - 1] : null;
+        $prev_chap = isset($all_chaps[$i + 1]) ? $all_chaps[$i + 1] : null;
         break;
     }
 }
@@ -218,27 +218,27 @@ $diagnostic_error = '';
 if (false === $images) {
     $images = [];
     if ($buddy_url) {
-        if (strpos($buddy_url, 'http') !== 0) $buddy_url = 'https://' . ltrim($buddy_url, '/'); 
-        session_write_close(); 
+        if (strpos($buddy_url, 'http') !== 0) $buddy_url = 'https://' . ltrim($buddy_url, '/');
+        session_write_close();
 
         $ch = curl_init($buddy_url);
         curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true, 
-            CURLOPT_FOLLOWLOCATION => true, 
-            CURLOPT_TIMEOUT => 15, 
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 15,
             CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_ENCODING => '', 
+            CURLOPT_ENCODING => '',
             CURLOPT_HTTPHEADER => [
                 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Referer: https://manhwabuddy.com/'
             ],
             CURLOPT_COOKIE => "wpmanga-adault=1; wpmanga-adult=1; mature_warning_accept=yes; content_safe=1;"
         ]);
-        
-        $html = curl_exec($ch); 
+
+        $html = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        
+
         if (!$html || trim($html) === '') {
             $diagnostic_error = "Server rejected HTML connection (HTTP $http_code).";
         } else {
@@ -270,27 +270,27 @@ if (false === $images) {
 ?>
 
     <main class="min-h-screen relative w-full bg-[#0f0f13]">
-        
+
         <style>
             #bottom-nav, #global-nav, .site-header { display: none !important; }
             #pages-container { display: flex; flex-direction: column; width: 100%; min-height: 100vh; cursor: pointer; -webkit-tap-highlight-color: transparent; }
             .page-wrapper { position: relative; width: 100%; display: block; background: #0f0f13; margin: 0; padding: 0; }
-            .page-wrapper.is-loading { min-height: 400px; } 
-            
+            .page-wrapper.is-loading { min-height: 400px; }
+
             /* CSS Fix: Stripped out the opacity transition to prevent GPU black boxes */
             .chapter-page { position: relative; z-index: 20; display: block; width: 100%; }
-            
+
             .spinner-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; justify-content: center; align-items: center; }
             .orange-spinner { width: 36px; height: 36px; border: 3px solid #2a2a35; border-top-color: #e8783a; border-radius: 50%; animation: xcomix-spin 1s linear infinite; }
             @keyframes xcomix-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            
+
             #pages-container.mode-webtoon { gap: 0; padding-top: 56px; padding-bottom: 20px; display: block; text-align: center; }
             #pages-container.mode-webtoon .page-wrapper { max-width: 800px; margin: 0 auto; display: block; line-height: 0; font-size: 0; }
             #pages-container.mode-webtoon .chapter-page { width: 100%; height: auto; margin: 0; padding: 0; display: block; vertical-align: top; }
             #pages-container.mode-page { gap: 40px; padding-top: 80px; padding-bottom: 40px; background-color: #0f0f13; display: flex; flex-direction: column; align-items: center; }
             #pages-container.mode-page .page-wrapper { max-width: 1000px; margin: 0 auto; padding: 0 10px; display: flex; justify-content: center; }
             #pages-container.mode-page .chapter-page { max-height: 90vh; width: auto; max-width: 100%; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border-radius: 8px; margin: 0 auto; }
-            
+
             .progress-bar { position: fixed; top: 0; left: 0; height: 3px; z-[99999]; background: #e8783a; box-shadow: 0 0 10px #e8783a; transition: width 0.2s; }
             .drawer { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
             .drawer.open { transform: translateX(0); }
@@ -340,7 +340,7 @@ if (false === $images) {
                     </span>
                 </div>
             <?php } else { ?>
-                <?php foreach ($images as $img) { 
+                <?php foreach ($images as $img) {
                     $proxied_image_url = mvx_proxy_image_url($img, 'buddy');
                 ?>
                     <div class="page-wrapper page-tracker is-loading">
@@ -355,7 +355,7 @@ if (false === $images) {
             <div class="flex flex-col h-[500px] md:h-[600px] bg-[#1a1a22] border border-[#3a3a48] rounded-2xl shadow-2xl overflow-hidden">
                 <div class="p-3 md:p-4 border-b border-[#2a2a35] bg-[#252530] shrink-0 flex items-center justify-between">
                     <h2 class="text-[14px] font-black text-white tracking-tight uppercase flex items-center gap-2">
-                        <span class="w-1.5 h-4 bg-[#3b82f6] rounded-full"></span> 
+                        <span class="w-1.5 h-4 bg-[#3b82f6] rounded-full"></span>
                         Chapter <?php echo (float)$chapter_num; ?> Chat
                     </h2>
                     <span class="text-[9px] font-black uppercase text-gray-500 tracking-widest px-2 py-1 bg-[#2a2a35] rounded border border-[#3a3a48] shadow-inner">
@@ -450,7 +450,7 @@ if (false === $images) {
         </div>
 
         <div id="reader-overlay" onclick="window.toggleReaderDrawer()" class="overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999]"></div>
-        
+
         <div id="reader-drawer" class="drawer fixed top-0 right-0 h-full w-[280px] bg-[#0f0f13] border-l border-[#3a3a48] z-[9999] flex flex-col shadow-2xl">
             <div class="p-5 border-b border-[#3a3a48] flex items-center justify-between bg-[#1a1a22]">
                 <h3 class="font-black text-white uppercase tracking-widest text-[11px] flex items-center gap-2">
@@ -501,13 +501,13 @@ if (false === $images) {
                     link.addEventListener('click', function(e) {
                         if (this.hasAttribute('href') && this.href.startsWith('http') && this.getAttribute('target') !== '_blank') {
                             if (this.href.includes('javascript:') || this.getAttribute('href').startsWith('#')) return;
-                            
+
                             e.preventDefault();
                             let targetUrl = this.href;
-                            
+
                             // MAGIC TRICK: Abort all active proxy image downloads instantly
                             window.stop();
-                            
+
                             // Navigate instantly now that connection slots are free
                             window.location.href = targetUrl;
                         }
@@ -527,8 +527,8 @@ if (false === $images) {
                 function loadNext() {
                     while (activeLoads < maxConcurrent && currentIndex < images.length) {
                         let img = images[currentIndex];
-                        currentIndex++; 
-                        
+                        currentIndex++;
+
                         if (img.getAttribute('data-loading') === 'true') continue;
                         img.setAttribute('data-loading', 'true');
                         activeLoads++;
@@ -539,37 +539,37 @@ if (false === $images) {
                         img.onload = async function() {
                             // Waits for processor to build image BEFORE showing it (prevents black box)
                             try { await img.decode(); } catch(e) {}
-                            
+
                             img.classList.add('loaded');
                             if (wrapper) {
-                                wrapper.classList.remove('is-loading'); 
-                                wrapper.style.minHeight = '0px'; 
+                                wrapper.classList.remove('is-loading');
+                                wrapper.style.minHeight = '0px';
                             }
                             if (spinnerContainer) spinnerContainer.style.display = 'none';
-                            
+
                             activeLoads--;
                             window.updateProgressBar();
-                            loadNext(); 
+                            loadNext();
                         };
 
                         img.onerror = function() {
                             if (img.src.includes('mv_proxy_image=buddy')) {
                                 img.src = img.getAttribute('data-raw-src');
-                                return; 
+                                return;
                             }
                             if (wrapper) wrapper.style.display = 'none';
-                            
+
                             activeLoads--;
-                            loadNext(); 
+                            loadNext();
                         };
 
                         // Trigger download instantly
                         img.src = img.getAttribute('data-src');
-                        img.removeAttribute('data-src'); 
+                        img.removeAttribute('data-src');
                     }
                 }
 
-                loadNext(); 
+                loadNext();
             };
 
             // --- UI TOGGLES ---
@@ -585,7 +585,7 @@ if (false === $images) {
                 const btnWebtoon = document.getElementById('btn-webtoon');
                 const btnPage = document.getElementById('btn-page');
                 if(!container) return;
-                
+
                 localStorage.setItem('xcomix_reader_mode', mode);
                 if (mode === 'page') {
                     container.className = 'mode-page w-full';
@@ -634,7 +634,7 @@ if (false === $images) {
                     timestamp: Date.now()
                 };
                 localStorage.setItem('xcomix_history', JSON.stringify(history));
-                
+
                 let hiddenItems = JSON.parse(localStorage.getItem('xcomix_hidden_history') || '[]');
                 hiddenItems = hiddenItems.filter(item => item !== '<?php echo $manga_id; ?>');
                 localStorage.setItem('xcomix_hidden_history', JSON.stringify(hiddenItems));
@@ -652,10 +652,10 @@ if (false === $images) {
                 window.setReaderMode(localStorage.getItem('xcomix_reader_mode') || 'webtoon');
                 window.addEventListener('scroll', window.updateProgressBar);
                 window.logReadingHistory();
-                
+
                 window.loadFastImages(); // Trigger the fast image loader
                 window.initInstantNavigation(); // Trigger the instant navigation fix
-                
+
                 setTimeout(() => {
                     const topNav = document.getElementById('reader-top-nav');
                     const bottomToolbar = document.getElementById('reader-bottom-toolbar');
@@ -669,13 +669,13 @@ if (false === $images) {
                 return new Promise((resolve) => {
                     const overlay = document.getElementById('custom-modal-overlay');
                     const box = document.getElementById('custom-modal-box');
-                    document.getElementById('custom-modal-title').innerText = title; 
+                    document.getElementById('custom-modal-title').innerText = title;
                     document.getElementById('custom-modal-text').innerText = text;
-                    document.getElementById('custom-modal-confirm').innerText = confirmText; 
+                    document.getElementById('custom-modal-confirm').innerText = confirmText;
                     document.getElementById('custom-modal-cancel').innerText = cancelText;
 
                     const inputEl = document.getElementById('custom-modal-input');
-                    if (type === 'prompt') { inputEl.style.display = 'block'; inputEl.value = inputValue; } 
+                    if (type === 'prompt') { inputEl.style.display = 'block'; inputEl.value = inputValue; }
                     else { inputEl.style.display = 'none'; }
                     document.getElementById('custom-modal-cancel').style.display = (type === 'alert') ? 'none' : 'block';
 
@@ -699,21 +699,21 @@ if (false === $images) {
                 document.getElementById('chat_comment_parent').value = parentId;
                 document.getElementById('chat-input-box').focus();
             };
-            
+
             window.cancelReply = function() {
                 document.getElementById('reply-preview').classList.add('hidden');
                 document.getElementById('chat_comment_parent').value = 0;
             };
-            
+
             window.insertText = function(text) {
                 const inputBox = document.getElementById('chat-input-box');
                 if (inputBox) { inputBox.value += text + " "; inputBox.focus(); inputBox.style.height = inputBox.scrollHeight + 'px'; }
             };
-            
-            window.toggleGifPicker = function() { 
-                document.getElementById('gif-picker').classList.toggle('hidden'); 
+
+            window.toggleGifPicker = function() {
+                document.getElementById('gif-picker').classList.toggle('hidden');
             };
-            
+
             window.selectGif = function(url) {
                 document.getElementById('hidden_image_url').value = url;
                 document.getElementById('upload-preview-img').src = url;
@@ -721,17 +721,17 @@ if (false === $images) {
                 window.toggleGifPicker();
                 document.getElementById('chat-input-box').removeAttribute('required');
             };
-            
+
             window.openLightbox = function(url) {
-                document.getElementById('lightbox-img').src = url; 
+                document.getElementById('lightbox-img').src = url;
                 document.getElementById('image-lightbox').classList.remove('hidden');
             };
-            
+
             window.closeLightbox = function() {
-                document.getElementById('image-lightbox').classList.add('hidden'); 
+                document.getElementById('image-lightbox').classList.add('hidden');
                 document.getElementById('lightbox-img').src = '';
             };
-            
+
             window.copyChatText = function(commentId) {
                 let el = document.getElementById('chat-content-' + commentId);
                 navigator.clipboard.writeText(el.getAttribute('data-raw')).then(async () => { await window.showModal({title: 'Copied!', text: 'Message copied to clipboard.'}); });
@@ -748,15 +748,15 @@ if (false === $images) {
                     }
                 });
             }
-            
+
             window.scrollChatToBottom = function() {
-                if(chatFeed) chatFeed.scrollTop = 0; 
+                if(chatFeed) chatFeed.scrollTop = 0;
             };
 
             window.uploadChatImage = async function(inputElement) {
                 if (!inputElement.files || inputElement.files.length === 0) return;
                 let formData = new FormData(); formData.append('chat_image', inputElement.files[0]);
-                
+
                 let btnLabel = document.getElementById('upload-btn-label');
                 let originalIcon = btnLabel.innerHTML;
                 btnLabel.innerHTML = `<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`;
@@ -772,7 +772,7 @@ if (false === $images) {
                     } else await window.showModal({title: 'Upload Failed', text: data.error});
                 } catch(e) { await window.showModal({title: 'Error', text: 'File may be too large.'}); }
 
-                btnLabel.innerHTML = originalIcon; inputElement.value = ""; 
+                btnLabel.innerHTML = originalIcon; inputElement.value = "";
             };
 
             window.removeUpload = function() {
@@ -788,9 +788,9 @@ if (false === $images) {
                 let hiddenImg = document.getElementById('hidden_image_url').value;
                 let postId = document.getElementById('chat_comment_post_ID').value;
                 let parentId = document.getElementById('chat_comment_parent').value;
-                
+
                 if (textValue.trim() === '' && hiddenImg === '') return;
-                
+
                 let finalContent = textValue;
                 if (hiddenImg !== '') finalContent += "\n" + hiddenImg;
 
@@ -802,9 +802,9 @@ if (false === $images) {
 
                 btn.classList.add('opacity-50', 'pointer-events-none');
                 let formData = new FormData();
-                formData.append('custom_chat_submit', '1'); 
+                formData.append('custom_chat_submit', '1');
                 formData.append('comment_content', finalContent);
-                formData.append('comment_post_ID', postId); 
+                formData.append('comment_post_ID', postId);
                 formData.append('comment_parent', parentId);
 
                 inputBox.value = ''; inputBox.style.height = 'auto'; window.removeUpload(); window.cancelReply();
@@ -815,9 +815,9 @@ if (false === $images) {
                 } catch(e) {
                     console.error('Chat submission error:', e);
                 }
-                
+
                 btn.classList.remove('opacity-50', 'pointer-events-none');
-                window.fetchLiveChats(); 
+                window.fetchLiveChats();
             };
 
             window.deleteChat = async function(commentId) {
@@ -825,13 +825,13 @@ if (false === $images) {
                 if (!confirmDelete) return;
                 let formData = new FormData(); formData.append('delete_chat_id', commentId);
                 await fetch(window.location.pathname + window.location.search, { method: 'POST', body: formData });
-                window.fetchLiveChats(); 
+                window.fetchLiveChats();
             };
-            
+
             window.editChat = async function(commentId) {
                 let el = document.getElementById('chat-content-' + commentId);
                 let rawContent = el.getAttribute('data-raw');
-                
+
                 if (/(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp))/i.test(rawContent)) {
                     await window.showModal({title: 'Action Denied', text: 'Messages containing attachments or GIFs cannot be edited. Please delete the message and resend it.'}); return;
                 }
@@ -844,7 +844,7 @@ if (false === $images) {
                     window.fetchLiveChats();
                 }
             };
-            
+
             window.likeChat = async function(commentId) {
                 let formData = new FormData(); formData.append('like_chat_id', commentId);
                 let res = await fetch(window.location.pathname + window.location.search, { method: 'POST', body: formData });
@@ -855,9 +855,9 @@ if (false === $images) {
 
             window.fetchLiveChats = async function() {
                 if(!chatFeed) return;
-                let isScrolledBottom = Math.abs(chatFeed.scrollTop) < 50; 
+                let isScrolledBottom = Math.abs(chatFeed.scrollTop) < 50;
                 let formData = new FormData(); formData.append('fetch_live_chats', '1'); formData.append('chapter_id', <?php echo $current_post_id; ?>);
-                
+
                 try {
                     let res = await fetch(window.location.pathname + window.location.search, { method: 'POST', body: formData });
                     chatFeed.innerHTML = await res.text();

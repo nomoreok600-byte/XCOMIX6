@@ -1,4 +1,4 @@
-<?php 
+<?php
 /* Template Name: Browse */
 get_header();
 
@@ -70,13 +70,13 @@ $alphabet = range('A', 'Z');
         <!-- Manga Grid -->
         <?php if ($mangas->have_posts()): ?>
         <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-            <?php while ($mangas->have_posts()): $mangas->the_post(); 
+            <?php while ($mangas->have_posts()): $mangas->the_post();
                 $score = get_post_meta(get_the_ID(), '_mv_score', true) ?: 'N/A';
             ?>
             <a href="<?php the_permalink(); ?>" class="group block card-hover">
                 <div class="relative rounded-xl overflow-hidden bg-[#1a1a22] aspect-[2/3] mb-2">
-                    <img src="<?php echo mv_get_cover(get_the_ID(), 'medium'); ?>" 
-                         alt="<?php the_title_attribute(); ?>" 
+                    <img src="<?php echo mv_get_cover(get_the_ID(), 'medium'); ?>"
+                         alt="<?php the_title_attribute(); ?>"
                          class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                          loading="lazy">
                     <div class="absolute top-2 right-2 bg-mv-accent/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
