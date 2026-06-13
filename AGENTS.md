@@ -41,3 +41,7 @@ the WordPress theme package, and full cPanel deployment steps.
   the generated server. `npm start` === `node server.js` and requires a build first.
 - When verifying the prod bundle locally, static assets are served under
   `/_next/static/...` (not `/.next/...`).
+- `npm run dev` and `npm run build` share the same `.next/` directory. Running a
+  build while a dev server is up corrupts the dev server's chunks (it starts
+  returning 500 `MODULE_NOT_FOUND`). Stop one before running the other, or build
+  in a separate checkout.
