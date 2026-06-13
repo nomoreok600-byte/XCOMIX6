@@ -58,18 +58,37 @@ export async function GET(request) {
 
   const desktopHeader = DESKTOP_HEADERS[Math.floor(Math.random() * DESKTOP_HEADERS.length)];
 
-  const upstream = await fetch(targetUrl, {
-    headers: {
-      ...desktopHeader,
-      Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-      Referer: refererFor(targetUrl),
-      Origin: `${targetUrl.protocol}//${targetUrl.hostname}`,
-      Connection: "keep-alive",
-      "Upgrade-Insecure-Requests": "1",
-    },
-    cache: "no-store",
-    redirect: "follow",
-  });
+  // cPanel Node apps run with tight per-process memory and a small pool of
+  // concurrent connections. Guard the time-to-first-byte with an AbortController
+  // so a slow/hung upstream can't pin a worker indefinitely. The timeout is
+  // cleared once headers arrive; the body itself is streamed through untouched
+  // (never buffered into memory) so large chapter pages stay low-overhead.
+  const controller = new AbortController();
+  const headerTimeout = setTimeout(() => controller.abort(), 20000);
+
+  let upstream;
+  try {
+    upstream = await fetch(targetUrl, {
+      headers: {
+        ...desktopHeader,
+        Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        Referer: refererFor(targetUrl),
+        Origin: `${targetUrl.protocol}//${targetUrl.hostname}`,
+        Connection: "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+      },
+      cache: "no-store",
+      redirect: "follow",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    return Response.json(
+      { error: "Upstream image request failed", detail: error?.name === "AbortError" ? "timeout" : error?.message },
+      { status: 504 }
+    );
+  } finally {
+    clearTimeout(headerTimeout);
+  }
 
   if (!upstream.ok || !upstream.body) {
     return Response.json({ error: "Unable to fetch image" }, { status: upstream.status || 502 });
@@ -80,13 +99,20 @@ export async function GET(request) {
     ? "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800"
     : "no-store";
 
-  return new Response(upstream.body, {
-    status: 200,
-    headers: {
-      "Content-Type": contentType,
-      "Cache-Control": cacheControl,
-      "Access-Control-Allow-Origin": "*",
-      "X-Content-Type-Options": "nosniff",
-    },
-  });
+  const headers = {
+    "Content-Type": contentType,
+    "Cache-Control": cacheControl,
+    "Access-Control-Allow-Origin": "*",
+    "X-Content-Type-Options": "nosniff",
+  };
+
+  // Forward length/range hints when present so the platform can stream the
+  // response progressively instead of materializing the whole image.
+  const contentLength = upstream.headers.get("content-length");
+  if (contentLength) headers["Content-Length"] = contentLength;
+  const acceptRanges = upstream.headers.get("accept-ranges");
+  if (acceptRanges) headers["Accept-Ranges"] = acceptRanges;
+
+  // Stream the upstream body straight through (no arrayBuffer/Buffer copy).
+  return new Response(upstream.body, { status: 200, headers });
 }
