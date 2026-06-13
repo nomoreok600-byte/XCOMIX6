@@ -1,0 +1,104 @@
+/*
+Theme Name: MangaVerse XCOMIX
+Theme URI: https://xcomix.top
+Author: MangaVerse Team, X COMIX
+Description: MangaVerse visual theme merged with XCOMIX MangaKatana, ManhwaBuddy, Mgeko scraping, proxy, reader, and library compatibility.
+Version: 2.1.0
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: mangaverse
+Tags: manga, anime, webtoon, manhwa, manhua, dark, responsive, fast, seo
+*/
+
+/* ===== THEME FOUNDATION ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f13;
+    color: #e2e2e8;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+input, textarea, select { font-family: inherit; outline: none; }
+ul, ol { list-style: none; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0f0f13; }
+::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a48; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===== SELECTION ===== */
+::selection { background: #e8783a; color: #fff; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } 
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } 
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } 
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } } 
+@keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } } 
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(232, 120, 58, 0.3); } 50% { box-shadow: 0 0 30px rgba(232, 120, 58, 0.6); } } 
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } 
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } 
+@keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } 
+
+.animate-fade-in { animation: fadeIn 0.3s ease forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.4s ease forwards; }
+.animate-scale-in { animation: scaleIn 0.3s ease forwards; }
+.animate-slide-left { animation: slideInLeft 0.3s ease forwards; }
+.animate-slide-right { animation: slideInRight 0.3s ease forwards; }
+
+/* ===== PAGINATION ===== */
+.page-numbers {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 42px; height: 42px; background: transparent;
+    color: #666; font-weight: 700; font-size: 13px;
+    border-radius: 10px; transition: all 0.25s; margin: 0 2px;
+}
+.page-numbers.current {
+    background: #e8783a; color: white;
+    box-shadow: 0 4px 12px rgba(232, 120, 58, 0.3);
+}
+a.page-numbers:hover { background: #1a1a22; color: white; }
+
+/* ===== READER STYLES ===== */
+.reader-mode-webtoon { display: flex; flex-direction: column; gap: 0; padding-top: 56px; }
+.reader-mode-webtoon .page-wrapper { max-width: 800px; margin: 0 auto; width: 100%; }
+.reader-mode-page { display: flex; flex-direction: column; align-items: center; gap: 30px; padding: 80px 10px 40px; }
+.reader-mode-page .page-wrapper { max-width: 900px; display: flex; justify-content: center; }
+.reader-mode-page .chapter-page { max-height: 90vh; width: auto; max-width: 100%; object-fit: contain; border-radius: 6px; }
+
+/* ===== CHAT/COMMUNITY STYLES ===== */
+.chat-scroll::-webkit-scrollbar { width: 5px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 10px; }
+.mention-highlight { color: #e8783a; font-weight: 700; background: rgba(232, 120, 58, 0.1); padding: 0 4px; border-radius: 3px; }
+.spoiler-block { background: #2a2a35; color: transparent; padding: 0 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s; user-select: none; }
+.spoiler-block:hover, .spoiler-block:active { background: rgba(255,255,255,0.1); color: #fff; }
+
+/* ===== SKELETON LOADING ===== */
+.skeleton { background: linear-gradient(90deg, #1a1a22 25%, #252530 50%, #1a1a22 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+
+/* ===== UTILITY CLASSES ===== */
+.line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+.line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.line-clamp-4 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+
+.glass { background: rgba(15, 15, 19, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.glass-light { background: rgba(26, 26, 34, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+
+.text-gradient { background: linear-gradient(135deg, #e8783a, #f0a060); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+.card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+
+/* ===== ADMIN BAR FIX ===== */
+#wpadminbar { display: none !important; }
+html { margin-top: 0 !important; }
