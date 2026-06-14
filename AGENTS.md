@@ -137,6 +137,13 @@ Non-obvious caveats:
   (`PROXY_CACHE_MAX_BYTES`/`_ENTRIES`/`_ITEM`); restarting the backend clears it.
 - Importers filter chapter links to the series' own slug, so MangaKatana
   "you may also like" rails no longer leak foreign chapters into a title.
+- Ad slots + the announcement banner are admin-managed via the `site_settings`
+  key/value table (added in `app-schema.sql`). Edit them in `/admin` (Ads +
+  Announcement panels); the frontend reads enabled ones from `GET /api/site/config`
+  (cached once via `SiteConfigProvider`) and renders `<AdSlot slot="header|footer|
+  manga|chapter">` + `<Announcement>`. Disabled slots ship no HTML.
+- UI uses inline SVGs via `components/Icon.jsx` (+ `components/Logo.jsx`), not
+  emoji — add a new path to `Icon` rather than reintroducing emoji.
 
 ### cPanel / production build (no Vercel)
 - `next.config.mjs` sets `output: 'standalone'`. `npm run build` emits
