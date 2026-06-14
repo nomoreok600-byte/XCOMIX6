@@ -116,6 +116,28 @@ Non-obvious caveats:
  not affect the other, but (as with any Next app) don't run `next build` and
  `next dev` against the same `.next/` simultaneously.
 
+### XCOMIX engine — non-obvious gotchas (database/ + backend/ + frontend/)
+- The `frontend/` carries its own `frontend/postcss.config.mjs` (empty plugins).
+  Without it, `next dev`/`next build` in `frontend/` walk up and load the repo
+  root `postcss.config.mjs` (which needs `tailwindcss`, a root-app-only dep) and
+  crash with `Cannot find module 'tailwindcss'`. Do not delete that file.
+- Reader/manga pages read their `?id=`/`?slug=` via `useSearchParams()` (wrapped
+  in `<Suspense>`), so in-page query-only navigation (e.g. the reader Prev/Next
+  buttons) actually re-renders. Reading the query once in a mount `useEffect`
+  silently breaks those buttons.
+- Frontend-traffic-driven auto importer: every page view pings
+  `GET /api/activity/ping` (wired in `frontend/src/lib/auth.jsx`). The backend
+  (`backend/lib/activity.js`) debounces it to a "latest" crawl every 15 min and a
+  5-page backlog crawl every 60 min, persisting the per-source backlog page
+  cursor to `backend/.import-state.json` so it resumes instead of re-fetching.
+  Tune with `ACTIVITY_*` env (defaults match 15 min / 60 min / 5 pages); inspect
+  via `GET /api/activity/status`.
+- The image proxy (`GET /api/proxy/image`) has an in-memory LRU cache; repeat
+  hits return `X-Proxy-Cache: HIT` instantly. It is per-process and bounded
+  (`PROXY_CACHE_MAX_BYTES`/`_ENTRIES`/`_ITEM`); restarting the backend clears it.
+- Importers filter chapter links to the series' own slug, so MangaKatana
+  "you may also like" rails no longer leak foreign chapters into a title.
+
 ### cPanel / production build (no Vercel)
 - `next.config.mjs` sets `output: 'standalone'`. `npm run build` emits
   `.next/standalone/` AND runs `scripts/copy-standalone-assets.mjs` to copy

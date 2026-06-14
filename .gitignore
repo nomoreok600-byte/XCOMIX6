@@ -6,3 +6,7 @@ out/
 public/sw.js
 public/workbox-*.js
 npm-debug.log*
+
+# Backend auto-importer cursor/state (runtime only)
+.import-state.json
+backend/.import-state.json
