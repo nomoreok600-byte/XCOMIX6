@@ -6,6 +6,27 @@ Manga Headless Frontend: a **Next.js 15 (App Router)** site that reads from a
 headless **WordPress XCOMIX REST API**. See `README.md` for routes, architecture,
 the WordPress theme package, and full cPanel deployment steps.
 
+## XCOMIX decoupled engine (database/ + backend/ + frontend/)
+
+A from-scratch alternative stack lives in three top-level folders and is fully
+independent of the WordPress-backed manga frontend above:
+- `database/` — MySQL `schema.sql` (tables `mangas`, `chapters`, `pages`) + `seed.sql`.
+- `backend/` — Express + MySQL2 + CORS API for `www.a3555bet.com`. Endpoints:
+  `/api/manga`, `/api/manga/:slug`, `/api/chapters/:id/pages`, `/api/proxy/image`.
+  Run: `cd backend && cp .env.example .env` (set DB creds), `npm install`, `npm start`.
+- `frontend/` — Next.js `output: 'export'` static site for `https://www.xcomix.top`.
+  Run: `cd frontend && npm install`, set `NEXT_PUBLIC_API_BASE`, `npm run build` (emits `out/`).
+
+Non-obvious caveats:
+- The backend needs a running **MySQL/MariaDB** (a system dependency, not in the
+  update script). Load `database/schema.sql` then `database/seed.sql`.
+- The frontend's dynamic routes use `generateStaticParams`, so `NEXT_PUBLIC_API_BASE`
+  must point at a reachable backend **at build time** or those pages won't be emitted.
+- All artwork renders through `${API_BASE}/api/proxy/image?url=...`; never hotlink
+  source images directly (they 403). The proxy spoofs headers + host-based Referer.
+- `backend/scripts/import-demo-data.mjs` re-populates MySQL from a source API
+  (the JS port of the legacy scraper sync stage).
+
 ## Cursor Cloud specific instructions
 
 ### What this repo is
