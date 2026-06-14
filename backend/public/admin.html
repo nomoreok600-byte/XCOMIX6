@@ -92,6 +92,23 @@
     </div>
 
     <div class="panel">
+      <h2>Announcement banner</h2>
+      <p style="color:var(--muted)">Shown across the top of the site only while enabled.</p>
+      <div class="row" style="margin-bottom:10px">
+        <label class="row" style="gap:6px"><input type="checkbox" id="ann-on" /> Enabled</label>
+      </div>
+      <textarea id="ann-text" rows="2" style="width:100%;background:#0e0e18;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px" placeholder="e.g. New chapters added daily — enjoy XCOMIX!"></textarea>
+      <div class="row" style="margin-top:10px"><button id="ann-save">Save announcement</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>Ads</h2>
+      <p style="color:var(--muted)">Paste ad HTML / script tags per slot. Each slot renders only when enabled.</p>
+      <div id="ad-slots"></div>
+      <div class="row" style="margin-top:10px"><button id="ads-save">Save ads</button></div>
+    </div>
+
+    <div class="panel">
       <h2>Recently updated manga</h2>
       <table><thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Source</th><th>Chapters</th><th>Updated</th></tr></thead>
       <tbody id="recent-manga"></tbody></table>
@@ -159,8 +176,34 @@ async function refresh() {
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 const fmt = (d) => d ? new Date(d).toLocaleString() : "—";
 
+const AD_SLOTS = [["header","Header (top of every page)"],["footer","Footer"],["manga","Single manga page"],["chapter","Chapter reader"]];
+
+async function loadSettings() {
+  const cfg = await api("/settings");
+  $("#ann-on").checked = !!cfg.announcement.enabled;
+  $("#ann-text").value = cfg.announcement.text || "";
+  $("#ad-slots").innerHTML = AD_SLOTS.map(([k,l]) =>
+    `<div style="margin-bottom:14px">
+       <label class="row" style="gap:6px;margin-bottom:6px"><input type="checkbox" class="ad-on" data-slot="${k}" ${cfg.ads[k].enabled?"checked":""}/> <b>${l}</b></label>
+       <textarea class="ad-html" data-slot="${k}" rows="3" style="width:100%;background:#0e0e18;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:ui-monospace,monospace;font-size:12px" placeholder="&lt;a href=...&gt;&lt;img src=...&gt;&lt;/a&gt; or &lt;script&gt;…&lt;/script&gt;">${esc(cfg.ads[k].html||"")}</textarea>
+     </div>`
+  ).join("");
+}
+
+$("#ann-save").onclick = async () => {
+  try { await api("/settings", { method:"POST", body: JSON.stringify({ announcement: { enabled: $("#ann-on").checked, text: $("#ann-text").value } }) }); log("Announcement saved."); }
+  catch (e) { log("ERROR: " + e.message); }
+};
+$("#ads-save").onclick = async () => {
+  const ads = {};
+  document.querySelectorAll(".ad-html").forEach((t) => { ads[t.dataset.slot] = { html: t.value }; });
+  document.querySelectorAll(".ad-on").forEach((c) => { ads[c.dataset.slot] = { ...(ads[c.dataset.slot]||{}), enabled: c.checked }; });
+  try { await api("/settings", { method:"POST", body: JSON.stringify({ ads }) }); log("Ads saved."); }
+  catch (e) { log("ERROR: " + e.message); }
+};
+
 async function boot() {
-  try { await refresh(); $("#gate").classList.add("hidden"); $("#app").classList.remove("hidden"); }
+  try { await refresh(); await loadSettings(); $("#gate").classList.add("hidden"); $("#app").classList.remove("hidden"); }
   catch (e) { $("#gate").classList.remove("hidden"); $("#app").classList.add("hidden"); if (TOKEN) $("#gate-err").textContent = e.message; }
 }
 

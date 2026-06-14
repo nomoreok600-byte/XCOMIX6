@@ -6,6 +6,7 @@ const { query } = require("../db");
 const { requireAdmin } = require("../lib/auth");
 const importers = require("../lib/importers");
 const scheduler = require("../lib/scheduler");
+const settings = require("../lib/settings");
 
 const router = express.Router();
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -116,6 +117,33 @@ router.post("/import/backlog", wrap(async (req, res) => {
     }
   })();
   res.json({ ok: true, started: true, sources, startPage, endPage });
+}));
+
+// ---- Site settings: ad slots + announcement banner ----
+router.get("/settings", wrap(async (_req, res) => {
+  res.json(await settings.adminConfig());
+}));
+
+router.post("/settings", wrap(async (req, res) => {
+  const body = req.body || {};
+  const updates = {};
+  const flag = (v) => (v ? "1" : "0");
+  // Ad slots: { ads: { header: { html, enabled }, ... } }
+  if (body.ads && typeof body.ads === "object") {
+    for (const slot of settings.AD_SLOTS) {
+      const a = body.ads[slot];
+      if (!a) continue;
+      if (a.html !== undefined) updates[`ad_${slot}`] = String(a.html);
+      if (a.enabled !== undefined) updates[`ad_${slot}_on`] = flag(a.enabled);
+    }
+  }
+  // Announcement: { announcement: { text, enabled } }
+  if (body.announcement && typeof body.announcement === "object") {
+    if (body.announcement.text !== undefined) updates.announcement_text = String(body.announcement.text);
+    if (body.announcement.enabled !== undefined) updates.announcement_on = flag(body.announcement.enabled);
+  }
+  await settings.setMany(updates);
+  res.json({ ok: true, config: await settings.adminConfig() });
 }));
 
 router.get("/scheduler", (_req, res) => {

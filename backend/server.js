@@ -57,6 +57,7 @@ app.use("/api/library", require("./routes/library"));
 app.use("/api/social", require("./routes/social"));
 app.use("/api/community", require("./routes/community"));
 app.use("/api/catalog", require("./routes/catalog"));
+app.use("/api/site", require("./routes/site"));
 app.use("/admin", require("./routes/admin"));
 
 // ---------------------------------------------------------------------------

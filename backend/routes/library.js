@@ -144,4 +144,19 @@ router.post("/history", wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// Clear the whole reading history for the current user.
+router.delete("/history", wrap(async (req, res) => {
+  await query("DELETE FROM reading_history WHERE user_id = :uid", { uid: req.user.id });
+  res.json({ ok: true });
+}));
+
+// Remove a single manga from the reading history.
+router.delete("/history/:mangaId", wrap(async (req, res) => {
+  await query("DELETE FROM reading_history WHERE user_id = :uid AND manga_id = :mid", {
+    uid: req.user.id,
+    mid: req.params.mangaId,
+  });
+  res.json({ ok: true });
+}));
+
 module.exports = router;
