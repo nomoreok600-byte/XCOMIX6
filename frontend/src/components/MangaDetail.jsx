@@ -8,6 +8,8 @@ import LibraryButton from "./LibraryButton";
 import Reviews from "./Reviews";
 import Comments from "./Comments";
 import Stars from "./Stars";
+import Icon from "./Icon";
+import AdSlot from "./AdSlot";
 import { fetchManga, proxyImage, decodeEntities } from "../lib/api";
 
 export default function MangaDetail({ slug }) {
@@ -49,7 +51,7 @@ export default function MangaDetail({ slug }) {
     <>
       <SiteNav />
       <main className="container">
-        <Link href="/home" className="back-link">‹ Back to home</Link>
+        <Link href="/home" className="back-link"><Icon name="chevronLeft" size={15} /> Back to home</Link>
 
         {!slug || loading ? (
           <DetailSkeleton />
@@ -105,6 +107,8 @@ export default function MangaDetail({ slug }) {
                 </div>
               </div>
             </section>
+
+            <AdSlot slot="manga" className="ad-slot-manga" />
 
             <div className="tabs">
               {[["chapters", `Chapters (${chapters.length})`], ["about", "About"], ["reviews", "Reviews"], ["comments", "Comments"]].map(([v, l]) => (

@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { fetchPopular, proxyImage } from "../lib/api";
+import Icon from "../components/Icon";
 
 const FEATURES = [
-  ["📖", "Manga", "Classic Japanese series — action, shonen, seinen, romance and slice-of-life, updated daily."],
-  ["🐉", "Manhwa", "Full-color Korean webtoons built for scrolling: cultivation, regression and revenge epics."],
-  ["🀄", "Manhua", "Chinese comics and donghua-style adventures, from martial arts to modern fantasy."],
-  ["🌙", "Read your way", "A smooth dark-mode reader with fit modes, keyboard navigation and a bookmarkable library."],
+  ["book", "Manga", "Classic Japanese series — action, shonen, seinen, romance and slice-of-life, updated daily."],
+  ["globe", "Manhwa", "Full-color Korean webtoons built for scrolling: cultivation, regression and revenge epics."],
+  ["collection", "Manhua", "Chinese comics and donghua-style adventures, from martial arts to modern fantasy."],
+  ["moon", "Read your way", "A smooth dark-mode reader with fit modes, keyboard navigation and a bookmarkable library."],
 ];
 
 export default function Landing() {
@@ -44,7 +45,7 @@ export default function Landing() {
         <div className="landing-features">
           {FEATURES.map(([icon, h, p]) => (
             <div key={h} className="landing-feature">
-              <div style={{ fontSize: 26, marginBottom: 8 }}>{icon}</div>
+              <div className="landing-feature-ico"><Icon name={icon} size={26} /></div>
               <h3>{h}</h3>
               <p>{p}</p>
             </div>

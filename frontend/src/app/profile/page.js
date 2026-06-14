@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
 import Footer from "../../components/Footer";
+import Icon from "../../components/Icon";
 import { useAuth, THEME_NAMES, applyTheme } from "../../lib/auth";
 import {
   fetchProfile,
@@ -17,7 +18,7 @@ import {
 function StatCard({ icon, n, label }) {
   return (
     <div className="stat-card">
-      <div className="ic">{icon}</div>
+      <div className="ic"><Icon name={icon} size={22} /></div>
       <div className="n">{n}</div>
       <div className="l">{label}</div>
     </div>
@@ -98,15 +99,15 @@ export default function ProfilePage() {
           <div style={{ flex: 1 }}>
             <h1 className="pf-name">{form.username}</h1>
             <div className="pf-pills">
-              <span className="pf-pill"><span className="k">★</span> {stats.comments * 2 + stats.reviews * 3} Karma</span>
-              <span className="pf-pill">👥 {stats.followers} Followers</span>
+              <span className="pf-pill"><Icon name="star" size={14} /> {stats.comments * 2 + stats.reviews * 3} Karma</span>
+              <span className="pf-pill"><Icon name="users" size={14} /> {stats.followers} Followers</span>
             </div>
           </div>
         </div>
 
         <div className="pf-tabs">
-          {[["dashboard", "📊 Dashboard"], ["collections", "📚 Collections"], ["activity", "⚡ Activity"], ["settings", "⚙ Settings"]].map(([v, l]) => (
-            <button key={v} className={`pf-tab${tab === v ? " active" : ""}`} onClick={() => setTab(v)}>{l}</button>
+          {[["dashboard", "chart", "Dashboard"], ["collections", "collection", "Collections"], ["activity", "bolt", "Activity"], ["settings", "settings", "Settings"]].map(([v, ic, l]) => (
+            <button key={v} className={`pf-tab${tab === v ? " active" : ""}`} onClick={() => setTab(v)}><Icon name={ic} size={15} /> {l}</button>
           ))}
         </div>
 
@@ -115,15 +116,15 @@ export default function ProfilePage() {
         {tab === "dashboard" && (
           <>
             <div className="stat-cards">
-              <StatCard icon="🔖" n={stats.library} label="Bookmarks" />
-              <StatCard icon="📖" n={history.length} label="Reading" />
-              <StatCard icon="⭐" n={stats.reviews} label="Reviews" />
-              <StatCard icon="💬" n={stats.comments} label="Comments" />
+              <StatCard icon="bookmark" n={stats.library} label="Bookmarks" />
+              <StatCard icon="book" n={history.length} label="Reading" />
+              <StatCard icon="star" n={stats.reviews} label="Reviews" />
+              <StatCard icon="comment" n={stats.comments} label="Comments" />
             </div>
 
             <div className="panel-box" style={{ marginTop: 18 }}>
               <div className="row" style={{ justifyContent: "space-between" }}>
-                <h3 style={{ margin: 0 }}>🔖 Bookmarks</h3>
+                <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="bookmark" size={18} /> Bookmarks</h3>
                 <Link href="/library" className="head-link">View All →</Link>
               </div>
               {library.length === 0 ? <p className="faint">No bookmarks yet.</p> : (
@@ -139,7 +140,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="panel-box">
-              <h3 style={{ marginTop: 0 }}>🕘 Reading History</h3>
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="clock" size={18} /> Reading History</h3>
               {history.length === 0 ? <p className="faint">No reading history yet. Start reading to see your progress here!</p> : (
                 history.slice(0, 6).map((h) => (
                   <Link key={h.manga.id} href={`/manga/?slug=${encodeURIComponent(h.manga.slug)}`} className="list-row" style={{ textDecoration: "none", padding: 8 }}>
@@ -157,16 +158,16 @@ export default function ProfilePage() {
             </div>
 
             <div className="panel-box">
-              <h3 style={{ marginTop: 0 }}>🔗 Share Profile</h3>
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="share" size={18} /> Share Profile</h3>
               <p className="faint" style={{ marginTop: 0 }}>Your public profile URL</p>
               <div className="share-box">
                 <input className="input" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
-                <button className="btn btn-primary" onClick={copyShare}>{copied ? "Copied ✓" : "Copy"}</button>
+                <button className="btn btn-primary" onClick={copyShare}>{copied ? "Copied" : "Copy"}</button>
               </div>
             </div>
 
             <div className="panel-box">
-              <h3 style={{ marginTop: 0 }}>👤 Account</h3>
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="user" size={18} /> Account</h3>
               <p className="faint" style={{ margin: "2px 0" }}>Username</p>
               <p style={{ margin: "0 0 10px", fontWeight: 700 }}>{user.username}</p>
               <p className="faint" style={{ margin: "2px 0" }}>Email</p>
@@ -180,8 +181,8 @@ export default function ProfilePage() {
         {tab === "collections" && (
           <div className="panel-box">
             <div className="row" style={{ justifyContent: "space-between" }}>
-              <h3 style={{ margin: 0 }}>📚 Your Collections</h3>
-              <Link href="/library" className="btn btn-ghost">＋ Manage folders</Link>
+              <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="collection" size={18} /> Your Collections</h3>
+              <Link href="/library" className="btn btn-ghost"><Icon name="plus" size={15} /> Manage folders</Link>
             </div>
             <p className="faint">Organize and share your favorite manga in custom folders. Manage them in your Library.</p>
             <Link href="/library" className="btn btn-primary">Open Library →</Link>
@@ -191,20 +192,20 @@ export default function ProfilePage() {
         {tab === "activity" && (
           <>
             <div className="panel-box">
-              <h3 style={{ marginTop: 0 }}>💬 My Comments</h3>
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="comment" size={18} /> My Comments</h3>
               <p className="faint">{stats.comments} comments · {stats.reviews} reviews posted.</p>
             </div>
             <div className="panel-box">
-              <h3 style={{ marginTop: 0 }}>🔔 Notifications</h3>
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="bell" size={18} /> Notifications</h3>
               <Link href="/notifications" className="btn btn-ghost">View notifications →</Link>
             </div>
             <div className="panel-box">
-              <h3 style={{ marginTop: 0 }}>📈 Activity Overview</h3>
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="chart" size={18} /> Activity Overview</h3>
               <div className="stat-cards">
-                <StatCard icon="💬" n={stats.comments} label="Comments" />
-                <StatCard icon="🔖" n={stats.library} label="Bookmarks" />
-                <StatCard icon="👥" n={stats.following} label="Following" />
-                <StatCard icon="⭐" n={stats.reviews} label="Reviews" />
+                <StatCard icon="comment" n={stats.comments} label="Comments" />
+                <StatCard icon="bookmark" n={stats.library} label="Bookmarks" />
+                <StatCard icon="users" n={stats.following} label="Following" />
+                <StatCard icon="star" n={stats.reviews} label="Reviews" />
               </div>
             </div>
           </>
@@ -213,7 +214,7 @@ export default function ProfilePage() {
         {tab === "settings" && (
           <>
             <div className="panel-box">
-              <h3 style={{ marginTop: 0 }}>👤 Personal Information</h3>
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="user" size={18} /> Personal Information</h3>
               <div className="field"><label>Username</label><input className="input" value={form.username} onChange={(e) => set("username", e.target.value)} /></div>
               <div className="field"><label>Bio</label><textarea className="input" rows={3} placeholder="Tell others about yourself…" value={form.bio} onChange={(e) => set("bio", e.target.value)} /></div>
               <div className="field"><label>Avatar image URL</label><input className="input" value={form.avatar_url} onChange={(e) => set("avatar_url", e.target.value)} placeholder="https://…" /></div>
@@ -232,14 +233,14 @@ export default function ProfilePage() {
             </div>
 
             <div className="panel-box">
-              <h3 style={{ marginTop: 0 }}>🔑 Security</h3>
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="key" size={18} /> Security</h3>
               <div className="field"><label>Current password</label><input className="input" type="password" value={pw.current_password} onChange={(e) => setPw((p) => ({ ...p, current_password: e.target.value }))} /></div>
               <div className="field"><label>New password</label><input className="input" type="password" value={pw.new_password} onChange={(e) => setPw((p) => ({ ...p, new_password: e.target.value }))} /></div>
               <button className="btn btn-ghost" onClick={savePassword}>Update password</button>
             </div>
 
             <div className="panel-box" style={{ borderColor: "rgba(255,0,68,0.4)" }}>
-              <h3 style={{ marginTop: 0, color: "#ff7a9c" }}>⚠ Danger Zone</h3>
+              <h3 style={{ marginTop: 0, color: "#ff7a9c", display: "flex", alignItems: "center", gap: 8 }}><Icon name="warning" size={18} /> Danger Zone</h3>
               <p className="faint">Permanently delete your account and all data. This cannot be undone.</p>
               <button className="btn btn-ghost" style={{ borderColor: "rgba(255,0,68,0.5)", color: "#ff7a9c" }} onClick={remove}>Delete My Account</button>
             </div>

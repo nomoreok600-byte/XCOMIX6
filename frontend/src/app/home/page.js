@@ -8,6 +8,7 @@ import MangaGrid from "../../components/MangaGrid";
 import Slider from "../../components/Slider";
 import Footer from "../../components/Footer";
 import Avatar from "../../components/Avatar";
+import Icon from "../../components/Icon";
 import { GridSkeleton } from "../../components/Skeletons";
 import {
   fetchRecent,
@@ -117,7 +118,7 @@ export default function HomePage() {
           <section className="section" id="popular">
             <div className="section-head">
               <span className="bar" />
-              <h2>🔥 Popular</h2>
+              <h2><Icon name="flame" size={20} className="head-ico" /> Popular</h2>
               <Link href="/browse?order=popular" className="head-link">View all →</Link>
             </div>
             {loading ? <GridSkeleton count={8} /> : <Slider items={popular} />}
@@ -127,7 +128,7 @@ export default function HomePage() {
         <section className="section" id="latest">
           <div className="section-head">
             <span className="bar" />
-            <h2>{query ? `Results for "${query}"` : "⚡ Recently Updated"}</h2>
+            <h2>{query ? `Results for "${query}"` : <><Icon name="bolt" size={20} className="head-ico" /> Recently Updated</>}</h2>
             {!query && <Link href="/recent" className="head-link">View all →</Link>}
           </div>
           <MangaGrid items={filtered.slice(0, shown)} loading={loading} empty="No titles match your search." />
@@ -147,7 +148,7 @@ export default function HomePage() {
           <section className="section" id="completed">
             <div className="section-head">
               <span className="bar" />
-              <h2>✅ Completed</h2>
+              <h2><Icon name="checkCircle" size={20} className="head-ico" /> Completed</h2>
               <Link href="/browse?status=Completed" className="head-link">View all →</Link>
             </div>
             <Slider items={completed} />
@@ -158,7 +159,7 @@ export default function HomePage() {
           <section className="section" id="comments">
             <div className="section-head">
               <span className="bar" />
-              <h2>💬 Latest Comments</h2>
+              <h2><Icon name="comment" size={20} className="head-ico" /> Latest Comments</h2>
             </div>
             <div className="list-rows">
               {comments.map((c) => (

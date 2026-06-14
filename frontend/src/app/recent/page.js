@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import SiteNav from "../../components/SiteNav";
 import MangaGrid from "../../components/MangaGrid";
 import Footer from "../../components/Footer";
+import Icon from "../../components/Icon";
 import { fetchRecent, fetchPopular } from "../../lib/api";
 
 export default function RecentPage() {
@@ -27,7 +28,7 @@ export default function RecentPage() {
         <section className="section" style={{ marginTop: 24 }}>
           <div className="section-head">
             <span className="bar" />
-            <h2>⚡ Recently Updated</h2>
+            <h2><Icon name="bolt" size={20} className="head-ico" /> Recently Updated</h2>
           </div>
           <MangaGrid items={recent} loading={loading} empty="No recent updates yet." />
         </section>
@@ -35,7 +36,7 @@ export default function RecentPage() {
         <section className="section">
           <div className="section-head">
             <span className="bar" />
-            <h2>🔥 Popular Right Now</h2>
+            <h2><Icon name="flame" size={20} className="head-ico" /> Popular Right Now</h2>
           </div>
           <MangaGrid items={popular} loading={loading} />
         </section>

@@ -1261,8 +1261,77 @@ select.input {
   .stat-cards { grid-template-columns: repeat(2, 1fr); }
   .pf-avatar { width: 88px; height: 88px; font-size: 34px; }
   .pf-name { font-size: 22px; }
-  .nav-search { display: none; }
+  /* Keep search reachable on mobile (shrink instead of hiding it). */
+  .nav-search { order: 3; flex-basis: 100%; max-width: 100%; }
+  .nav-inner { flex-wrap: wrap; row-gap: 10px; }
 }
 @media (max-width: 420px) {
   .grid { gap: 10px; }
 }
+
+/* =====================================================================
+   XCOMIX — Icons, logo, search, ads, announcement, library tiles
+   ===================================================================== */
+.icon { vertical-align: middle; flex-shrink: 0; }
+.head-ico { vertical-align: -4px; color: var(--crimson); }
+.section-head h2 { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Brand / logo */
+.brand { gap: 0; }
+.logo-word { font-weight: 900; font-size: 22px; letter-spacing: 1px; }
+.logo-x { color: var(--crimson); text-shadow: var(--glow); }
+.foot-brand { display: flex; justify-content: center; margin-bottom: 10px; }
+
+/* Nav search with leading icon */
+.nav-search { position: relative; display: flex; align-items: center; }
+.nav-search-icon { position: absolute; left: 14px; color: var(--text-faint); pointer-events: none; }
+.nav-search input { padding-left: 42px; }
+.nav-links a { display: inline-flex; align-items: center; gap: 6px; }
+.nav-links a .icon { color: var(--text-faint); }
+.nav-links a:hover .icon { color: var(--crimson); }
+
+/* Announcement banner */
+.announcement {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(90deg, var(--crimson), var(--crimson-2));
+  color: #04140f; font-weight: 700; font-size: 14px;
+  padding: 10px 18px; position: relative; z-index: 55;
+}
+.announcement-text { flex: 1; text-align: center; }
+.announcement-close {
+  background: rgba(0,0,0,0.18); border: 0; color: inherit; cursor: pointer;
+  width: 26px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* Ad slots */
+.ad-slot { margin: 16px auto; max-width: 1280px; padding: 0 20px; text-align: center; }
+.ad-slot img, .ad-slot iframe { max-width: 100%; height: auto; border-radius: 10px; }
+.ad-slot-top { margin: 0 auto; padding: 10px 20px; }
+.ad-slot-manga { margin: 18px auto; }
+.ad-slot-chapter { max-width: 900px; margin: 12px auto; }
+.ad-slot-footer { margin: 0 auto 18px; }
+
+/* Library bookmark tiles */
+.lib-tile { display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.lib-tile-cover { position: relative; aspect-ratio: 2/3; background: var(--bg-2); display: block; }
+.lib-tile-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-tile-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.lib-tile-title { font-size: 13px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 34px; }
+.lib-tile-actions { display: flex; gap: 8px; align-items: center; }
+.lib-select { flex: 1; min-width: 0; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 8px; font-size: 12px; font-family: inherit; cursor: pointer; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: var(--bg-2); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; flex-shrink: 0; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+.icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
+.icon-btn.danger:hover { color: #ff6b6b; border-color: rgba(255,80,80,0.5); background: rgba(255,40,40,0.08); }
+.lb-row-main { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.lib-folder-ico { color: var(--crimson); display: inline-flex; }
+.lb-stats { display: inline-flex; gap: 12px; align-items: center; }
+.lb-stats span { display: inline-flex; gap: 4px; align-items: center; }
+.landing-feature-ico { color: var(--crimson); margin-bottom: 8px; display: flex; justify-content: center; }
+
+/* Reader: tap to hide/show the option bars (immersive mode) */
+.reader-bar.top, .reader-progress, .reader-settings { transition: opacity 0.2s ease, transform 0.2s ease; }
+.reader.chrome-hidden .reader-bar.top { opacity: 0; transform: translateY(-100%); pointer-events: none; }
+.reader.chrome-hidden .reader-bar.bottom { opacity: 0; transform: translate(-50%, 140%); pointer-events: none; }
+.reader.chrome-hidden .reader-progress { opacity: 0; }
+.reader.chrome-hidden .reader-settings { opacity: 0; pointer-events: none; }
+.reader-stage { cursor: pointer; }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
 import Footer from "../../components/Footer";
 import Avatar from "../../components/Avatar";
+import Icon from "../../components/Icon";
 import { useAuth } from "../../lib/auth";
 import {
   fetchFeed,
@@ -56,9 +57,9 @@ function Post({ p, onChanged }) {
       )}
       <div className="wall-actions">
         <button className={p.liked ? "liked" : ""} onClick={like} disabled={!user}>
-          ♥ {p.likes}
+          <Icon name="heart" size={15} fill={p.liked ? "currentColor" : "none"} /> {p.likes}
         </button>
-        <button onClick={toggle}>💬 {p.replies} {open ? "Hide" : "Reply"}</button>
+        <button onClick={toggle}><Icon name="comment" size={15} /> {p.replies} {open ? "Hide" : "Reply"}</button>
       </div>
       {open && (
         <div style={{ marginTop: 10, marginLeft: 12, borderLeft: "1px solid var(--border)", paddingLeft: 12 }}>

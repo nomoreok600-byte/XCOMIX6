@@ -6,6 +6,7 @@ import SiteNav from "../../components/SiteNav";
 import Footer from "../../components/Footer";
 import Avatar from "../../components/Avatar";
 import MangaCard from "../../components/MangaCard";
+import Icon from "../../components/Icon";
 import { useAuth } from "../../lib/auth";
 import { fetchProfile, follow, unfollow, proxyImage } from "../../lib/api";
 
@@ -61,7 +62,7 @@ export default function PublicProfilePage() {
           {user && !is_self && (
             <div className="row">
               <button className={`btn ${is_following ? "btn-ghost" : "btn-primary"}`} disabled={busy} onClick={toggleFollow}>
-                {is_following ? "Following ✓" : "＋ Follow"}
+                {is_following ? <><Icon name="check" size={15} /> Following</> : <><Icon name="plus" size={15} /> Follow</>}
               </button>
               <Link href={`/messages?to=${profile.id}`} className="btn btn-ghost">Message</Link>
             </div>

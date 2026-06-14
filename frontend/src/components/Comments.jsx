@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "../lib/auth";
 import Avatar from "./Avatar";
+import Icon from "./Icon";
 import {
   fetchComments,
   postComment,
@@ -160,7 +161,7 @@ export default function Comments({ mangaId, chapterId }) {
   return (
     <div>
       <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
-        <span className="muted" style={{ fontWeight: 700 }}>💬 {list.length} comments</span>
+        <span className="muted" style={{ fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}><Icon name="comment" size={15} /> {list.length} comments</span>
         <div className="pill-tabs" style={{ margin: 0 }}>
           {[["top", "Top"], ["new", "New"], ["old", "Old"]].map(([v, l]) => (
             <button key={v} className={`pill-tab${sort === v ? " active" : ""}`} onClick={() => setSort(v)}>{l}</button>
@@ -184,13 +185,13 @@ export default function Comments({ mangaId, chapterId }) {
               <img className="comment-img" src={image} alt="preview" />
             )}
             <div className="comment-actions" style={{ marginTop: 8 }}>
-              <label className="link-btn" style={{ cursor: "pointer" }}>
-                📷 Image
+              <label className="link-btn" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Icon name="image" size={15} /> Image
                 <input type="file" accept="image/*" hidden onChange={onFile} />
               </label>
               <label className="faint" style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <input type="checkbox" checked={spoiler} onChange={(e) => setSpoiler(e.target.checked)} />
-                ⚠ Spoiler
+                <Icon name="warning" size={14} /> Spoiler
               </label>
               <span style={{ flex: 1 }} />
               <button className="btn btn-primary" disabled={busy} onClick={submit}>Post</button>

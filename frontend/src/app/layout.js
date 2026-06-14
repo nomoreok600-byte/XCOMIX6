@@ -1,5 +1,8 @@
 import "./globals.css";
 import { AuthProvider } from "../lib/auth";
+import { SiteConfigProvider } from "../lib/siteConfig";
+import Announcement from "../components/Announcement";
+import AdSlot from "../components/AdSlot";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.xcomix.top";
 const API_ORIGIN = (() => {
@@ -66,7 +69,13 @@ export default function RootLayout({ children }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       </head>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <SiteConfigProvider>
+            <Announcement />
+            <AdSlot slot="header" className="ad-slot-top" />
+            {children}
+          </SiteConfigProvider>
+        </AuthProvider>
       </body>
     </html>
   );
