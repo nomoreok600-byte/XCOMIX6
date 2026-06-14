@@ -127,10 +127,16 @@ function extractMangaMeta(html) {
 function extractChapterLinks(html, { origin, mangaSlug }) {
   const found = new Map();
   const re = /href=["']([^"']*(?:chapter|ch)-?\d+(?:\.\d+)?[^"']*)["']/gi;
+  // Match the series slug only as a bounded path segment (…/<slug>/… or
+  // …/<slug>-chapter-…) so recommended-series rails can't leak foreign chapters.
+  const slugLc = mangaSlug ? String(mangaSlug).toLowerCase() : null;
   let m;
   while ((m = re.exec(html)) !== null) {
     let link = m[1];
-    if (mangaSlug && !link.toLowerCase().includes(mangaSlug.toLowerCase())) continue;
+    if (slugLc) {
+      const linkLc = link.toLowerCase();
+      if (!linkLc.includes(`/${slugLc}/`) && !linkLc.includes(`/${slugLc}-`)) continue;
+    }
     if (!/^https?:/i.test(link)) link = `${origin.replace(/\/+$/, "")}/${link.replace(/^\/+/, "")}`;
     const num = link.match(/(?:chapter|ch)-?([0-9]+(?:\.[0-9]+)?)/i);
     const number = num ? num[1] : "0";
@@ -255,13 +261,23 @@ function extractKatanaMeta(html) {
   };
 }
 
-/** Extract chapter links from a MangaKatana manga page (ascending by number). */
-function extractKatanaChapters(html) {
+/**
+ * Extract chapter links from a MangaKatana manga page (ascending by number).
+ * MangaKatana pages embed "you may also like"/related rails that link straight
+ * to OTHER series' chapters; if `mangaSlug` is supplied we keep only links whose
+ * `/manga/<slug>/` segment matches this series so foreign chapters never leak in.
+ */
+function extractKatanaChapters(html, mangaSlug) {
+  const wanted = mangaSlug ? String(mangaSlug).toLowerCase() : null;
   const found = new Map();
   const re = /<a[^>]+href="(https?:\/\/(?:www\.)?mangakatana\.com\/manga\/[^"]+\/c[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let m;
   while ((m = re.exec(html)) !== null) {
     const url = m[1].split("?")[0];
+    if (wanted) {
+      const linkSlug = (url.match(/\/manga\/([^/]+)\//i) || [])[1] || "";
+      if (linkSlug.toLowerCase() !== wanted) continue;
+    }
     const text = decodeEntities(m[2].replace(/<[^>]+>/g, " ")).trim();
     const num = (text.match(/([0-9]+(?:\.[0-9]+)?)/) || url.match(/\/c([0-9]+(?:\.[0-9]+)?)/i) || [])[1] || "0";
     if (!found.has(num)) found.set(num, { number: num, url, title: text || `Chapter ${num}` });

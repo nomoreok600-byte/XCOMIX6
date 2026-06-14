@@ -163,8 +163,9 @@ async function importKatanaManga(url, { read = true, maxChapters = 3, delay = 60
   if (!canon) throw new Error("Invalid MangaKatana URL");
   const html = await fetchHtml(canon, { referer: `${KATANA_ORIGIN}/` });
   const meta = extractKatanaMeta(html);
-  const chapters = extractKatanaChapters(html);
   const slug = slugFromUrl(canon);
+  // Pass the slug so related-series rails on the page can't leak foreign chapters.
+  const chapters = extractKatanaChapters(html, slug);
 
   const { mangaId, newChapters, chapterRows } = await persistManga({
     ...meta,
