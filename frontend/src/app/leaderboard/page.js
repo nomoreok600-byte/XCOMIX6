@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
+import Footer from "../../components/Footer";
 import Avatar from "../../components/Avatar";
 import { fetchLeaderboard } from "../../lib/api";
 
@@ -42,7 +43,7 @@ export default function LeaderboardPage() {
           ))
         )}
       </main>
-      <footer className="footer"><div className="container">XCOMIX · leaderboard</div></footer>
+      <Footer />
     </>
   );
 }

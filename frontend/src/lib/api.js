@@ -5,6 +5,7 @@ export const API_BASE = (
 ).replace(/\/+$/, "");
 
 const TOKEN_KEY = "xcomix_token";
+const ADULT_KEY = "xcomix_adult";
 
 export function getToken() {
   if (typeof window === "undefined") return null;
@@ -15,6 +16,18 @@ export function setToken(token) {
   if (token) window.localStorage.setItem(TOKEN_KEY, token);
   else window.localStorage.removeItem(TOKEN_KEY);
 }
+
+// 18+ content is hidden by default; the user can opt in via a nav toggle.
+export function getAdult() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(ADULT_KEY) === "1";
+}
+export function setAdult(on) {
+  if (typeof window === "undefined") return;
+  if (on) window.localStorage.setItem(ADULT_KEY, "1");
+  else window.localStorage.removeItem(ADULT_KEY);
+}
+const adultQ = () => (getAdult() ? { adult: 1 } : {});
 
 /** Wrap any remote image URL through the backend streaming proxy. */
 export function proxyImage(url) {
@@ -73,11 +86,11 @@ export const fetchMangaList = (params = {}) => request(`/api/manga${qs(params)}`
 export const fetchManga = (slug) => request(`/api/catalog/manga/${encodeURIComponent(slug)}`);
 export const fetchChapterPages = (id) => request(`/api/chapters/${encodeURIComponent(id)}/pages`);
 export const fetchGenres = () => request(`/api/catalog/genres`);
-export const browse = (params = {}) => request(`/api/catalog/browse${qs(params)}`);
-export const fetchPopular = (limit = 12) => request(`/api/catalog/popular${qs({ limit })}`);
-export const fetchRecent = (limit = 24) => request(`/api/catalog/recent${qs({ limit })}`);
-export const fetchCompleted = (limit = 24) => request(`/api/catalog/completed${qs({ limit })}`);
-export const fetchRandom = () => request(`/api/catalog/random`);
+export const browse = (params = {}) => request(`/api/catalog/browse${qs({ ...adultQ(), ...params })}`);
+export const fetchPopular = (limit = 12) => request(`/api/catalog/popular${qs({ limit, ...adultQ() })}`);
+export const fetchRecent = (limit = 24) => request(`/api/catalog/recent${qs({ limit, ...adultQ() })}`);
+export const fetchCompleted = (limit = 24) => request(`/api/catalog/completed${qs({ limit, ...adultQ() })}`);
+export const fetchRandom = () => request(`/api/catalog/random${qs(adultQ())}`);
 
 // ---- Auth ----
 export const register = (body) => request(`/api/auth/register`, { method: "POST", body });
@@ -133,3 +146,11 @@ export const sendMessage = (userId, body) =>
 export const fetchNotifications = () => request(`/api/community/notifications`, { auth: true });
 export const markNotificationsRead = () =>
   request(`/api/community/notifications/read`, { method: "POST", auth: true });
+
+// ---- Community wall (forum feed) + home extras ----
+export const fetchFeed = (sort = "new") => request(`/api/community/feed${qs({ sort })}`, { auth: true });
+export const fetchReplies = (id) => request(`/api/community/feed/${id}/replies`);
+export const postFeed = (body) => request(`/api/community/feed`, { method: "POST", body, auth: true });
+export const likeFeed = (id) => request(`/api/community/feed/${id}/like`, { method: "POST", auth: true });
+export const deleteFeed = (id) => request(`/api/community/feed/${id}`, { method: "DELETE", auth: true });
+export const fetchLatestComments = () => request(`/api/community/latest-comments`);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "./SiteNav";
+import Footer from "./Footer";
 import LibraryButton from "./LibraryButton";
 import Reviews from "./Reviews";
 import Comments from "./Comments";
@@ -32,6 +33,17 @@ export default function MangaDetail({ slug }) {
   const chapters = data?.chapters || [];
   const firstChapter = chapters[0];
   const lastChapter = chapters[chapters.length - 1];
+
+  // Client-side SEO: reflect the title/description for shares + crawlers that run JS.
+  useEffect(() => {
+    if (!manga) return;
+    const title = `Read ${decodeEntities(manga.title)} ${manga.type} Online · XCOMIX`;
+    document.title = title;
+    const desc = (decodeEntities(manga.synopsis) || `Read ${decodeEntities(manga.title)} online free on XCOMIX.`).slice(0, 160);
+    let tag = document.querySelector('meta[name="description"]');
+    if (!tag) { tag = document.createElement("meta"); tag.setAttribute("name", "description"); document.head.appendChild(tag); }
+    tag.setAttribute("content", desc);
+  }, [manga]);
 
   return (
     <>
@@ -133,9 +145,7 @@ export default function MangaDetail({ slug }) {
           </>
         )}
       </main>
-      <footer className="footer">
-        <div className="container">XCOMIX · neon manga engine</div>
-      </footer>
+      <Footer />
     </>
   );
 }

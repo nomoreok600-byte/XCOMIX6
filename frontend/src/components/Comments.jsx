@@ -97,6 +97,10 @@ function CommentNode({ c, onReply, onChanged, depth = 0 }) {
   );
 }
 
+function reactionTotal(c) {
+  return (c.reactions || []).reduce((n, r) => n + r.count, 0);
+}
+
 export default function Comments({ mangaId, chapterId }) {
   const { user } = useAuth();
   const [list, setList] = useState([]);
@@ -105,6 +109,7 @@ export default function Comments({ mangaId, chapterId }) {
   const [image, setImage] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [sort, setSort] = useState("top");
 
   const load = useCallback(() => {
     fetchComments({ manga_id: mangaId, chapter_id: chapterId })
@@ -115,6 +120,12 @@ export default function Comments({ mangaId, chapterId }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  const sorted = [...list].sort((a, b) => {
+    if (sort === "new") return new Date(b.created_at) - new Date(a.created_at);
+    if (sort === "old") return new Date(a.created_at) - new Date(b.created_at);
+    return reactionTotal(b) - reactionTotal(a) || new Date(b.created_at) - new Date(a.created_at);
+  });
 
   const onFile = (e) => {
     const file = e.target.files?.[0];
@@ -148,55 +159,54 @@ export default function Comments({ mangaId, chapterId }) {
 
   return (
     <div>
+      <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
+        <span className="muted" style={{ fontWeight: 700 }}>💬 {list.length} comments</span>
+        <div className="pill-tabs" style={{ margin: 0 }}>
+          {[["top", "Top"], ["new", "New"], ["old", "Old"]].map(([v, l]) => (
+            <button key={v} className={`pill-tab${sort === v ? " active" : ""}`} onClick={() => setSort(v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+
       {user ? (
-        <div className="panel-box">
-          {replyTo && (
-            <div className="faint" style={{ marginBottom: 8 }}>
-              Replying to @{replyTo.user.username}{" "}
-              <button className="link-btn" onClick={() => setReplyTo(null)}>
-                cancel
-              </button>
+        <div className="composer">
+          <Avatar user={user} />
+          <div className="grow">
+            {replyTo && (
+              <div className="faint" style={{ marginBottom: 8 }}>
+                Replying to @{replyTo.user.username}{" "}
+                <button className="link-btn" onClick={() => setReplyTo(null)}>cancel</button>
+              </div>
+            )}
+            <textarea rows={3} placeholder="Share your thoughts…" value={body} onChange={(e) => setBody(e.target.value)} />
+            {image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="comment-img" src={image} alt="preview" />
+            )}
+            <div className="comment-actions" style={{ marginTop: 8 }}>
+              <label className="link-btn" style={{ cursor: "pointer" }}>
+                📷 Image
+                <input type="file" accept="image/*" hidden onChange={onFile} />
+              </label>
+              <label className="faint" style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input type="checkbox" checked={spoiler} onChange={(e) => setSpoiler(e.target.checked)} />
+                ⚠ Spoiler
+              </label>
+              <span style={{ flex: 1 }} />
+              <button className="btn btn-primary" disabled={busy} onClick={submit}>Post</button>
             </div>
-          )}
-          <textarea
-            className="input"
-            rows={3}
-            placeholder="Share your thoughts…"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
-          {image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="comment-img" src={image} alt="preview" />
-          )}
-          <div className="comment-actions" style={{ marginTop: 10 }}>
-            <label className="link-btn" style={{ cursor: "pointer" }}>
-              📷 Image
-              <input type="file" accept="image/*" hidden onChange={onFile} />
-            </label>
-            <label className="faint" style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <input type="checkbox" checked={spoiler} onChange={(e) => setSpoiler(e.target.checked)} />
-              Spoiler
-            </label>
-            <span style={{ flex: 1 }} />
-            <button className="btn btn-primary" disabled={busy} onClick={submit}>
-              Post
-            </button>
           </div>
         </div>
       ) : (
         <p className="muted">
-          <Link href="/login" style={{ color: "var(--crimson)" }}>
-            Sign in
-          </Link>{" "}
-          to join the discussion.
+          <Link href="/login" style={{ color: "var(--crimson)" }}>Sign in</Link> to join the discussion.
         </p>
       )}
 
-      {list.length === 0 ? (
-        <div className="center-state">No comments yet — be the first.</div>
+      {sorted.length === 0 ? (
+        <div className="center-state">No comments yet — be the first to share your thoughts!</div>
       ) : (
-        list.map((c) => <CommentNode key={c.id} c={c} onReply={setReplyTo} onChanged={load} />)
+        sorted.map((c) => <CommentNode key={c.id} c={c} onReply={setReplyTo} onChanged={load} />)
       )}
     </div>
   );

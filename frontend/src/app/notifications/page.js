@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
+import Footer from "../../components/Footer";
 import { useAuth } from "../../lib/auth";
 import { fetchNotifications, markNotificationsRead } from "../../lib/api";
 
@@ -56,7 +57,7 @@ export default function NotificationsPage() {
           })
         )}
       </main>
-      <footer className="footer"><div className="container">XCOMIX · notifications</div></footer>
+      <Footer />
     </>
   );
 }

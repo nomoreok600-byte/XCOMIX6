@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
+import Footer from "../../components/Footer";
 import Avatar from "../../components/Avatar";
 import MangaCard from "../../components/MangaCard";
 import { useAuth } from "../../lib/auth";
@@ -91,7 +92,7 @@ export default function PublicProfilePage() {
           )}
         </div>
       </main>
-      <footer className="footer"><div className="container">XCOMIX · profile</div></footer>
+      <Footer />
     </>
   );
 }

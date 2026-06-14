@@ -3,12 +3,25 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
-import { fetchNotifications, fetchRandom } from "../lib/api";
+import { fetchNotifications, fetchRandom, getAdult, setAdult } from "../lib/api";
 
 export default function SiteNav({ query, onQuery }) {
   const { user, logout } = useAuth();
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
+  const [adult, setAdultState] = useState(false);
+
+  useEffect(() => {
+    setAdultState(getAdult());
+  }, []);
+
+  const toggleAdult = () => {
+    const next = !adult;
+    setAdult(next);
+    setAdultState(next);
+    // Re-fetch lists with the new preference.
+    window.location.reload();
+  };
 
   useEffect(() => {
     let active = true;
@@ -63,6 +76,10 @@ export default function SiteNav({ query, onQuery }) {
           <Link href="/community">Community</Link>
           <Link href="/leaderboard">Ranking</Link>
           <a href="#" onClick={goRandom}>Random</a>
+          <span className="adult-toggle" onClick={toggleAdult} title="Show 18+ titles">
+            <span className={`switch${adult ? " on" : ""}`} />
+            18+
+          </span>
           {user ? (
             <>
               <Link href="/library">Library</Link>

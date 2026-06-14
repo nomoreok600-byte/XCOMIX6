@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import SiteNav from "../../components/SiteNav";
 import MangaGrid from "../../components/MangaGrid";
+import Footer from "../../components/Footer";
 import { fetchRecent, fetchPopular } from "../../lib/api";
 
 export default function RecentPage() {
@@ -39,7 +40,7 @@ export default function RecentPage() {
           <MangaGrid items={popular} loading={loading} />
         </section>
       </main>
-      <footer className="footer"><div className="container">XCOMIX · recent</div></footer>
+      <Footer />
     </>
   );
 }

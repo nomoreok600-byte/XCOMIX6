@@ -27,8 +27,14 @@ export default function MangaCard({ manga }) {
       <div className="card-body">
         <div className="card-title">{title}</div>
         <div className="card-meta">
-          <span className={isOngoing ? "" : ""}>{manga.status || "—"}</span>
-          {manga.chapter_count != null && <span>{manga.chapter_count} ch</span>}
+          <span>{manga.status || "—"}</span>
+          {manga.latest_chapter != null ? (
+            <span className="ch" style={{ color: "var(--crimson)", fontWeight: 800 }}>
+              Ch. {manga.latest_chapter}
+            </span>
+          ) : (
+            manga.chapter_count != null && <span>{manga.chapter_count} ch</span>
+          )}
         </div>
       </div>
     </Link>

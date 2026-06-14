@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
 import MangaCard from "../../components/MangaCard";
+import Footer from "../../components/Footer";
 import { useAuth } from "../../lib/auth";
 import {
   fetchLibrary,
@@ -158,7 +159,7 @@ export default function LibraryPage() {
           </>
         )}
       </main>
-      <footer className="footer"><div className="container">XCOMIX · library</div></footer>
+      <Footer />
     </>
   );
 }
