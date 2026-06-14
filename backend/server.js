@@ -5,7 +5,8 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { Readable } = require("node:stream");
-const { query } = require("./db");
+const { pool, query } = require("./db");
+const { ensureChapterPages } = require("./lib/chapterReader");
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -158,7 +159,7 @@ app.get("/api/chapters/:id/pages", wrap(async (req, res) => {
   if (Number.isNaN(id)) return res.status(400).json({ error: "Invalid chapter id" });
 
   const chapterRows = await query(
-    `SELECT c.id, c.manga_id, c.chapter_number, c.title, c.created_at,
+    `SELECT c.id, c.manga_id, c.chapter_number, c.title, c.source_url, c.created_at,
             m.title AS manga_title, m.slug AS manga_slug, m.cover_url AS manga_cover
      FROM chapters c
      JOIN mangas m ON m.id = c.manga_id
@@ -170,11 +171,27 @@ app.get("/api/chapters/:id/pages", wrap(async (req, res) => {
   }
   const ch = chapterRows[0];
 
-  const pageRows = await query(
+  let pageRows = await query(
     `SELECT page_number, remote_source_url
      FROM pages WHERE chapter_id = :id ORDER BY page_number ASC`,
     { id }
   );
+
+  // Lazy "chapter reader": if pages were never resolved but we know the source
+  // chapter URL, scrape + cache them on first read, then continue normally.
+  if (pageRows.length === 0 && ch.source_url) {
+    try {
+      const result = await ensureChapterPages(pool, { id: ch.id, source_url: ch.source_url });
+      if (result.inserted > 0) {
+        pageRows = result.pages.map((p) => ({
+          page_number: p.page_number,
+          remote_source_url: p.source_url,
+        }));
+      }
+    } catch (err) {
+      console.warn(`[reader] could not resolve pages for chapter ${id}:`, err.message);
+    }
+  }
 
   // Sibling chapters for prev/next navigation (ordered by numeric chapter).
   const siblings = await query(

@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "import:demo": "node scripts/import-demo-data.mjs"
+    "import:demo": "node scripts/import-demo-data.mjs",
+    "import:buddy": "node scripts/buddy-import.mjs",
+    "read:chapters": "node scripts/read-chapters.mjs"
   },
   "engines": {
     "node": ">=18"
