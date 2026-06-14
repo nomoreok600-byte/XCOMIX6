@@ -40,6 +40,12 @@ export function proxyImage(url) {
 export function decodeEntities(input) {
   if (!input) return "";
   return String(input)
+    // Scraped synopses ship literal markup (e.g. <br>, <p>, <a …>). Turn line
+    // breaks into newlines and drop every other tag so nothing renders as raw
+    // "<br><br>" text in titles/synopses.
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/(p|div|li)\s*>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
     .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
     .replace(/&amp;/g, "&")
@@ -51,7 +57,10 @@ export function decodeEntities(input) {
     .replace(/&#8220;|&ldquo;/g, "\u201C")
     .replace(/&#8221;|&rdquo;/g, "\u201D")
     .replace(/&#8230;|&hellip;/g, "\u2026")
-    .replace(/&nbsp;/g, " ");
+    .replace(/&nbsp;/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 async function request(path, { method = "GET", body, auth = false, cache = "no-store" } = {}) {
@@ -154,3 +163,11 @@ export const postFeed = (body) => request(`/api/community/feed`, { method: "POST
 export const likeFeed = (id) => request(`/api/community/feed/${id}/like`, { method: "POST", auth: true });
 export const deleteFeed = (id) => request(`/api/community/feed/${id}`, { method: "DELETE", auth: true });
 export const fetchLatestComments = () => request(`/api/community/latest-comments`);
+
+// ---- Activity (frontend-traffic-driven auto importer) ----
+// Pinged on page load; the backend decides (and debounces) whether to run the
+// 15-min "latest" crawl and the 60-min backlog crawl. Best-effort + silent.
+export const activityPing = () =>
+  fetch(`${API_BASE}/api/activity/ping`, { cache: "no-store" })
+    .then((r) => r.json())
+    .catch(() => null);

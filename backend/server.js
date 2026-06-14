@@ -9,6 +9,7 @@ const { pool, query } = require("./db");
 const { ensureChapterPages } = require("./lib/chapterReader");
 const { attachUser } = require("./lib/auth");
 const scheduler = require("./lib/scheduler");
+const activity = require("./lib/activity");
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -102,6 +103,22 @@ app.get("/api/health", wrap(async (_req, res) => {
   await query("SELECT 1");
   res.json({ status: "ok", service: "xcomix-backend", time: new Date().toISOString() });
 }));
+
+// ---------------------------------------------------------------------------
+// GET /api/activity/ping — frontend-traffic-driven auto importer.
+//
+// Every page view on the static site pings this. It is cheap and non-blocking:
+// it decides whether 15 min (latest) / 60 min (backlog) have elapsed and, if so,
+// launches the import in the background (remembering the backlog page cursor).
+// ---------------------------------------------------------------------------
+app.get("/api/activity/ping", (_req, res) => {
+  res.json(activity.ping());
+});
+
+// Inspect the auto-importer state (last runs, backlog cursor, recent history).
+app.get("/api/activity/status", (_req, res) => {
+  res.json(activity.status());
+});
 
 // ---------------------------------------------------------------------------
 // GET /api/manga  — paginated catalog with optional search / filters
@@ -279,6 +296,39 @@ function refererFor(url) {
   return `${url.protocol}//${url.hostname}/`;
 }
 
+// ---------------------------------------------------------------------------
+// In-memory LRU cache for proxied images. The slowest part of image loading is
+// the per-request upstream round trip (random UA + Cloudflare + hotlink
+// defenses); covers and pages are requested over and over across visitors, so a
+// short-lived hot cache turns those repeats into instant memory hits. Bounded by
+// total bytes + entry count; oversized bodies stream through uncached.
+// ---------------------------------------------------------------------------
+const IMG_CACHE_MAX_BYTES = Number(process.env.PROXY_CACHE_MAX_BYTES || 256 * 1024 * 1024);
+const IMG_CACHE_MAX_ENTRIES = Number(process.env.PROXY_CACHE_MAX_ENTRIES || 4000);
+const IMG_CACHE_MAX_ITEM = Number(process.env.PROXY_CACHE_MAX_ITEM || 4 * 1024 * 1024);
+const imgCache = new Map(); // key -> { buf, type, bytes }
+let imgCacheBytes = 0;
+
+function cacheGet(key) {
+  const hit = imgCache.get(key);
+  if (!hit) return null;
+  // Refresh recency (Map preserves insertion order → re-insert = move to newest).
+  imgCache.delete(key);
+  imgCache.set(key, hit);
+  return hit;
+}
+function cacheSet(key, entry) {
+  if (entry.bytes > IMG_CACHE_MAX_ITEM) return;
+  imgCache.set(key, entry);
+  imgCacheBytes += entry.bytes;
+  while ((imgCacheBytes > IMG_CACHE_MAX_BYTES || imgCache.size > IMG_CACHE_MAX_ENTRIES) && imgCache.size > 0) {
+    const oldestKey = imgCache.keys().next().value;
+    const old = imgCache.get(oldestKey);
+    imgCache.delete(oldestKey);
+    if (old) imgCacheBytes -= old.bytes;
+  }
+}
+
 app.get("/api/proxy/image", wrap(async (req, res) => {
   const target = (req.query.url || "").toString();
   if (!target) return res.status(400).json({ error: "Missing url parameter" });
@@ -291,6 +341,18 @@ app.get("/api/proxy/image", wrap(async (req, res) => {
   }
   if (!["http:", "https:"].includes(url.protocol) || isBlockedHost(url.hostname)) {
     return res.status(400).json({ error: "Blocked target" });
+  }
+
+  // Fast path: serve a hot cache hit straight from memory (no upstream trip).
+  const cached = cacheGet(target);
+  if (cached) {
+    res.status(200);
+    res.setHeader("Content-Type", cached.type);
+    res.setHeader("Content-Length", cached.bytes);
+    res.setHeader("Cache-Control", `public, max-age=${PROXY_CACHE_MAX_AGE}, immutable`);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Proxy-Cache", "HIT");
+    return res.end(cached.buf);
   }
 
   const headers = {
@@ -340,19 +402,36 @@ app.get("/api/proxy/image", wrap(async (req, res) => {
   }
   res.status(200);
   res.setHeader("Content-Type", contentType);
-  res.setHeader("Cache-Control", `public, max-age=${PROXY_CACHE_MAX_AGE}`);
+  res.setHeader("Cache-Control", `public, max-age=${PROXY_CACHE_MAX_AGE}, immutable`);
   res.setHeader("X-Content-Type-Options", "nosniff");
-  const len = upstream.headers.get("content-length");
-  if (len) res.setHeader("Content-Length", len);
+  res.setHeader("X-Proxy-Cache", "MISS");
 
-  // Pipe the binary stream straight through; abort upstream if client leaves.
-  const nodeStream = Readable.fromWeb(upstream.body);
-  res.on("close", () => nodeStream.destroy());
-  nodeStream.on("error", () => {
-    if (!res.headersSent) res.status(502).end();
-    else res.end();
-  });
-  nodeStream.pipe(res);
+  const declaredLen = Number(upstream.headers.get("content-length") || 0);
+
+  // Small/medium images: buffer once so we can cache them for instant repeat
+  // hits. Large bodies stream straight through uncached to bound memory use.
+  if (declaredLen && declaredLen > IMG_CACHE_MAX_ITEM) {
+    res.setHeader("Content-Length", declaredLen);
+    const nodeStream = Readable.fromWeb(upstream.body);
+    res.on("close", () => nodeStream.destroy());
+    nodeStream.on("error", () => {
+      if (!res.headersSent) res.status(502).end();
+      else res.end();
+    });
+    nodeStream.pipe(res);
+    return;
+  }
+
+  let buf;
+  try {
+    buf = Buffer.from(await upstream.arrayBuffer());
+  } catch (err) {
+    if (!res.headersSent) return res.status(502).json({ error: "Unable to read image" });
+    return res.end();
+  }
+  cacheSet(target, { buf, type: contentType, bytes: buf.length });
+  res.setHeader("Content-Length", buf.length);
+  res.end(buf);
 }));
 
 // ---------------------------------------------------------------------------

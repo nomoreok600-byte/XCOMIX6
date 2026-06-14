@@ -54,6 +54,15 @@ export function AuthProvider({ children }) {
     refresh();
   }, [refresh]);
 
+  // Frontend-traffic-driven auto importer: ping the backend on load and then
+  // periodically while a tab stays open. The backend gates the actual work to
+  // every 15 min (latest) / 60 min (backlog), so this is safe to call often.
+  useEffect(() => {
+    api.activityPing();
+    const t = setInterval(() => api.activityPing(), 5 * 60 * 1000);
+    return () => clearInterval(t);
+  }, []);
+
   const login = async (creds) => {
     const { token, user } = await api.login(creds);
     api.setToken(token);
