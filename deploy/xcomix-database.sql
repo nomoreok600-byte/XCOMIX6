@@ -309,6 +309,17 @@ CREATE TABLE IF NOT EXISTS `follows` (
   CONSTRAINT `fk_follow_following` FOREIGN KEY (`following_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ---------------------------------------------------------------------
+--  Site settings — key/value store for admin-managed ad slots and the
+--  site-wide announcement banner (header/footer/manga/chapter ads, etc.)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `site_settings` (
+  `key`        VARCHAR(64) NOT NULL,
+  `value`      MEDIUMTEXT NULL,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET foreign_key_checks = 1;
 
 -- =====================================================================
