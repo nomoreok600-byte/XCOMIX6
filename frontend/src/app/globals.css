@@ -22,6 +22,26 @@
 
 * {
   box-sizing: border-box;
+  /* Kill the translucent blue tap-highlight box mobile browsers paint over
+     links/buttons (e.g. when tapping a manga poster). */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove the default focus outline for pointer clicks but keep a clean,
+   on-brand ring for keyboard navigation (accessibility). */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+a:focus-visible,
+button:focus-visible,
+.card:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--border-strong);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.card {
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -371,12 +391,12 @@ a {
 .detail-grid {
   position: relative;
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 28px;
-  padding: 32px;
+  grid-template-columns: 190px 1fr;
+  gap: 26px;
+  padding: 28px;
 }
 .detail-cover {
-  width: 220px;
+  width: 190px;
   aspect-ratio: 2 / 3;
   border-radius: var(--radius);
   overflow: hidden;
@@ -408,6 +428,10 @@ a {
   line-height: 1.7;
   font-size: 15px;
   max-width: 760px;
+  white-space: pre-line;
+}
+.panel-box .muted {
+  white-space: pre-line;
 }
 .detail-actions {
   display: flex;
@@ -510,6 +534,138 @@ a {
   opacity: 0.35;
   cursor: not-allowed;
 }
+.reader-bar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Top scroll-progress indicator */
+.reader-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--crimson), var(--amber));
+  box-shadow: var(--glow);
+  z-index: 60;
+  transition: width 0.1s linear;
+}
+
+/* Settings drawer */
+.reader-settings {
+  position: sticky;
+  top: 60px;
+  z-index: 39;
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  background: rgba(13, 13, 20, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 0 0 var(--radius) var(--radius);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.reader-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.reader-settings-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.reader-settings-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.seg {
+  display: inline-flex;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+}
+.seg-btn {
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.seg-btn.active {
+  background: var(--crimson);
+  color: #04140f;
+}
+.reader-select {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  max-width: 260px;
+  cursor: pointer;
+}
+.reader-select.compact {
+  flex: 1;
+  min-width: 0;
+  max-width: 320px;
+  text-align: center;
+}
+
+/* End-of-chapter navigation block */
+.reader-end {
+  max-width: 900px;
+  margin: 28px auto 0;
+  padding: 0 18px;
+}
+.reader-end-nav {
+  display: flex;
+  gap: 12px;
+}
+.reader-end-nav .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+/* Image fit modes */
+.reader-stage.fit-height,
+.reader-stage.fit-native {
+  max-width: 100%;
+}
+.reader-page.fit-width img {
+  width: 100%;
+}
+.reader-page.fit-height {
+  display: flex;
+  justify-content: center;
+}
+.reader-page.fit-height img {
+  width: auto;
+  max-width: 100%;
+  max-height: 100vh;
+}
+.reader-page.fit-native {
+  display: flex;
+  justify-content: center;
+}
+.reader-page.fit-native img {
+  width: auto;
+  max-width: 100%;
+}
 
 /* ---------- States / misc ---------- */
 .center-state {
@@ -539,15 +695,37 @@ a {
 
 @media (max-width: 720px) {
   .detail-grid {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-    padding: 22px;
+    grid-template-columns: 120px 1fr;
+    gap: 16px;
+    padding: 18px;
+    text-align: left;
+    align-items: start;
+  }
+  .detail-cover {
+    width: 120px;
+  }
+  .detail-info h1 {
+    font-size: 21px;
+  }
+  .detail-synopsis {
+    font-size: 14px;
+    /* Keep the hero compact on phones; full text still lives in the About tab. */
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .detail-synopsis,
   .detail-tags,
   .detail-actions {
+    justify-content: flex-start;
+  }
+  .detail-actions .btn {
+    flex: 1;
     justify-content: center;
+  }
+  .chapter-list {
+    grid-template-columns: 1fr;
   }
   .nav-links {
     display: none;

@@ -2,6 +2,13 @@ import "./globals.css";
 import { AuthProvider } from "../lib/auth";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.xcomix.top";
+const API_ORIGIN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_API_BASE || "https://www.a3555bet.com").origin;
+  } catch {
+    return "";
+  }
+})();
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -52,6 +59,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        {/* Warm up the connection to the image proxy / API origin so the first
+            covers and pages start downloading sooner. */}
+        {API_ORIGIN && <link rel="preconnect" href={API_ORIGIN} crossOrigin="" />}
+        {API_ORIGIN && <link rel="dns-prefetch" href={API_ORIGIN} />}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       </head>
       <body>

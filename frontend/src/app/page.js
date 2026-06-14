@@ -6,10 +6,10 @@ import { useAuth } from "../lib/auth";
 import { fetchPopular, proxyImage } from "../lib/api";
 
 const FEATURES = [
-  ["⚡", "Auto engine", "MangaKatana + ManhwaBuddy import on autopilot — new chapters appear with zero clicks."],
-  ["📚", "Your library", "Bookmark with statuses, custom collections, reading history and new-chapter alerts."],
-  ["💬", "Community", "Reviews, threaded comments with emoji & spoilers, a global wall, DMs and a leaderboard."],
-  ["📱", "Cascade reader", "A buttery, mobile-first webtoon reader that streams artwork — never stored, never hotlinked."],
+  ["📖", "Manga", "Classic Japanese series — action, shonen, seinen, romance and slice-of-life, updated daily."],
+  ["🐉", "Manhwa", "Full-color Korean webtoons built for scrolling: cultivation, regression and revenge epics."],
+  ["🀄", "Manhua", "Chinese comics and donghua-style adventures, from martial arts to modern fantasy."],
+  ["🌙", "Read your way", "A smooth dark-mode reader with fit modes, keyboard navigation and a bookmarkable library."],
 ];
 
 export default function Landing() {
@@ -33,13 +33,13 @@ export default function Landing() {
           <span className="x">X</span>COMIX
         </h1>
         <p className="tagline">
-          A neon, dark-mode manga &amp; webtoon universe. Read thousands of auto-synced titles, build
-          your library, and join the community — built mobile-first.
+          Read manga, manhwa and manhua online — free. Thousands of titles across every genre,
+          updated with the latest chapters and built for a clean, mobile-first reading experience.
         </p>
         <div className="landing-actions">
-          <Link href="/home" className="btn btn-primary">Enter XCOMIX ›</Link>
+          <Link href="/home" className="btn btn-primary">Start reading ›</Link>
           {!user && <Link href="/register" className="btn btn-ghost">Create account</Link>}
-          <Link href="/browse" className="btn btn-ghost">Browse catalog</Link>
+          <Link href="/browse" className="btn btn-ghost">Browse library</Link>
         </div>
         <div className="landing-features">
           {FEATURES.map(([icon, h, p]) => (
