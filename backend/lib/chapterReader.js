@@ -8,13 +8,13 @@
  * records the ordered remote image URLs into the `pages` table.
  */
 
-const { fetchHtml, extractPageImages } = require("./source");
+const { fetchHtml, extractPageImagesFor } = require("./source");
 
 /** Fetch a chapter source page and return ordered page-image URLs. */
 async function readChapterPages(sourceUrl, { referer } = {}) {
   if (!sourceUrl) return [];
   const html = await fetchHtml(sourceUrl, { referer });
-  return extractPageImages(html);
+  return extractPageImagesFor(html, sourceUrl);
 }
 
 /**

@@ -7,6 +7,8 @@ const cors = require("cors");
 const { Readable } = require("node:stream");
 const { pool, query } = require("./db");
 const { ensureChapterPages } = require("./lib/chapterReader");
+const { attachUser } = require("./lib/auth");
+const scheduler = require("./lib/scheduler");
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -37,6 +39,20 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
+// JSON body parsing (allow base64 data URLs for comment image uploads).
+app.use(express.json({ limit: "8mb" }));
+
+// Decode the optional Bearer token and attach req.user for all routes.
+app.use(attachUser);
+
+// Feature routers (auth, library, social, community, catalog, admin).
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/library", require("./routes/library"));
+app.use("/api/social", require("./routes/social"));
+app.use("/api/community", require("./routes/community"));
+app.use("/api/catalog", require("./routes/catalog"));
+app.use("/admin", require("./routes/admin"));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -351,6 +367,8 @@ app.use((err, req, res, _next) => {
 app.listen(PORT, () => {
   console.log(`XCOMIX backend listening on :${PORT}`);
   console.log(`CORS allow-list: ${ALLOWED_ORIGINS.join(", ")}`);
+  console.log(`Admin dashboard: http://localhost:${PORT}/admin`);
+  scheduler.start();
 });
 
 module.exports = app;
