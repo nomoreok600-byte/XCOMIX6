@@ -6,6 +6,7 @@ import SiteNav from "../../components/SiteNav";
 import MangaGrid from "../../components/MangaGrid";
 import Footer from "../../components/Footer";
 import Stars from "../../components/Stars";
+import Icon from "../../components/Icon";
 import { browse, fetchGenres, proxyImage, decodeEntities } from "../../lib/api";
 
 const STATUSES = ["", "Ongoing", "Completed"];
@@ -56,6 +57,7 @@ export default function BrowsePage() {
       status: p.get("status") || "",
       type: p.get("type") || "",
       order: p.get("order") || "updated",
+      q: p.get("q") || "",
     }));
     fetchGenres().then((d) => setGenres(d.data || [])).catch(() => {});
   }, []);
@@ -104,8 +106,8 @@ export default function BrowsePage() {
           </select>
           <span style={{ flex: 1 }} />
           <div className="view-toggle">
-            <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>☰</button>
-            <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}>▦</button>
+            <button className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="List view"><Icon name="list" size={16} /></button>
+            <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")} aria-label="Grid view"><Icon name="collection" size={16} /></button>
           </div>
         </div>
 
