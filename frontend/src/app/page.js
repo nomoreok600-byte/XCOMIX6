@@ -56,7 +56,7 @@ export default function HomePage() {
               <h1>{decodeEntities(hero.title)}</h1>
               <p>{decodeEntities(hero.synopsis)}</p>
               <div>
-                <Link href={`/manga/${hero.slug}/`} className="btn btn-primary">
+                <Link href={`/manga/?slug=${encodeURIComponent(hero.slug)}`} className="btn btn-primary">
                   Read Now ›
                 </Link>
               </div>

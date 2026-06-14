@@ -8,7 +8,7 @@ export default function MangaCard({ manga }) {
   const isOngoing = /ongoing|releasing/i.test(manga.status || "");
 
   return (
-    <Link href={`/manga/${manga.slug}/`} className="card" title={title}>
+    <Link href={`/manga/?slug=${encodeURIComponent(manga.slug)}`} className="card" title={title}>
       <div className="card-cover">
         <div className="tag-row">
           {manga.is_18_plus && <span className="tag adult">18+</span>}

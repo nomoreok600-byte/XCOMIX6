@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { fetchChapterPages, proxyImage, decodeEntities } from "../../../lib/api";
+import { fetchChapterPages, proxyImage, decodeEntities } from "../lib/api";
 
 function ReaderImage({ page }) {
   const [status, setStatus] = useState("loading");
@@ -36,13 +36,14 @@ function ReaderImage({ page }) {
   );
 }
 
-export default function ReaderClient({ id }) {
+export default function ReaderView({ id }) {
   const router = useRouter();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!id) return;
     let active = true;
     setLoading(true);
     window.scrollTo({ top: 0 });
@@ -60,12 +61,12 @@ export default function ReaderClient({ id }) {
   const prevId = data?.prev_chapter_id;
   const nextId = data?.next_chapter_id;
 
-  const go = (target) => target && router.push(`/reader/${target}/`);
+  const go = (target) => target && router.push(`/reader/?id=${target}`);
 
   return (
     <div className="reader">
       <div className="reader-bar top">
-        <Link href={chapter ? `/manga/${chapter.manga_slug}/` : "/"} className="btn btn-ghost reader-nav-btn">
+        <Link href={chapter ? `/manga/?slug=${chapter.manga_slug}` : "/"} className="btn btn-ghost reader-nav-btn">
           ‹ Series
         </Link>
         <div className="reader-title">
@@ -79,7 +80,7 @@ export default function ReaderClient({ id }) {
       </div>
 
       <div className="reader-stage">
-        {loading ? (
+        {!id || loading ? (
           <div className="center-state">Streaming pages…</div>
         ) : error ? (
           <div className="center-state">

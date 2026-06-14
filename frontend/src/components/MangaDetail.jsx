@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Navbar from "../../../components/Navbar";
-import { fetchManga, proxyImage, decodeEntities } from "../../../lib/api";
+import Navbar from "./Navbar";
+import { fetchManga, proxyImage, decodeEntities } from "../lib/api";
 
-export default function MangaClient({ slug }) {
+export default function MangaDetail({ slug }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!slug) return;
     let active = true;
     setLoading(true);
     fetchManga(slug)
@@ -35,7 +36,7 @@ export default function MangaClient({ slug }) {
           ‹ Back to library
         </Link>
 
-        {loading ? (
+        {!slug || loading ? (
           <DetailSkeleton />
         ) : error ? (
           <div className="center-state">
@@ -68,12 +69,12 @@ export default function MangaClient({ slug }) {
                   <p className="detail-synopsis">{decodeEntities(manga.synopsis) || "No synopsis available."}</p>
                   <div className="detail-actions">
                     {firstChapter && (
-                      <Link href={`/reader/${firstChapter.id}/`} className="btn btn-primary">
+                      <Link href={`/reader/?id=${firstChapter.id}`} className="btn btn-primary">
                         Read First Chapter
                       </Link>
                     )}
                     {lastChapter && lastChapter.id !== firstChapter?.id && (
-                      <Link href={`/reader/${lastChapter.id}/`} className="btn btn-ghost">
+                      <Link href={`/reader/?id=${lastChapter.id}`} className="btn btn-ghost">
                         Latest Chapter
                       </Link>
                     )}
@@ -95,7 +96,7 @@ export default function MangaClient({ slug }) {
                     .slice()
                     .reverse()
                     .map((ch) => (
-                      <Link key={ch.id} href={`/reader/${ch.id}/`} className="chapter-row">
+                      <Link key={ch.id} href={`/reader/?id=${ch.id}`} className="chapter-row">
                         <span className="num">
                           {decodeEntities(ch.title) || `Chapter ${ch.chapter_number}`}
                         </span>
