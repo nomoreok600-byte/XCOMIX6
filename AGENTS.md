@@ -9,23 +9,48 @@ the WordPress theme package, and full cPanel deployment steps.
 ## XCOMIX decoupled engine (database/ + backend/ + frontend/)
 
 A from-scratch alternative stack lives in three top-level folders and is fully
-independent of the WordPress-backed manga frontend above:
-- `database/` — MySQL `schema.sql` (tables `mangas`, `chapters`, `pages`) + `seed.sql`.
-- `backend/` — Express + MySQL2 + CORS API for `www.a3555bet.com`. Endpoints:
-  `/api/manga`, `/api/manga/:slug`, `/api/chapters/:id/pages`, `/api/proxy/image`.
-  Run: `cd backend && cp .env.example .env` (set DB creds), `npm install`, `npm start`.
+independent of the WordPress-backed manga frontend above. This is the **active
+product** on this branch (a full manga platform: catalog + accounts + social).
+- `database/` — MySQL `schema.sql` (tables `mangas`, `chapters`, `pages`) plus
+ `app-schema.sql` (additive: `genres`, `users`, `library`/`folders`,
+ `reading_history`, `reviews`, `comments`/`comment_reactions`, `notifications`,
+ `messages`, `follows`, and extra `mangas`/`chapters` columns) + `seed.sql`.
+- `backend/` — Express + MySQL2 + CORS API for `www.a3555bet.com`. Catalog:
+ `/api/manga`, `/api/chapters/:id/pages`, `/api/proxy/image`, plus
+ `/api/catalog/*` (genres/browse/popular/recent/completed/random/rich detail).
+ Social/user: `/api/auth/*` (JWT), `/api/library/*`, `/api/social/*`
+ (comments+reviews), `/api/community/*` (profiles/follow/messages/notifications/
+ leaderboard). Admin dashboard at **`/admin`** (stats + import controls).
+ Run: `cd backend && cp .env.example .env` (set DB creds), `npm install`, `npm start`.
 - `frontend/` — Next.js `output: 'export'` static site for `https://www.xcomix.top`.
-  Run: `cd frontend && npm install`, set `NEXT_PUBLIC_API_BASE`, `npm run build` (emits `out/`).
+ Pages: landing `/` → `/home`, `/browse`, `/recent`, `/manga`, `/reader`,
+ `/login`, `/register`, `/library`, `/profile`, `/u`, `/community`,
+ `/leaderboard`, `/messages`, `/notifications`.
+ Run: `cd frontend && npm install`, set `NEXT_PUBLIC_API_BASE`, `npm run build` (emits `out/`).
+
+### Importers (fully automatic, no human)
+- `backend/scripts/katana-import.mjs` — **MangaKatana** importer (JS port of
+ `wordpress-themes/mangaverse-xcomix-theme/scraper.php`). `--url=` or `--latest`.
+- `backend/scripts/buddy-import.mjs` — **ManhwaBuddy** importer (`--url=`/`--latest`).
+- `backend/lib/importers.js` — shared engine both scripts + the scheduler + admin
+ use; links genres and emits new-chapter notifications to bookmarkers.
+- `backend/lib/scheduler.js` — background auto-import loop. Enable with env
+ `AUTO_IMPORT_ENABLED=true` (interval/sources/limit via `AUTO_IMPORT_*`). Can also
+ be triggered on demand from the admin dashboard ("Run latest crawl now") or
+ `POST /admin/import/run`. No human interaction needed.
 
 Non-obvious caveats:
 - The backend needs a running **MySQL/MariaDB** (a system dependency, not in the
-  update script). Load `database/schema.sql` then `database/seed.sql`.
-- The frontend's dynamic routes use `generateStaticParams`, so `NEXT_PUBLIC_API_BASE`
-  must point at a reachable backend **at build time** or those pages won't be emitted.
+ update script). Load `database/schema.sql`, then `database/app-schema.sql`, then
+ (optionally) `database/seed.sql`. `app-schema.sql` is idempotent.
+- The frontend uses **query-param SPA routing** (e.g. `/manga/?slug=...`,
+ `/reader/?id=...`), so there is **no** `generateStaticParams` build-time API
+ dependency — newly imported titles work immediately with no rebuild.
 - All artwork renders through `${API_BASE}/api/proxy/image?url=...`; never hotlink
-  source images directly (they 403). The proxy spoofs headers + host-based Referer.
+ source images directly (they 403). The proxy spoofs headers + host-based Referer.
+- The first registered user automatically becomes `role=admin`.
 - `backend/scripts/import-demo-data.mjs` re-populates MySQL from a source API
-  (the JS port of the legacy scraper sync stage).
+ (the JS port of the legacy scraper sync stage).
 
 ## Cursor Cloud specific instructions
 
@@ -52,6 +77,29 @@ Non-obvious caveats:
 - Remote cover/page images are always rendered through `/api/proxy-image?url=...`
   (it injects desktop headers + a per-source Referer); hotlinking source images
   directly will usually 403.
+
+### XCOMIX decoupled engine — local dev (database/ + backend/ + frontend/)
+- **MariaDB** is required and is NOT in the update script (system dependency).
+ Start it (no systemd in the container) and create the `xcomix` DB + user, then
+ load `database/schema.sql` → `database/app-schema.sql` → `database/seed.sql`.
+ The backend reads `backend/.env` (copy from `.env.example`); for local dev set
+ `DB_HOST=127.0.0.1`, real `DB_*` creds, `JWT_SECRET`, `ADMIN_TOKEN`, and add the
+ dev frontend origin to `FRONTEND_ORIGIN` (e.g. `http://localhost:3100`).
+- Run order: backend first (`cd backend && npm start`, serves `:4000`), then the
+ frontend (`cd frontend && npx next dev -p 3100`) with
+ `NEXT_PUBLIC_API_BASE=http://localhost:4000` in `frontend/.env.local`. Use a
+ non-3000 port so it never collides with the root WordPress-frontend dev server.
+- Admin dashboard: `http://localhost:4000/admin`, unlock with the `ADMIN_TOKEN`
+ value. It shows live stats and can trigger Katana/Buddy imports on demand.
+- CORS: the API allow-lists `FRONTEND_ORIGIN` for cross-origin browsers but also
+ always allows **same-origin** requests (so the first-party `/admin` page works
+ on any deployment) and permits `GET/POST/PATCH/DELETE`.
+- Importers + the lazy chapter reader need network egress to mangakatana.com /
+ manhwabuddy.com. A chapter with a `source_url` but no `pages` resolves its
+ page images on first `GET /api/chapters/:id/pages` hit (cached thereafter).
+- `frontend/` and the root app each have their own `.next/` — building one does
+ not affect the other, but (as with any Next app) don't run `next build` and
+ `next dev` against the same `.next/` simultaneously.
 
 ### cPanel / production build (no Vercel)
 - `next.config.mjs` sets `output: 'standalone'`. `npm run build` emits

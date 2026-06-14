@@ -25,20 +25,24 @@ const ALLOWED_ORIGINS = (process.env.FRONTEND_ORIGIN || "https://www.xcomix.top"
   .map((o) => o.trim().replace(/\/+$/, ""))
   .filter(Boolean);
 
-const corsOptions = {
-  origin(origin, callback) {
-    // Allow non-browser clients (no Origin header) and any allow-listed origin.
-    if (!origin || ALLOWED_ORIGINS.includes(origin.replace(/\/+$/, ""))) {
-      return callback(null, true);
-    }
-    return callback(new Error("Origin not allowed by CORS policy"));
-  },
-  methods: ["GET", "OPTIONS"],
-  maxAge: 600,
-};
+// CORS delegate: allow non-browser clients (no Origin), any allow-listed
+// frontend origin, AND same-origin requests (so the first-party admin page +
+// the static frontend's read/write API calls work on any deployment). The
+// strict allow-list still gates cross-origin browser clients.
+function corsDelegate(req, callback) {
+  const origin = (req.headers.origin || "").replace(/\/+$/, "");
+  const self = `${req.protocol}://${req.headers.host || ""}`.replace(/\/+$/, "");
+  const allowed = !origin || ALLOWED_ORIGINS.includes(origin) || origin === self;
+  callback(allowed ? null : new Error("Origin not allowed by CORS policy"), {
+    origin: allowed,
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Token"],
+    maxAge: 600,
+  });
+}
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.use(cors(corsDelegate));
+app.options("*", cors(corsDelegate));
 
 // JSON body parsing (allow base64 data URLs for comment image uploads).
 app.use(express.json({ limit: "8mb" }));
