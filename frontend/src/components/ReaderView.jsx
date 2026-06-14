@@ -12,6 +12,8 @@ import {
   decodeEntities,
 } from "../lib/api";
 import Comments from "./Comments";
+import Icon from "./Icon";
+import AdSlot from "./AdSlot";
 
 const FIT_KEY = "xcomix_reader_fit";
 const FIT_MODES = [
@@ -66,6 +68,9 @@ export default function ReaderView({ id }) {
   const [fit, setFit] = useState("width");
   const [showSettings, setShowSettings] = useState(false);
   const [progress, setProgress] = useState(0);
+  // Immersive reading: tap the page area to toggle the top/bottom option bars so
+  // they don't permanently overlay (and shift) the artwork.
+  const [chrome, setChrome] = useState(true);
 
   // Restore persisted fit preference once on mount.
   useEffect(() => {
@@ -122,6 +127,13 @@ export default function ReaderView({ id }) {
     [router]
   );
 
+  // Tap the artwork to hide/show the option bars (ignore taps on controls).
+  const toggleChrome = (e) => {
+    if (e.target.closest("button, a, select, input")) return;
+    setChrome((c) => !c);
+    setShowSettings(false);
+  };
+
   // Keyboard navigation: ←/→ jump chapters, Home returns to the series.
   useEffect(() => {
     const onKey = (e) => {
@@ -153,7 +165,7 @@ export default function ReaderView({ id }) {
   }, [nextId]);
 
   return (
-    <div className="reader">
+    <div className={`reader${chrome ? "" : " chrome-hidden"}`}>
       <div className="reader-progress" style={{ width: `${progress}%` }} />
 
       <div className="reader-bar top">
@@ -161,7 +173,7 @@ export default function ReaderView({ id }) {
           href={chapter ? `/manga/?slug=${chapter.manga_slug}` : "/"}
           className="btn btn-ghost reader-nav-btn"
         >
-          ‹ Series
+          <Icon name="chevronLeft" size={16} /> Series
         </Link>
         <div className="reader-title">
           {chapter
@@ -174,10 +186,10 @@ export default function ReaderView({ id }) {
             onClick={() => setShowSettings((s) => !s)}
             aria-label="Reader settings"
           >
-            ⚙ Settings
+            <Icon name="settings" size={16} /> Settings
           </button>
           <Link href="/home" className="btn btn-ghost reader-nav-btn">
-            Home
+            <Icon name="home" size={16} />
           </Link>
         </div>
       </div>
@@ -216,12 +228,14 @@ export default function ReaderView({ id }) {
             </select>
           </div>
           <p className="reader-settings-hint">
-            Tip: use ← and → on your keyboard to move between chapters.
+            Tip: tap the page to hide these bars · use ← and → to change chapters.
           </p>
         </div>
       )}
 
-      <div className={`reader-stage fit-${fit}`}>
+      <AdSlot slot="chapter" className="ad-slot-chapter" />
+
+      <div className={`reader-stage fit-${fit}`} onClick={toggleChrome}>
         {!id || loading ? (
           <div className="center-state">Streaming pages…</div>
         ) : error ? (
@@ -242,10 +256,10 @@ export default function ReaderView({ id }) {
         <div className="reader-end">
           <div className="reader-end-nav">
             <button className="btn btn-ghost" disabled={!prevId} onClick={() => go(prevId)}>
-              ‹ Previous chapter
+              <Icon name="chevronLeft" size={16} /> Previous chapter
             </button>
             <button className="btn btn-primary" disabled={!nextId} onClick={() => go(nextId)}>
-              Next chapter ›
+              Next chapter <Icon name="chevronRight" size={16} />
             </button>
           </div>
         </div>
@@ -264,7 +278,7 @@ export default function ReaderView({ id }) {
       {!loading && !error && chapter && (
         <div className="reader-bar bottom">
           <button className="btn btn-ghost reader-nav-btn" disabled={!prevId} onClick={() => go(prevId)}>
-            ‹ Prev
+            <Icon name="chevronLeft" size={16} /> Prev
           </button>
           <select
             className="reader-select compact"
@@ -283,7 +297,7 @@ export default function ReaderView({ id }) {
             {chapters.length === 0 && <option value={id}>Ch. {chapter.chapter_number}</option>}
           </select>
           <button className="btn btn-primary reader-nav-btn" disabled={!nextId} onClick={() => go(nextId)}>
-            Next ›
+            Next <Icon name="chevronRight" size={16} />
           </button>
         </div>
       )}
