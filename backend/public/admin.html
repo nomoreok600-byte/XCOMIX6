@@ -67,9 +67,26 @@
         <input id="run-limit" type="number" value="6" min="1" max="30" style="width:90px" title="manga per source" />
         <button id="run-latest">Run latest crawl now</button>
       </div>
-      <div class="row">
+      <div class="row" style="margin-bottom:12px">
         <input id="import-url" placeholder="https://mangakatana.com/manga/... or manhwabuddy.com/manhwa/..." style="flex:1;min-width:280px" />
         <button id="import-url-btn">Import URL</button>
+      </div>
+      <div class="row" style="margin-bottom:12px">
+        <button id="sched-on" class="ghost">▶ Enable auto-import</button>
+        <button id="sched-off" class="ghost">⏸ Disable auto-import</button>
+        <span class="badge">runtime toggle — also set AUTO_IMPORT_ENABLED=true to auto-start on boot</span>
+      </div>
+      <div class="row">
+        <span class="badge">Backlog crawl pages</span>
+        <input id="bl-start" type="number" value="1" min="1" style="width:80px" title="start page" />
+        <span>→</span>
+        <input id="bl-end" type="number" value="3" min="1" style="width:80px" title="end page" />
+        <select id="bl-sources">
+          <option value="katana,buddy">Katana + Buddy</option>
+          <option value="katana">MangaKatana</option>
+          <option value="buddy">ManhwaBuddy</option>
+        </select>
+        <button id="bl-run">Run backlog importer</button>
       </div>
       <div class="log" id="log" style="margin-top:12px">Ready.</div>
     </div>
@@ -167,6 +184,19 @@ $("#import-url-btn").onclick = async () => {
   if (!url) return;
   log("Importing " + url + " …");
   try { const r = await api("/import/url", { method: "POST", body: JSON.stringify({ url }) }); log("OK: " + JSON.stringify(r.result)); refresh(); }
+  catch (e) { log("ERROR: " + e.message); }
+};
+$("#sched-on").onclick = async () => {
+  try { await api("/scheduler/start", { method: "POST", body: JSON.stringify({}) }); log("Auto-import ENABLED. First pass starts shortly…"); let n=0; const t=setInterval(async()=>{await refresh(); if(++n>10)clearInterval(t);},8000); }
+  catch (e) { log("ERROR: " + e.message); }
+};
+$("#sched-off").onclick = async () => {
+  try { await api("/scheduler/stop", { method: "POST", body: JSON.stringify({}) }); log("Auto-import DISABLED."); refresh(); }
+  catch (e) { log("ERROR: " + e.message); }
+};
+$("#bl-run").onclick = async () => {
+  const body = { sources: $("#bl-sources").value, start_page: Number($("#bl-start").value), end_page: Number($("#bl-end").value) };
+  try { await api("/import/backlog", { method: "POST", body: JSON.stringify(body) }); log("Backlog crawl started (pages " + body.start_page + "–" + body.end_page + "). Refreshing…"); let n=0; const t=setInterval(async()=>{await refresh(); if(++n>15)clearInterval(t);},8000); }
   catch (e) { log("ERROR: " + e.message); }
 };
 

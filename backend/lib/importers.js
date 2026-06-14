@@ -258,6 +258,31 @@ async function importBuddyLatest({
   return results;
 }
 
+// ---------------------------------------------------------------------------
+// Backlog crawlers — walk multiple "latest" pages to backfill the catalog.
+// ---------------------------------------------------------------------------
+async function importKatanaBacklog({ startPage = 1, endPage = 5, limit = 15, maxChapters = 1, read = false, delay = 800 } = {}) {
+  const results = [];
+  for (let page = startPage; page <= endPage; page += 1) {
+    const pageResults = await importKatanaLatest({ limit, maxChapters, read, page, delay });
+    results.push(...pageResults);
+    if (pageResults.length === 0) break; // end of backlog
+    await sleep(delay);
+  }
+  return results;
+}
+
+async function importBuddyBacklog({ startPage = 1, endPage = 5, limit = 15, maxChapters = 1, read = false, delay = 800 } = {}) {
+  const results = [];
+  for (let page = startPage; page <= endPage; page += 1) {
+    const pageResults = await importBuddyLatest({ limit, maxChapters, read, page, delay });
+    results.push(...pageResults);
+    if (pageResults.length === 0) break;
+    await sleep(delay);
+  }
+  return results;
+}
+
 /** Detect source from a single manga URL and import it. */
 async function importByUrl(url, opts = {}) {
   if (/mangakatana/i.test(url)) return importKatanaManga(url, opts);
@@ -268,7 +293,9 @@ module.exports = {
   persistManga,
   importKatanaManga,
   importKatanaLatest,
+  importKatanaBacklog,
   importBuddyManga,
   importBuddyLatest,
+  importBuddyBacklog,
   importByUrl,
 };

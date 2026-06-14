@@ -21,11 +21,14 @@ const state = {
   lastRun: null,
   lastResult: null,
   runs: 0,
+  // Runtime override (toggled from the admin dashboard). null = follow env.
+  enabledOverride: null,
 };
 
 function cfg() {
+  const envEnabled = String(process.env.AUTO_IMPORT_ENABLED || "false").toLowerCase() === "true";
   return {
-    enabled: String(process.env.AUTO_IMPORT_ENABLED || "false").toLowerCase() === "true",
+    enabled: state.enabledOverride != null ? state.enabledOverride : envEnabled,
     intervalMin: Number(process.env.AUTO_IMPORT_INTERVAL_MIN || 180),
     sources: String(process.env.AUTO_IMPORT_SOURCES || "katana,buddy")
       .split(",")
@@ -73,10 +76,11 @@ async function runOnce(overrides = {}) {
   return summary;
 }
 
-function schedule() {
+function schedule({ immediate = false } = {}) {
+  if (state.timer) clearTimeout(state.timer);
   const c = cfg();
   const ms = Math.max(1, c.intervalMin) * 60 * 1000;
-  state.timer = setTimeout(async function loop() {
+  const loop = async () => {
     try {
       console.log("[scheduler] auto-import run starting…");
       const s = await runOnce();
@@ -84,24 +88,43 @@ function schedule() {
     } catch (err) {
       console.warn("[scheduler] auto-import failed:", err.message);
     }
-    state.timer = setTimeout(loop, ms);
-  }, ms);
+    if (cfg().enabled) state.timer = setTimeout(loop, ms);
+  };
+  state.timer = setTimeout(loop, immediate ? 1000 : ms);
 }
 
 function start() {
   const c = cfg();
   if (!c.enabled) {
-    console.log("[scheduler] auto-import disabled (set AUTO_IMPORT_ENABLED=true to enable).");
+    console.log("[scheduler] auto-import disabled (set AUTO_IMPORT_ENABLED=true or enable it from /admin).");
     return;
   }
   console.log(
     `[scheduler] auto-import enabled: every ${c.intervalMin}m, sources=${c.sources.join(",")}, limit=${c.limit}`
   );
-  schedule();
+  // Run a first pass shortly after boot, then repeat on the interval.
+  schedule({ immediate: true });
+}
+
+/** Turn the loop on at runtime (admin toggle); runs a first pass shortly after. */
+function enable(intervalMin) {
+  state.enabledOverride = true;
+  if (intervalMin) process.env.AUTO_IMPORT_INTERVAL_MIN = String(intervalMin);
+  console.log("[scheduler] auto-import ENABLED at runtime.");
+  schedule({ immediate: true });
+}
+
+/** Turn the loop off at runtime (admin toggle). */
+function disable() {
+  state.enabledOverride = false;
+  if (state.timer) clearTimeout(state.timer);
+  state.timer = null;
+  console.log("[scheduler] auto-import DISABLED at runtime.");
 }
 
 function status() {
-  return { ...cfg(), ...state, timer: undefined };
+  const { timer, ...rest } = state;
+  return { ...cfg(), ...rest };
 }
 
-module.exports = { start, runOnce, status };
+module.exports = { start, runOnce, status, enable, disable };

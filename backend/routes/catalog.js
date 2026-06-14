@@ -12,6 +12,12 @@ function asInt(value, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {})
   return Math.min(Math.max(n, min), max);
 }
 
+// 18+ titles are hidden unless the client explicitly opts in (?adult=1).
+function showAdult(req) {
+  const v = String(req.query.adult || "").toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
 function mangaCard(row) {
   return {
     id: String(row.id),
@@ -60,6 +66,7 @@ router.get("/browse", wrap(async (req, res) => {
 
   const where = [];
   const params = {};
+  if (!showAdult(req)) where.push("m.is_18_plus = 0");
   if (status) { where.push("m.status = :status"); params.status = status; }
   if (type) { where.push("m.type = :type"); params.type = type; }
   if (q) { where.push("(m.title LIKE :q OR m.slug LIKE :q)"); params.q = `%${q}%`; }
@@ -95,26 +102,30 @@ router.get("/browse", wrap(async (req, res) => {
 
 router.get("/popular", wrap(async (req, res) => {
   const limit = asInt(req.query.limit, 12, { min: 1, max: 60 });
-  const rows = await query(`${CARD_SELECT} ORDER BY m.views DESC, m.id DESC LIMIT ${limit}`);
+  const adult = showAdult(req) ? "" : "WHERE m.is_18_plus = 0";
+  const rows = await query(`${CARD_SELECT} ${adult} ORDER BY m.views DESC, m.id DESC LIMIT ${limit}`);
   res.json({ data: rows.map(mangaCard) });
 }));
 
 router.get("/recent", wrap(async (req, res) => {
   const limit = asInt(req.query.limit, 24, { min: 1, max: 60 });
-  const rows = await query(`${CARD_SELECT} ORDER BY m.updated_at DESC, m.id DESC LIMIT ${limit}`);
+  const adult = showAdult(req) ? "" : "WHERE m.is_18_plus = 0";
+  const rows = await query(`${CARD_SELECT} ${adult} ORDER BY m.updated_at DESC, m.id DESC LIMIT ${limit}`);
   res.json({ data: rows.map(mangaCard) });
 }));
 
 router.get("/completed", wrap(async (req, res) => {
   const limit = asInt(req.query.limit, 24, { min: 1, max: 60 });
+  const adult = showAdult(req) ? "" : "AND m.is_18_plus = 0";
   const rows = await query(
-    `${CARD_SELECT} WHERE m.status = 'Completed' ORDER BY m.updated_at DESC, m.id DESC LIMIT ${limit}`
+    `${CARD_SELECT} WHERE m.status = 'Completed' ${adult} ORDER BY m.updated_at DESC, m.id DESC LIMIT ${limit}`
   );
   res.json({ data: rows.map(mangaCard) });
 }));
 
-router.get("/random", wrap(async (_req, res) => {
-  const rows = await query(`${CARD_SELECT} ORDER BY RAND() LIMIT 1`);
+router.get("/random", wrap(async (req, res) => {
+  const adult = showAdult(req) ? "" : "WHERE m.is_18_plus = 0";
+  const rows = await query(`${CARD_SELECT} ${adult} ORDER BY RAND() LIMIT 1`);
   if (!rows.length) return res.status(404).json({ error: "No manga available" });
   res.json({ data: mangaCard(rows[0]) });
 }));

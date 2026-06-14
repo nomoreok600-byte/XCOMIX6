@@ -217,6 +217,118 @@ router.post("/messages/:userId", requireAuth, wrap(async (req, res) => {
   res.status(201).json({ id: String(ins.insertId) });
 }));
 
+// ---- Community wall (global forum feed) ----
+router.get("/feed", wrap(async (req, res) => {
+  const sort = (req.query.sort || "new").toString();
+  const viewerId = (req.user && req.user.id) || 0;
+  const orderSql =
+    sort === "old" ? "p.created_at ASC"
+    : sort === "top" ? "likes DESC, p.created_at DESC"
+    : "p.created_at DESC";
+
+  const rows = await query(
+    `SELECT p.id, p.user_id, p.body, p.image_url, p.created_at, u.username, u.avatar_url,
+            (SELECT COUNT(*) FROM community_post_likes l WHERE l.post_id = p.id) AS likes,
+            (SELECT COUNT(*) FROM community_posts r WHERE r.parent_id = p.id) AS replies,
+            (SELECT COUNT(*) FROM community_post_likes l WHERE l.post_id = p.id AND l.user_id = :viewer) AS liked
+     FROM community_posts p JOIN users u ON u.id = p.user_id
+     WHERE p.parent_id IS NULL
+     ORDER BY ${orderSql} LIMIT 100`,
+    { viewer: viewerId }
+  );
+  res.json({
+    data: rows.map((r) => ({
+      id: String(r.id),
+      user: { id: String(r.user_id), username: r.username, avatar_url: r.avatar_url || "" },
+      body: r.body,
+      image_url: r.image_url || "",
+      created_at: r.created_at,
+      likes: Number(r.likes),
+      replies: Number(r.replies),
+      liked: Number(r.liked) > 0,
+    })),
+  });
+}));
+
+router.get("/feed/:id/replies", wrap(async (req, res) => {
+  const rows = await query(
+    `SELECT p.id, p.user_id, p.body, p.image_url, p.created_at, u.username, u.avatar_url
+     FROM community_posts p JOIN users u ON u.id = p.user_id
+     WHERE p.parent_id = :id ORDER BY p.created_at ASC`,
+    { id: req.params.id }
+  );
+  res.json({
+    data: rows.map((r) => ({
+      id: String(r.id),
+      user: { id: String(r.user_id), username: r.username, avatar_url: r.avatar_url || "" },
+      body: r.body,
+      image_url: r.image_url || "",
+      created_at: r.created_at,
+    })),
+  });
+}));
+
+router.post("/feed", requireAuth, wrap(async (req, res) => {
+  const body = String(req.body.body || "").trim().slice(0, 4000);
+  const parentId = req.body.parent_id ? Number(req.body.parent_id) : null;
+  const imageUrl = req.body.image_url ? String(req.body.image_url).slice(0, 1000) : null;
+  if (!body && !imageUrl) return res.status(400).json({ error: "Message body or image required" });
+  const [ins] = await pool.execute(
+    "INSERT INTO community_posts (user_id, parent_id, body, image_url) VALUES (?, ?, ?, ?)",
+    [req.user.id, parentId, body, imageUrl]
+  );
+  res.status(201).json({ id: String(ins.insertId) });
+}));
+
+router.post("/feed/:id/like", requireAuth, wrap(async (req, res) => {
+  const existing = await query(
+    "SELECT 1 FROM community_post_likes WHERE post_id = :p AND user_id = :u LIMIT 1",
+    { p: req.params.id, u: req.user.id }
+  );
+  if (existing.length) {
+    await query("DELETE FROM community_post_likes WHERE post_id = :p AND user_id = :u", {
+      p: req.params.id,
+      u: req.user.id,
+    });
+    return res.json({ ok: true, liked: false });
+  }
+  await pool.execute("INSERT IGNORE INTO community_post_likes (post_id, user_id) VALUES (?, ?)", [
+    req.params.id,
+    req.user.id,
+  ]);
+  res.json({ ok: true, liked: true });
+}));
+
+router.delete("/feed/:id", requireAuth, wrap(async (req, res) => {
+  const isAdmin = req.user.role === "admin";
+  await query(
+    `DELETE FROM community_posts WHERE id = :id ${isAdmin ? "" : "AND user_id = :uid"}`,
+    isAdmin ? { id: req.params.id } : { id: req.params.id, uid: req.user.id }
+  );
+  res.json({ ok: true });
+}));
+
+// ---- Latest site-wide comments (for the home page) ----
+router.get("/latest-comments", wrap(async (_req, res) => {
+  const rows = await query(
+    `SELECT c.id, c.body, c.is_spoiler, c.created_at, c.manga_id, c.chapter_id,
+            u.username, u.avatar_url, m.slug AS manga_slug, m.title AS manga_title
+     FROM comments c JOIN users u ON u.id = c.user_id
+     LEFT JOIN mangas m ON m.id = c.manga_id
+     ORDER BY c.created_at DESC LIMIT 12`
+  );
+  res.json({
+    data: rows.map((r) => ({
+      id: String(r.id),
+      body: r.is_spoiler ? "(spoiler hidden)" : r.body,
+      created_at: r.created_at,
+      user: { username: r.username, avatar_url: r.avatar_url || "" },
+      manga_slug: r.manga_slug || null,
+      manga_title: r.manga_title || null,
+    })),
+  });
+}));
+
 // ---- Notifications ----
 router.get("/notifications", requireAuth, wrap(async (req, res) => {
   const rows = await query(

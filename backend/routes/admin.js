@@ -94,8 +94,42 @@ router.post("/import/run", wrap(async (req, res) => {
   res.json({ ok: true, started: true });
 }));
 
+// Deep backlog crawl across multiple "latest" pages (backfills everything).
+router.post("/import/backlog", wrap(async (req, res) => {
+  const sources = (req.body.sources ? String(req.body.sources) : "katana,buddy")
+    .split(",").map((s) => s.trim()).filter(Boolean);
+  const startPage = Number(req.body.start_page || 1);
+  const endPage = Number(req.body.end_page || 5);
+  const limit = Number(req.body.limit || 15);
+  const maxChapters = Number(req.body.max_chapters || 0);
+
+  // Run in the background (can be long); poll /admin/scheduler or /admin/stats.
+  (async () => {
+    for (const src of sources) {
+      try {
+        if (src === "katana") await importers.importKatanaBacklog({ startPage, endPage, limit, maxChapters });
+        else if (src === "buddy") await importers.importBuddyBacklog({ startPage, endPage, limit, maxChapters });
+        console.log(`[admin] backlog ${src} pages ${startPage}-${endPage} done`);
+      } catch (err) {
+        console.warn(`[admin] backlog ${src} failed:`, err.message);
+      }
+    }
+  })();
+  res.json({ ok: true, started: true, sources, startPage, endPage });
+}));
+
 router.get("/scheduler", (_req, res) => {
   res.json(scheduler.status());
+});
+
+// Toggle the auto-import scheduler on/off at runtime.
+router.post("/scheduler/start", (req, res) => {
+  scheduler.enable(req.body.interval_min ? Number(req.body.interval_min) : undefined);
+  res.json({ ok: true, status: scheduler.status() });
+});
+router.post("/scheduler/stop", (_req, res) => {
+  scheduler.disable();
+  res.json({ ok: true, status: scheduler.status() });
 });
 
 module.exports = router;
