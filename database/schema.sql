@@ -20,9 +20,12 @@ CREATE TABLE IF NOT EXISTS `mangas` (
   `status`     VARCHAR(40)     NOT NULL DEFAULT 'Ongoing',
   `type`       VARCHAR(40)     NOT NULL DEFAULT 'Manga',
   `is_18_plus` TINYINT(1)      NOT NULL DEFAULT 0,
+  -- Origin page URL on the source site (used by importers to re-sync).
+  `source_url` VARCHAR(767)    NULL,
   `created_at` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_mangas_slug` (`slug`),
+  KEY `idx_mangas_source` (`source_url`),
   KEY `idx_mangas_status` (`status`),
   KEY `idx_mangas_type` (`type`),
   KEY `idx_mangas_created` (`created_at`)
@@ -36,6 +39,8 @@ CREATE TABLE IF NOT EXISTS `chapters` (
   `manga_id`       BIGINT UNSIGNED NOT NULL,
   `chapter_number` VARCHAR(40)     NOT NULL,
   `title`          VARCHAR(512)    NULL,
+  -- Source chapter page URL. The "chapter reader" fetches this to resolve pages.
+  `source_url`     VARCHAR(767)    NULL,
   `created_at`     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_chapter_per_manga` (`manga_id`, `chapter_number`),
