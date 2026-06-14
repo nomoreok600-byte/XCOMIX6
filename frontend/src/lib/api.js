@@ -4,6 +4,18 @@ export const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE || "https://www.a3555bet.com"
 ).replace(/\/+$/, "");
 
+const TOKEN_KEY = "xcomix_token";
+
+export function getToken() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(TOKEN_KEY);
+}
+export function setToken(token) {
+  if (typeof window === "undefined") return;
+  if (token) window.localStorage.setItem(TOKEN_KEY, token);
+  else window.localStorage.removeItem(TOKEN_KEY);
+}
+
 /** Wrap any remote image URL through the backend streaming proxy. */
 export function proxyImage(url) {
   if (!url) return "";
@@ -29,32 +41,95 @@ export function decodeEntities(input) {
     .replace(/&nbsp;/g, " ");
 }
 
-async function getJson(path, { cache = "no-store" } = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Accept: "application/json" },
-    cache,
-  });
-  if (!res.ok) {
-    throw new Error(`API ${res.status} for ${path}`);
+async function request(path, { method = "GET", body, auth = false, cache = "no-store" } = {}) {
+  const headers = { Accept: "application/json" };
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (auth) {
+    const t = getToken();
+    if (t) headers.Authorization = `Bearer ${t}`;
   }
-  return res.json();
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    cache,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `API ${res.status}`);
+  return data;
 }
 
-export function fetchMangaList(params = {}) {
-  const qs = new URLSearchParams();
-  if (params.limit != null) qs.set("limit", params.limit);
-  if (params.offset != null) qs.set("offset", params.offset);
-  if (params.q) qs.set("q", params.q);
-  if (params.type) qs.set("type", params.type);
-  if (params.status) qs.set("status", params.status);
-  const suffix = qs.toString() ? `?${qs.toString()}` : "";
-  return getJson(`/api/manga${suffix}`);
-}
+const qs = (params) => {
+  const u = new URLSearchParams();
+  for (const [k, v] of Object.entries(params || {})) {
+    if (v !== undefined && v !== null && v !== "") u.set(k, v);
+  }
+  const s = u.toString();
+  return s ? `?${s}` : "";
+};
 
-export function fetchManga(slug) {
-  return getJson(`/api/manga/${encodeURIComponent(slug)}`);
-}
+// ---- Catalog ----
+export const fetchMangaList = (params = {}) => request(`/api/manga${qs(params)}`);
+export const fetchManga = (slug) => request(`/api/catalog/manga/${encodeURIComponent(slug)}`);
+export const fetchChapterPages = (id) => request(`/api/chapters/${encodeURIComponent(id)}/pages`);
+export const fetchGenres = () => request(`/api/catalog/genres`);
+export const browse = (params = {}) => request(`/api/catalog/browse${qs(params)}`);
+export const fetchPopular = (limit = 12) => request(`/api/catalog/popular${qs({ limit })}`);
+export const fetchRecent = (limit = 24) => request(`/api/catalog/recent${qs({ limit })}`);
+export const fetchCompleted = (limit = 24) => request(`/api/catalog/completed${qs({ limit })}`);
+export const fetchRandom = () => request(`/api/catalog/random`);
 
-export function fetchChapterPages(id) {
-  return getJson(`/api/chapters/${encodeURIComponent(id)}/pages`);
-}
+// ---- Auth ----
+export const register = (body) => request(`/api/auth/register`, { method: "POST", body });
+export const login = (body) => request(`/api/auth/login`, { method: "POST", body });
+export const fetchMe = () => request(`/api/auth/me`, { auth: true });
+export const updateMe = (body) => request(`/api/auth/me`, { method: "PATCH", body, auth: true });
+export const changePassword = (body) =>
+  request(`/api/auth/change-password`, { method: "POST", body, auth: true });
+export const deleteAccount = () => request(`/api/auth/me`, { method: "DELETE", auth: true });
+
+// ---- Library ----
+export const fetchLibrary = (params = {}) => request(`/api/library${qs(params)}`, { auth: true });
+export const libraryStatus = (mangaId) => request(`/api/library/status/${mangaId}`, { auth: true });
+export const setLibrary = (body) => request(`/api/library`, { method: "POST", body, auth: true });
+export const removeLibrary = (mangaId) =>
+  request(`/api/library/${mangaId}`, { method: "DELETE", auth: true });
+export const fetchFolders = () => request(`/api/library/folders`, { auth: true });
+export const createFolder = (name) =>
+  request(`/api/library/folders`, { method: "POST", body: { name }, auth: true });
+export const deleteFolder = (id) =>
+  request(`/api/library/folders/${id}`, { method: "DELETE", auth: true });
+export const fetchHistory = () => request(`/api/library/history`, { auth: true });
+export const pushHistory = (body) =>
+  request(`/api/library/history`, { method: "POST", body, auth: true });
+
+// ---- Social ----
+export const fetchComments = (params = {}) =>
+  request(`/api/social/comments${qs(params)}`, { auth: true });
+export const postComment = (body) =>
+  request(`/api/social/comments`, { method: "POST", body, auth: true });
+export const deleteComment = (id) =>
+  request(`/api/social/comments/${id}`, { method: "DELETE", auth: true });
+export const reactComment = (id, emoji) =>
+  request(`/api/social/comments/${id}/react`, { method: "POST", body: { emoji }, auth: true });
+export const fetchReviews = (mangaId) => request(`/api/social/reviews${qs({ manga_id: mangaId })}`);
+export const postReview = (body) =>
+  request(`/api/social/reviews`, { method: "POST", body, auth: true });
+
+// ---- Community ----
+export const fetchUsers = (q) => request(`/api/community/users${qs({ q })}`);
+export const fetchLeaderboard = () => request(`/api/community/leaderboard`);
+export const fetchProfile = (username) =>
+  request(`/api/community/profile/${encodeURIComponent(username)}`, { auth: true });
+export const follow = (userId) =>
+  request(`/api/community/follow/${userId}`, { method: "POST", auth: true });
+export const unfollow = (userId) =>
+  request(`/api/community/follow/${userId}`, { method: "DELETE", auth: true });
+export const fetchConversations = () => request(`/api/community/messages`, { auth: true });
+export const fetchThread = (userId) =>
+  request(`/api/community/messages/${userId}`, { auth: true });
+export const sendMessage = (userId, body) =>
+  request(`/api/community/messages/${userId}`, { method: "POST", body: { body }, auth: true });
+export const fetchNotifications = () => request(`/api/community/notifications`, { auth: true });
+export const markNotificationsRead = () =>
+  request(`/api/community/notifications/read`, { method: "POST", auth: true });

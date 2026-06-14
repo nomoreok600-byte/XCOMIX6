@@ -1,98 +1,50 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Navbar from "../components/Navbar";
-import MangaCard from "../components/MangaCard";
-import { GridSkeleton } from "../components/Skeletons";
-import { fetchMangaList, proxyImage, decodeEntities } from "../lib/api";
+import { useAuth } from "../lib/auth";
 
-export default function HomePage() {
-  const [all, setAll] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [query, setQuery] = useState("");
+const FEATURES = [
+  ["Auto engine", "MangaKatana + ManhwaBuddy import on autopilot — new chapters appear with zero clicks."],
+  ["Your library", "Bookmark with statuses, custom folders, reading history and new-chapter alerts."],
+  ["Community", "Reviews, threaded comments with emoji & spoilers, DMs, profiles and a leaderboard."],
+  ["Cascade reader", "A buttery webtoon reader that streams artwork — nothing stored, never hotlinked."],
+];
 
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    fetchMangaList({ limit: 60 })
-      .then((res) => {
-        if (!active) return;
-        setAll(res.data || []);
-        setError(null);
-      })
-      .catch((err) => active && setError(err.message))
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter((m) => decodeEntities(m.title).toLowerCase().includes(q));
-  }, [all, query]);
-
-  const hero = all[0];
-
+export default function Landing() {
+  const { user } = useAuth();
   return (
-    <>
-      <Navbar query={query} onQuery={setQuery} />
-      <main className="container">
-        {loading ? (
-          <div className="hero skeleton" style={{ minHeight: 320 }} />
-        ) : hero ? (
-          <section className="hero" id="featured">
-            <div className="hero-bg" style={{ backgroundImage: `url(${proxyImage(hero.cover_url)})` }} />
-            <div className="hero-veil" />
-            <div className="hero-content">
-              <div className="detail-tags">
-                {hero.is_18_plus && <span className="tag adult">18+</span>}
-                <span className="tag type">{hero.type}</span>
-                <span className="tag ongoing">{hero.status}</span>
-              </div>
-              <h1>{decodeEntities(hero.title)}</h1>
-              <p>{decodeEntities(hero.synopsis)}</p>
-              <div>
-                <Link href={`/manga/?slug=${encodeURIComponent(hero.slug)}`} className="btn btn-primary">
-                  Read Now ›
-                </Link>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        <section className="section" id="hot">
-          <div className="section-head">
-            <span className="bar" />
-            <h2>{query ? `Results for "${query}"` : "Hot Updates"}</h2>
+    <main className="landing">
+      <h1>
+        <span className="x">X</span>COMIX
+      </h1>
+      <p className="tagline">
+        A neon, dark-mode manga & webtoon universe. Read thousands of auto-synced titles, build your
+        library, and join the community.
+      </p>
+      <div className="landing-actions">
+        <Link href="/home" className="btn btn-primary">
+          Enter XCOMIX ›
+        </Link>
+        {!user && (
+          <Link href="/register" className="btn btn-ghost">
+            Create account
+          </Link>
+        )}
+        <Link href="/browse" className="btn btn-ghost">
+          Browse catalog
+        </Link>
+      </div>
+      <div className="landing-features">
+        {FEATURES.map(([h, p]) => (
+          <div key={h} className="landing-feature">
+            <h3>{h}</h3>
+            <p>{p}</p>
           </div>
-
-          {error && (
-            <div className="center-state">
-              <p>Could not reach the engine.</p>
-              <p style={{ color: "var(--text-faint)", fontSize: 13 }}>{error}</p>
-            </div>
-          )}
-
-          {loading ? (
-            <GridSkeleton count={18} />
-          ) : filtered.length === 0 && !error ? (
-            <div className="center-state">No titles match your search.</div>
-          ) : (
-            <div className="grid">
-              {filtered.map((m) => (
-                <MangaCard key={m.id} manga={m} />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-      <footer className="footer">
-        <div className="container">XCOMIX · neon manga engine · streamed, never stored</div>
+        ))}
+      </div>
+      <footer className="footer" style={{ marginTop: 60 }}>
+        XCOMIX · neon manga engine · streamed, never stored
       </footer>
-    </>
+    </main>
   );
 }

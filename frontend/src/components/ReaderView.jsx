@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { fetchChapterPages, proxyImage, decodeEntities } from "../lib/api";
+import { fetchChapterPages, pushHistory, getToken, proxyImage, decodeEntities } from "../lib/api";
+import Comments from "./Comments";
 
 function ReaderImage({ page }) {
   const [status, setStatus] = useState("loading");
@@ -48,7 +49,15 @@ export default function ReaderView({ id }) {
     setLoading(true);
     window.scrollTo({ top: 0 });
     fetchChapterPages(id)
-      .then((res) => active && (setData(res), setError(null)))
+      .then((res) => {
+        if (!active) return;
+        setData(res);
+        setError(null);
+        // Record reading history for signed-in users.
+        if (getToken() && res.chapter) {
+          pushHistory({ manga_id: res.chapter.manga_id, chapter_id: res.chapter.id }).catch(() => {});
+        }
+      })
       .catch((err) => active && setError(err.message))
       .finally(() => active && setLoading(false));
     return () => {
@@ -74,7 +83,7 @@ export default function ReaderView({ id }) {
             ? `${decodeEntities(chapter.manga_title)} · ${decodeEntities(chapter.title)}`
             : "Loading…"}
         </div>
-        <Link href="/" className="btn btn-ghost reader-nav-btn">
+        <Link href="/home" className="btn btn-ghost reader-nav-btn">
           Home
         </Link>
       </div>
@@ -93,6 +102,16 @@ export default function ReaderView({ id }) {
           pages.map((p) => <ReaderImage key={p.page_number} page={p} />)
         )}
       </div>
+
+      {!loading && !error && chapter && (
+        <div className="container" style={{ maxWidth: 900, margin: "40px auto 120px" }}>
+          <div className="section-head">
+            <span className="bar" />
+            <h2>Chapter discussion</h2>
+          </div>
+          <Comments chapterId={chapter.id} />
+        </div>
+      )}
 
       {!loading && !error && chapter && (
         <div className="reader-bar bottom">

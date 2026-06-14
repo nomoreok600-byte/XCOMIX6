@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Navbar from "./Navbar";
+import SiteNav from "./SiteNav";
+import LibraryButton from "./LibraryButton";
+import Reviews from "./Reviews";
+import Comments from "./Comments";
+import Stars from "./Stars";
 import { fetchManga, proxyImage, decodeEntities } from "../lib/api";
 
 export default function MangaDetail({ slug }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tab, setTab] = useState("chapters");
 
   useEffect(() => {
     if (!slug) return;
@@ -30,11 +35,9 @@ export default function MangaDetail({ slug }) {
 
   return (
     <>
-      <Navbar />
+      <SiteNav />
       <main className="container">
-        <Link href="/" className="back-link">
-          ‹ Back to library
-        </Link>
+        <Link href="/home" className="back-link">‹ Back to home</Link>
 
         {!slug || loading ? (
           <DetailSkeleton />
@@ -48,10 +51,7 @@ export default function MangaDetail({ slug }) {
         ) : (
           <>
             <section className="detail-hero">
-              <div
-                className="detail-hero-bg"
-                style={{ backgroundImage: `url(${proxyImage(manga.cover_url)})` }}
-              />
+              <div className="detail-hero-bg" style={{ backgroundImage: `url(${proxyImage(manga.cover_url)})` }} />
               <div className="detail-hero-veil" />
               <div className="detail-grid">
                 <div className="detail-cover">
@@ -60,52 +60,76 @@ export default function MangaDetail({ slug }) {
                 </div>
                 <div className="detail-info">
                   <h1>{decodeEntities(manga.title)}</h1>
+                  {manga.alt_title && <p className="faint" style={{ marginTop: -4 }}>{decodeEntities(manga.alt_title)}</p>}
                   <div className="detail-tags">
                     {manga.is_18_plus && <span className="tag adult">18+</span>}
                     <span className="tag type">{manga.type}</span>
                     <span className="tag ongoing">{manga.status}</span>
                     <span className="tag">{chapters.length} Chapters</span>
                   </div>
+                  {manga.rating?.avg != null && (
+                    <div className="rating-line">
+                      <Stars value={manga.rating.avg} />
+                      <span className="faint">{manga.rating.avg.toFixed(1)} · {manga.rating.count} reviews</span>
+                    </div>
+                  )}
+                  {manga.genres?.length > 0 && (
+                    <div className="genre-chips" style={{ marginBottom: 14 }}>
+                      {manga.genres.map((g) => (
+                        <Link key={g.id} href={`/browse?genre=${g.slug}`} className="chip">{g.name}</Link>
+                      ))}
+                    </div>
+                  )}
                   <p className="detail-synopsis">{decodeEntities(manga.synopsis) || "No synopsis available."}</p>
                   <div className="detail-actions">
                     {firstChapter && (
-                      <Link href={`/reader/?id=${firstChapter.id}`} className="btn btn-primary">
-                        Read First Chapter
-                      </Link>
+                      <Link href={`/reader/?id=${firstChapter.id}`} className="btn btn-primary">Read First</Link>
                     )}
                     {lastChapter && lastChapter.id !== firstChapter?.id && (
-                      <Link href={`/reader/?id=${lastChapter.id}`} className="btn btn-ghost">
-                        Latest Chapter
-                      </Link>
+                      <Link href={`/reader/?id=${lastChapter.id}`} className="btn btn-ghost">Latest Chapter</Link>
                     )}
+                    <LibraryButton mangaId={manga.id} />
                   </div>
                 </div>
               </div>
             </section>
 
-            <section className="section">
-              <div className="section-head">
-                <span className="bar" />
-                <h2>Chapters</h2>
-              </div>
-              {chapters.length === 0 ? (
+            <div className="tabs">
+              {[["chapters", `Chapters (${chapters.length})`], ["about", "About"], ["reviews", "Reviews"], ["comments", "Comments"]].map(([v, l]) => (
+                <button key={v} className={`tab${tab === v ? " active" : ""}`} onClick={() => setTab(v)}>{l}</button>
+              ))}
+            </div>
+
+            {tab === "chapters" && (
+              chapters.length === 0 ? (
                 <div className="center-state">No chapters indexed yet.</div>
               ) : (
                 <div className="chapter-list">
-                  {chapters
-                    .slice()
-                    .reverse()
-                    .map((ch) => (
-                      <Link key={ch.id} href={`/reader/?id=${ch.id}`} className="chapter-row">
-                        <span className="num">
-                          {decodeEntities(ch.title) || `Chapter ${ch.chapter_number}`}
-                        </span>
-                        <span className="date">#{ch.chapter_number}</span>
-                      </Link>
-                    ))}
+                  {chapters.slice().reverse().map((ch) => (
+                    <Link key={ch.id} href={`/reader/?id=${ch.id}`} className="chapter-row">
+                      <span className="num">{decodeEntities(ch.title) || `Chapter ${ch.chapter_number}`}</span>
+                      <span className="date">#{ch.chapter_number}</span>
+                    </Link>
+                  ))}
                 </div>
-              )}
-            </section>
+              )
+            )}
+
+            {tab === "about" && (
+              <div className="panel-box">
+                <p><b>Title:</b> {decodeEntities(manga.title)}</p>
+                {manga.alt_title && <p><b>Alternative:</b> {decodeEntities(manga.alt_title)}</p>}
+                {manga.author && <p><b>Author:</b> {decodeEntities(manga.author)}</p>}
+                <p><b>Type:</b> {manga.type} · <b>Status:</b> {manga.status}</p>
+                <p><b>Genres:</b> {manga.genres?.map((g) => g.name).join(", ") || "—"}</p>
+                <p><b>Views:</b> {manga.views} · <b>Source:</b> {manga.source || "—"}</p>
+                <div className="divider" />
+                <p className="muted">{decodeEntities(manga.synopsis) || "No synopsis available."}</p>
+              </div>
+            )}
+
+            {tab === "reviews" && <Reviews mangaId={manga.id} />}
+            {tab === "comments" && <Comments mangaId={manga.id} />}
           </>
         )}
       </main>
