@@ -29,8 +29,9 @@ mysql -u root -p -e "CREATE DATABASE xcomix CHARACTER SET utf8mb4 COLLATE utf8mb
 mysql -u root -p -e "CREATE USER 'xcomix'@'localhost' IDENTIFIED BY 'xcomix_pw'; \
   GRANT ALL PRIVILEGES ON xcomix.* TO 'xcomix'@'localhost'; FLUSH PRIVILEGES;"
 
-# Create the tables
+# Create the tables (catalog first, then the accounts/social schema)
 mysql -u xcomix -p xcomix < database/schema.sql
+mysql -u xcomix -p xcomix < database/app-schema.sql   # users, library, comments, reviews, …
 
 # (Optional) load the bundled demo rows
 mysql -u xcomix -p xcomix < database/seed.sql
@@ -58,23 +59,37 @@ Key `.env` values:
 
 ```env
 PORT=4000
-FRONTEND_ORIGIN=https://www.xcomix.top,https://xcomix.top   # add http://localhost:8080 for local dev
+FRONTEND_ORIGIN=https://www.xcomix.top,https://xcomix.top   # add http://localhost:3100 for local dev
 DB_HOST=127.0.0.1
 DB_USER=xcomix
 DB_PASSWORD=xcomix_pw
 DB_NAME=xcomix
 PROXY_CF_COOKIE=                # optional cf_clearance cookie for gated sources
+JWT_SECRET=change-me            # signs user login tokens
+ADMIN_TOKEN=change-me           # unlocks the /admin dashboard
+AUTO_IMPORT_ENABLED=false       # true = auto-crawl katana+buddy on a timer
 ```
 
-Endpoints:
+Endpoints (catalog + accounts/social):
 
 | Method | Route | Purpose |
 | --- | --- | --- |
 | GET | `/api/health` | DB connectivity check |
 | GET | `/api/manga?limit=&offset=&q=&type=&status=` | Paginated catalog |
-| GET | `/api/manga/:slug` | One series + ordered chapters |
+| GET | `/api/catalog/{genres,browse,popular,recent,completed,random}` | Browse + filters |
+| GET | `/api/catalog/manga/:slug` | One series + chapters + genres + rating |
 | GET | `/api/chapters/:id/pages` | Page list + prev/next (lazy-resolves pages on first hit) |
 | GET | `/api/proxy/image?url=…` | Hardened streaming image proxy |
+| POST | `/api/auth/{register,login}` · GET `/api/auth/me` | Accounts (JWT) |
+| * | `/api/library/*` · `/api/social/*` · `/api/community/*` | Bookmarks, comments, reviews, DMs, leaderboard |
+| GET/POST | `/admin` + `/admin/*` | Admin dashboard + import controls (X-Admin-Token) |
+
+Add the MangaKatana importer alongside the ManhwaBuddy one:
+
+```bash
+node scripts/katana-import.mjs --url=https://mangakatana.com/manga/<slug>.<id>
+node scripts/katana-import.mjs --latest --limit=15        # crawl /latest (no human)
+```
 
 Quick check:
 

@@ -4,9 +4,9 @@ Three ready-to-upload files (download them from the chat/artifacts panel):
 
 | File | What it is | Where it goes |
 | --- | --- | --- |
-| `xcomix-database.sql` | Tables + demo data | phpMyAdmin import |
-| `xcomix-backend.zip` | API engine (Node) | `www.a3555bet.com` Node app |
-| `xcomix-frontend.zip` | The website (static) | `xcomix.top` `public_html` |
+| `xcomix-database.sql` | All tables (catalog + accounts/social) + demo data | phpMyAdmin import |
+| `xcomix-backend.zip` | API engine + admin dashboard (Node) | `www.a3555bet.com` Node app |
+| `xcomix-frontend.zip` | The full website (static) | `xcomix.top` `public_html` |
 
 > The frontend is pre-built to talk to `https://www.a3555bet.com`. Keep the API on
 > that domain and there is nothing to edit or rebuild.
@@ -34,8 +34,21 @@ Three ready-to-upload files (download them from the chat/artifacts panel):
    - `DB_USER` = your DB user (e.g. `cpuser_xcomix`)
    - `DB_PASSWORD` = the password you set
    - `FRONTEND_ORIGIN` = `https://www.xcomix.top,https://xcomix.top`
+   - `JWT_SECRET` = any long random string (signs user logins)
+   - `ADMIN_TOKEN` = a private token (unlocks the admin dashboard)
 4. Click **Run NPM Install**, then **Start/Restart**.
 5. Test: open `https://www.a3555bet.com/api/health` → should say `{"status":"ok"}`.
+
+### Admin dashboard + auto importer (no human)
+- Open `https://www.a3555bet.com/admin`, enter your `ADMIN_TOKEN`, and you get live
+  stats (manga, chapters, users, comments, reviews…) plus an **import panel**.
+- Click **Run latest crawl now** to auto-import the newest MangaKatana + ManhwaBuddy
+  titles, or paste a single manga URL and click **Import URL**. No human scraping needed.
+- To import on a timer automatically, set `AUTO_IMPORT_ENABLED=true` (and optionally
+  `AUTO_IMPORT_INTERVAL_MIN` / `AUTO_IMPORT_SOURCES` / `AUTO_IMPORT_LIMIT`), then Restart.
+- The database import already created the accounts/social tables, so user sign-up,
+  bookmarks, reviews, comments, messages, the leaderboard and notifications work
+  the moment the API is live. **The first account you register becomes the admin.**
 
 ## 3) Frontend website (2 min)
 1. cPanel → **File Manager** → open the `xcomix.top` document root (`public_html`).
@@ -63,5 +76,14 @@ someone opens it; to pre-warm them: `node scripts/read-chapters.mjs --limit=100`
 - `…/api/health` not OK → re-check the 4 `DB_*` env vars, then Restart the app.
 - Site loads but no covers/images → make sure `FRONTEND_ORIGIN` exactly matches
   your site URL, and that the API domain is `https://www.a3555bet.com`.
+
+## Rebuilding the upload bundles (for developers)
+After changing the code, regenerate all three files in `deploy/` with one command:
+
+```bash
+scripts/build-deploy.sh            # frontend baked for https://www.a3555bet.com
+# or point the frontend at a different API domain:
+API_BASE=https://your-api-domain scripts/build-deploy.sh
+```
 
 Full details for advanced setup live in `SETUP.md`.
