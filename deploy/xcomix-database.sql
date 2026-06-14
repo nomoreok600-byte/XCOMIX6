@@ -273,6 +273,30 @@ CREATE TABLE IF NOT EXISTS `messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
+--  Community wall — global forum-style posts + threaded replies
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `community_posts` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`    BIGINT UNSIGNED NOT NULL,
+  `parent_id`  BIGINT UNSIGNED NULL,
+  `body`       TEXT NOT NULL,
+  `image_url`  TEXT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_cposts_parent` (`parent_id`),
+  KEY `idx_cposts_created` (`created_at`),
+  CONSTRAINT `fk_cposts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `community_post_likes` (
+  `post_id` BIGINT UNSIGNED NOT NULL,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`post_id`, `user_id`),
+  CONSTRAINT `fk_clike_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_clike_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
 --  Follows — user social graph (powers community + leaderboard)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `follows` (

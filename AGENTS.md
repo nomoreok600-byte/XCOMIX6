@@ -49,6 +49,21 @@ Non-obvious caveats:
 - All artwork renders through `${API_BASE}/api/proxy/image?url=...`; never hotlink
  source images directly (they 403). The proxy spoofs headers + host-based Referer.
 - The first registered user automatically becomes `role=admin`.
+- **18+ titles are hidden by default.** Catalog list endpoints exclude
+  `is_18_plus` unless called with `?adult=1`; the frontend sends that only when
+  the nav "18+" toggle is on (persisted in `localStorage`).
+- Auto-import is **off by default**. Enable it persistently with
+  `AUTO_IMPORT_ENABLED=true`, or at runtime from `/admin` (or
+  `POST /admin/scheduler/start`); when enabled it runs a first pass shortly
+  after boot then every `AUTO_IMPORT_INTERVAL_MIN`. `POST /admin/import/backlog`
+  deep-crawls multiple "latest" pages to backfill the catalog.
+- The frontend is teal by default (theme `aqua`); `theme="neon"` from older
+  accounts is aliased to the same teal palette. The community page is a global
+  forum "wall" (`/api/community/feed`).
+- SEO note: it's a static export with **query-param** title routes
+  (`/manga/?slug=`), so per-title pages share one HTML shell — `robots.txt` +
+  `sitemap.xml` + per-route metadata exist, but true per-title SSR/SSG is not
+  possible without changing the routing model.
 - `backend/scripts/import-demo-data.mjs` re-populates MySQL from a source API
  (the JS port of the legacy scraper sync stage).
 
