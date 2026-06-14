@@ -124,6 +124,9 @@ export const deleteFolder = (id) =>
 export const fetchHistory = () => request(`/api/library/history`, { auth: true });
 export const pushHistory = (body) =>
   request(`/api/library/history`, { method: "POST", body, auth: true });
+export const clearHistory = () => request(`/api/library/history`, { method: "DELETE", auth: true });
+export const removeHistoryItem = (mangaId) =>
+  request(`/api/library/history/${mangaId}`, { method: "DELETE", auth: true });
 
 // ---- Social ----
 export const fetchComments = (params = {}) =>
@@ -171,3 +174,6 @@ export const activityPing = () =>
   fetch(`${API_BASE}/api/activity/ping`, { cache: "no-store" })
     .then((r) => r.json())
     .catch(() => null);
+
+// ---- Site config (admin-managed ad slots + announcement banner) ----
+export const fetchSiteConfig = () => request(`/api/site/config`);

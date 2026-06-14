@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { libraryStatus, setLibrary, removeLibrary } from "../lib/api";
+import Icon from "./Icon";
 
 const STATUSES = [
   ["reading", "Reading"],
@@ -27,7 +28,7 @@ export default function LibraryButton({ mangaId }) {
   if (!user) {
     return (
       <a href="/login" className="btn btn-ghost">
-        ♥ Sign in to bookmark
+        <Icon name="bookmark" size={16} /> Sign in to bookmark
       </a>
     );
   }
