@@ -640,6 +640,15 @@ a {
   flex: 1;
   justify-content: center;
 }
+.reader-published {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-faint);
+  font-size: 13px;
+  margin: 0 0 14px;
+}
 
 /* Image fit modes */
 .reader-stage.fit-height,
@@ -1327,6 +1336,45 @@ select.input {
 .lb-stats { display: inline-flex; gap: 12px; align-items: center; }
 .lb-stats span { display: inline-flex; gap: 4px; align-items: center; }
 .landing-feature-ico { color: var(--crimson); margin-bottom: 8px; display: flex; justify-content: center; }
+
+/* Manga detail: meta line + richer chapter rows */
+.detail-meta { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 14px; color: var(--text-dim); font-size: 13px; }
+.detail-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.detail-meta .icon { color: var(--crimson); }
+.chapter-row { gap: 12px; }
+.chapter-row .ch-no { font-weight: 800; color: var(--crimson); min-width: 46px; flex-shrink: 0; }
+.chapter-row .ch-main { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.chapter-row .ch-main .num { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chapter-row .ch-main .date { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-faint); }
+.ch-new { background: var(--crimson); color: #04140f; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 999px; letter-spacing: 0.5px; flex-shrink: 0; }
+
+/* Page header (recent/browse) */
+.page-head { margin: 24px 0 14px; }
+.page-head h1 { margin: 0; font-size: clamp(24px, 4vw, 32px); font-weight: 900; display: inline-flex; align-items: center; gap: 10px; }
+.page-head .muted { margin: 6px 0 0; }
+.tag.new-tag { background: var(--crimson); border-color: transparent; color: #04140f; box-shadow: var(--glow); }
+
+/* Continue reading row */
+.continue-row { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 14px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.continue-row::-webkit-scrollbar { height: 8px; }
+.continue-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+.continue-card { flex: 0 0 auto; width: 260px; display: flex; gap: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 10px; transition: border-color 0.2s, transform 0.15s; }
+.continue-card:hover { border-color: var(--border-strong); transform: translateY(-3px); }
+.continue-card img { width: 54px; height: 76px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.continue-card .cc-info { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.continue-card .cc-title { font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.continue-card .cc-meta { color: var(--text-faint); font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+
+/* Profile collections */
+.collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.collection-card { display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); transition: border-color 0.2s, transform 0.15s; }
+.collection-card:hover { border-color: var(--border-strong); transform: translateY(-3px); }
+.collection-ico { color: var(--crimson); }
+.collection-name { font-weight: 800; font-size: 14px; }
+
+/* Search: 18+ hidden-results hint */
+.adult-hint { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(255,176,32,0.1); border: 1px solid rgba(255,176,32,0.4); color: var(--amber); padding: 10px 14px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; }
+.adult-hint .link-btn { color: var(--crimson); font-weight: 800; }
 
 /* Reader: tap to hide/show the option bars (immersive mode) */
 .reader-bar.top, .reader-progress, .reader-settings { transition: opacity 0.2s ease, transform 0.2s ease; }

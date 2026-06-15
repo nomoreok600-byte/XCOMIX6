@@ -9,10 +9,12 @@ import { useAuth, THEME_NAMES, applyTheme } from "../../lib/auth";
 import {
   fetchProfile,
   fetchHistory,
+  fetchFolders,
   updateMe,
   changePassword,
   deleteAccount,
   proxyImage,
+  decodeEntities,
 } from "../../lib/api";
 
 function StatCard({ icon, n, label }) {
@@ -30,6 +32,7 @@ export default function ProfilePage() {
   const [tab, setTab] = useState("dashboard");
   const [data, setData] = useState(null);
   const [history, setHistory] = useState([]);
+  const [folders, setFolders] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [form, setForm] = useState({ username: "", bio: "", avatar_url: "", banner_url: "", theme: "aqua", profile_public: true });
@@ -49,6 +52,7 @@ export default function ProfilePage() {
     setShareUrl(`${window.location.origin}/u/?username=${encodeURIComponent(user.username)}`);
     fetchProfile(user.username).then(setData).catch(() => {});
     fetchHistory().then((d) => setHistory(d.data || [])).catch(() => {});
+    fetchFolders().then((d) => setFolders(d.data || [])).catch(() => {});
   }, [user]);
 
   if (!loading && !user) {
@@ -184,8 +188,49 @@ export default function ProfilePage() {
               <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="collection" size={18} /> Your Collections</h3>
               <Link href="/library" className="btn btn-ghost"><Icon name="plus" size={15} /> Manage folders</Link>
             </div>
-            <p className="faint">Organize and share your favorite manga in custom folders. Manage them in your Library.</p>
-            <Link href="/library" className="btn btn-primary">Open Library →</Link>
+
+            <div className="stat-cards" style={{ marginTop: 14 }}>
+              <StatCard icon="bookmark" n={stats.library} label="Bookmarks" />
+              <StatCard icon="folder" n={folders.length} label="Folders" />
+              <StatCard icon="book" n={history.length} label="In progress" />
+            </div>
+
+            <h4 style={{ margin: "18px 0 10px", display: "flex", alignItems: "center", gap: 8 }}>
+              <Icon name="folder" size={16} /> Folders
+            </h4>
+            {folders.length === 0 ? (
+              <p className="faint">No custom folders yet. Create one in your Library to organize titles.</p>
+            ) : (
+              <div className="collection-grid">
+                {folders.map((f) => (
+                  <Link key={f.id} href="/library" className="collection-card">
+                    <span className="collection-ico"><Icon name="folder" size={20} /></span>
+                    <span className="collection-name">{f.name}</span>
+                    <span className="faint">{f.count} {f.count === 1 ? "title" : "titles"}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <h4 style={{ margin: "20px 0 10px", display: "flex", alignItems: "center", gap: 8 }}>
+              <Icon name="bookmark" size={16} /> Recent bookmarks
+            </h4>
+            {library.length === 0 ? (
+              <p className="faint">No bookmarks yet. Browse titles and tap the bookmark to start a collection.</p>
+            ) : (
+              <div className="slider">
+                {library.map((l) => (
+                  <Link key={l.manga.id} href={`/manga/?slug=${encodeURIComponent(l.manga.slug)}`} style={{ width: 110, flex: "0 0 auto" }} title={decodeEntities(l.manga.title)}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={proxyImage(l.manga.cover_url)} alt={decodeEntities(l.manga.title)} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", borderRadius: 10 }} />
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: 18 }}>
+              <Link href="/library" className="btn btn-primary">Open Library <Icon name="arrowRight" size={15} /></Link>
+            </div>
           </div>
         )}
 

@@ -25,12 +25,13 @@ export default function RecentPage() {
     <>
       <SiteNav />
       <main className="container">
-        <section className="section" style={{ marginTop: 24 }}>
-          <div className="section-head">
-            <span className="bar" />
-            <h2><Icon name="bolt" size={20} className="head-ico" /> Recently Updated</h2>
-          </div>
-          <MangaGrid items={recent} loading={loading} empty="No recent updates yet." />
+        <div className="page-head">
+          <h1><Icon name="bolt" size={26} className="head-ico" /> Recently Updated</h1>
+          <p className="muted">The latest manga, manhwa and manhua to get new chapters.</p>
+        </div>
+
+        <section className="section">
+          <MangaGrid items={recent} loading={loading} showUpdated empty="No recent updates yet." />
         </section>
 
         <section className="section">

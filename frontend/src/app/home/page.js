@@ -10,20 +10,26 @@ import Footer from "../../components/Footer";
 import Avatar from "../../components/Avatar";
 import Icon from "../../components/Icon";
 import { GridSkeleton } from "../../components/Skeletons";
+import { useAuth } from "../../lib/auth";
 import {
   fetchRecent,
   fetchPopular,
   fetchCompleted,
   fetchLatestComments,
+  fetchHistory,
+  getToken,
   proxyImage,
   decodeEntities,
+  timeAgo,
 } from "../../lib/api";
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [recent, setRecent] = useState([]);
   const [popular, setPopular] = useState([]);
   const [completed, setCompleted] = useState([]);
   const [comments, setComments] = useState([]);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState("");
@@ -48,6 +54,19 @@ export default function HomePage() {
       active = false;
     };
   }, []);
+
+  // Continue reading (logged-in users) — from reading history.
+  useEffect(() => {
+    if (!getToken()) {
+      setHistory([]);
+      return;
+    }
+    let active = true;
+    fetchHistory().then((d) => active && setHistory((d.data || []).slice(0, 12))).catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const heroes = popular.slice(0, 5);
   useEffect(() => {
@@ -114,6 +133,35 @@ export default function HomePage() {
           </div>
         )}
 
+        {!query && history.length > 0 && (
+          <section className="section" id="continue">
+            <div className="section-head">
+              <span className="bar" />
+              <h2><Icon name="bookmark" size={20} className="head-ico" /> Continue Reading</h2>
+            </div>
+            <div className="continue-row">
+              {history.map((h) => (
+                <Link
+                  key={h.manga.id}
+                  href={h.chapter_id ? `/reader/?id=${h.chapter_id}` : `/manga/?slug=${encodeURIComponent(h.manga.slug)}`}
+                  className="continue-card"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={proxyImage(h.manga.cover_url)} alt={decodeEntities(h.manga.title)} />
+                  <div className="cc-info">
+                    <div className="cc-title">{decodeEntities(h.manga.title)}</div>
+                    <div className="cc-meta">
+                      <Icon name="book" size={12} />
+                      {h.chapter_number ? `Chapter ${h.chapter_number}` : "Start reading"}
+                    </div>
+                    <div className="cc-meta"><Icon name="clock" size={12} /> {timeAgo(h.updated_at)}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {!query && (
           <section className="section" id="popular">
             <div className="section-head">
@@ -131,7 +179,7 @@ export default function HomePage() {
             <h2>{query ? `Results for "${query}"` : <><Icon name="bolt" size={20} className="head-ico" /> Recently Updated</>}</h2>
             {!query && <Link href="/recent" className="head-link">View all →</Link>}
           </div>
-          <MangaGrid items={filtered.slice(0, shown)} loading={loading} empty="No titles match your search." />
+          <MangaGrid items={filtered.slice(0, shown)} loading={loading} showUpdated={!query} empty="No titles match your search." />
           {!query && filtered.length > shown && (
             <div style={{ textAlign: "center", marginTop: 18 }}>
               <button className="btn btn-ghost" onClick={() => setShown((s) => s + 12)}>Load more ▾</button>
