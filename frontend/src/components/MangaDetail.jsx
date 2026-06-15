@@ -139,7 +139,9 @@ export default function MangaDetail({ slug }) {
                       <span className="ch-no">#{ch.chapter_number}</span>
                       <span className="ch-main">
                         <span className="num">
-                          {decodeEntities(ch.title) || `Chapter ${ch.chapter_number}`}
+                          <span className="ch-title-text">
+                            {decodeEntities(ch.title) || `Chapter ${ch.chapter_number}`}
+                          </span>
                           {isFresh(ch.created_at) && <span className="ch-new">NEW</span>}
                         </span>
                         {ch.created_at && (
