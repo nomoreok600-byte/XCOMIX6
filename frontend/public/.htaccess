@@ -1,0 +1,25 @@
+# XCOMIX static frontend (cPanel / Apache / LiteSpeed).
+# Serve the branded Next.js 404 page for any unknown URL instead of the raw
+# host 404, and keep the static export's directory-style routes working.
+
+Options -MultiViews
+
+# Branded 404 for missing files/paths.
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # If the request maps to a real file or directory, serve it as-is.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Otherwise, for a path without a trailing slash, try its exported folder
+  # (this app uses trailingSlash routes, e.g. /home/ -> /home/index.html).
+  RewriteCond %{REQUEST_FILENAME}/index.html -f
+  RewriteRule ^(.*)$ /$1/index.html [L]
+
+  # Anything else is a genuine miss -> show the branded 404 page (404 status).
+  RewriteRule ^ /404.html [L,R=404]
+</IfModule>
