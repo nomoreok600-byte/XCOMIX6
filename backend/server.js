@@ -229,6 +229,15 @@ app.get("/api/chapters/:id/pages", wrap(async (req, res) => {
     } catch (err) {
       console.warn(`[reader] could not resolve pages for chapter ${id}:`, err.message);
     }
+    // Safety net: if this request resolved nothing (e.g. a concurrent request
+    // won the resolution), re-read from the DB before giving up.
+    if (pageRows.length === 0) {
+      pageRows = await query(
+        `SELECT page_number, remote_source_url
+         FROM pages WHERE chapter_id = :id ORDER BY page_number ASC`,
+        { id }
+      );
+    }
   }
 
   // Sibling chapters for prev/next navigation (ordered by numeric chapter).

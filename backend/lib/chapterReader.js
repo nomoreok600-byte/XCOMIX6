@@ -17,11 +17,32 @@ async function readChapterPages(sourceUrl, { referer } = {}) {
   return extractPageImagesFor(html, sourceUrl);
 }
 
+// Per-chapter in-flight resolution promises. Without this, the reader's
+// next-chapter prefetch and the click's own request hit ensureChapterPages
+// concurrently; the DELETE-then-INSERT below would race and one caller could
+// receive 0 pages (the reader then appears stuck on "Streaming pages…" until a
+// reload). Deduping concurrent resolves makes every caller share one result.
+const inFlight = new Map();
+
 /**
  * Resolve a chapter's pages from its source and persist them (idempotent).
  * @returns {Promise<{pages: Array<{page_number:number, source_url:string}>, inserted:number}>}
  */
-async function ensureChapterPages(db, chapter, { force = false } = {}) {
+function ensureChapterPages(db, chapter, { force = false } = {}) {
+  const chapterId = Number(chapter.id);
+  if (!force && inFlight.has(chapterId)) return inFlight.get(chapterId);
+
+  const promise = resolveChapterPages(db, chapter, { force });
+  if (!force) {
+    inFlight.set(chapterId, promise);
+    promise.finally(() => {
+      if (inFlight.get(chapterId) === promise) inFlight.delete(chapterId);
+    });
+  }
+  return promise;
+}
+
+async function resolveChapterPages(db, chapter, { force = false } = {}) {
   const chapterId = Number(chapter.id);
 
   if (!force) {
