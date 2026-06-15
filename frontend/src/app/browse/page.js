@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import SiteNav from "../../components/SiteNav";
 import MangaGrid from "../../components/MangaGrid";
 import Footer from "../../components/Footer";
 import Stars from "../../components/Stars";
 import Icon from "../../components/Icon";
-import { browse, fetchGenres, proxyImage, decodeEntities } from "../../lib/api";
+import { browse, fetchGenres, proxyImage, decodeEntities, getAdult, setAdult } from "../../lib/api";
 
 const STATUSES = ["", "Ongoing", "Completed"];
 const TYPES = ["", "Manga", "Manhwa", "Manhua"];
@@ -40,25 +41,32 @@ function ListRow({ m }) {
   );
 }
 
-export default function BrowsePage() {
+function BrowseInner() {
+  const sp = useSearchParams();
   const [genres, setGenres] = useState([]);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [adultHidden, setAdultHidden] = useState(0);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("list");
   const [page, setPage] = useState(0);
   const [f, setF] = useState({ genre: "", status: "", type: "", order: "updated", q: "" });
 
+  // Seed filters from the URL and re-seed whenever it changes (so a fresh nav
+  // search from anywhere — even while already on /browse — re-runs the search).
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
+    setPage(0);
     setF((prev) => ({
       ...prev,
-      genre: p.get("genre") || "",
-      status: p.get("status") || "",
-      type: p.get("type") || "",
-      order: p.get("order") || "updated",
-      q: p.get("q") || "",
+      genre: sp.get("genre") || "",
+      status: sp.get("status") || "",
+      type: sp.get("type") || "",
+      order: sp.get("order") || "updated",
+      q: sp.get("q") || "",
     }));
+  }, [sp]);
+
+  useEffect(() => {
     fetchGenres().then((d) => setGenres(d.data || [])).catch(() => {});
   }, []);
 
@@ -68,6 +76,7 @@ export default function BrowsePage() {
       .then((d) => {
         setItems(d.data || []);
         setTotal(d.total);
+        setAdultHidden(d.adult_hidden || 0);
       })
       .finally(() => setLoading(false));
   }, [f, page]);
@@ -75,6 +84,11 @@ export default function BrowsePage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const enableAdult = () => {
+    setAdult(true);
+    window.location.reload();
+  };
 
   const set = (k, v) => {
     setPage(0);
@@ -90,8 +104,12 @@ export default function BrowsePage() {
       <SiteNav query={f.q} onQuery={(v) => set("q", v)} />
       <main className="container">
         <div style={{ margin: "24px 0 8px" }}>
-          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 900 }}>Browse Manga</h1>
-          <p className="muted" style={{ margin: "4px 0 0" }}>Discover your next favorite series.</p>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 900 }}>
+            {f.q ? `Search: “${f.q}”` : "Browse Manga"}
+          </h1>
+          <p className="muted" style={{ margin: "4px 0 0" }}>
+            {f.q ? `${total} result${total === 1 ? "" : "s"} found` : "Discover your next favorite series."}
+          </p>
         </div>
 
         <div className="filter-bar">
@@ -124,10 +142,25 @@ export default function BrowsePage() {
 
         <p className="faint" style={{ marginBottom: 14 }}>{total} manga found</p>
 
+        {adultHidden > 0 && (
+          <div className="adult-hint">
+            <Icon name="warning" size={16} />
+            <span>{adultHidden} more 18+ {adultHidden === 1 ? "result is" : "results are"} hidden.</span>
+            <button className="link-btn" onClick={enableAdult}>Enable 18+</button>
+          </div>
+        )}
+
         {loading ? (
           <MangaGrid items={[]} loading empty="" />
         ) : items.length === 0 ? (
-          <div className="center-state">No titles match these filters.</div>
+          <div className="center-state">
+            {f.q ? `No titles match “${f.q}”.` : "No titles match these filters."}
+            {adultHidden > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <button className="btn btn-primary" onClick={enableAdult}>Show {adultHidden} 18+ result{adultHidden === 1 ? "" : "s"}</button>
+              </div>
+            )}
+          </div>
         ) : view === "grid" ? (
           <MangaGrid items={items} />
         ) : (
@@ -150,5 +183,13 @@ export default function BrowsePage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function BrowsePage() {
+  return (
+    <Suspense fallback={<><SiteNav /><div className="center-state">Loading…</div></>}>
+      <BrowseInner />
+    </Suspense>
   );
 }
