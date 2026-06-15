@@ -33,6 +33,7 @@ function mangaCard(row) {
     chapter_count: row.chapter_count != null ? Number(row.chapter_count) : undefined,
     avg_rating: row.avg_rating != null ? Number(Number(row.avg_rating).toFixed(2)) : null,
     latest_chapter: row.latest_chapter || null,
+    last_chapter_at: row.last_chapter_at || null,
   };
 }
 
@@ -41,8 +42,15 @@ const CARD_SELECT = `
     (SELECT COUNT(*) FROM chapters c WHERE c.manga_id = m.id) AS chapter_count,
     (SELECT AVG(r.rating) FROM reviews r WHERE r.manga_id = m.id) AS avg_rating,
     (SELECT c2.chapter_number FROM chapters c2 WHERE c2.manga_id = m.id
-       ORDER BY CAST(c2.chapter_number AS DECIMAL(10,2)) DESC, c2.id DESC LIMIT 1) AS latest_chapter
+       ORDER BY CAST(c2.chapter_number AS DECIMAL(10,2)) DESC, c2.id DESC LIMIT 1) AS latest_chapter,
+    (SELECT MAX(c3.created_at) FROM chapters c3 WHERE c3.manga_id = m.id) AS last_chapter_at
   FROM mangas m`;
+
+// "Recently updated" must reflect new titles / new chapters only — NOT a manga
+// being viewed or re-crawled. We sort by when the newest chapter was added
+// (falling back to when the title itself was added), which is immune to view
+// counters and metadata re-imports bumping mangas.updated_at.
+const RECENT_ORDER = "COALESCE(last_chapter_at, m.created_at) DESC, m.id DESC";
 
 // All genres (with counts) for the browse filter UI.
 router.get("/genres", wrap(async (_req, res) => {
@@ -69,7 +77,13 @@ router.get("/browse", wrap(async (req, res) => {
   if (!showAdult(req)) where.push("m.is_18_plus = 0");
   if (status) { where.push("m.status = :status"); params.status = status; }
   if (type) { where.push("m.type = :type"); params.type = type; }
-  if (q) { where.push("(m.title LIKE :q OR m.slug LIKE :q)"); params.q = `%${q}%`; }
+  if (q) {
+    // Match across title, alternate titles and slug; also match a slugified form
+    // of the query so "killer pietro" finds the "killer-pietro" slug.
+    where.push("(m.title LIKE :q OR m.alt_title LIKE :q OR m.slug LIKE :q OR m.slug LIKE :qslug)");
+    params.q = `%${q}%`;
+    params.qslug = `%${q.toLowerCase().replace(/[^a-z0-9]+/g, "-")}%`;
+  }
 
   let join = "";
   if (genre) {
@@ -82,7 +96,7 @@ router.get("/browse", wrap(async (req, res) => {
     : order === "newest" ? "m.created_at DESC, m.id DESC"
     : order === "title" ? "m.title ASC"
     : order === "rating" ? "avg_rating DESC, m.id DESC"
-    : "m.updated_at DESC, m.id DESC";
+    : RECENT_ORDER;
 
   const totalRows = await query(
     `SELECT COUNT(DISTINCT m.id) AS total FROM mangas m ${join} ${whereSql}`,
@@ -92,9 +106,23 @@ router.get("/browse", wrap(async (req, res) => {
     `${CARD_SELECT} ${join} ${whereSql} ORDER BY ${orderSql} LIMIT ${limit} OFFSET ${offset}`,
     params
   );
+
+  // When a search is run with 18+ hidden, tell the client how many adult matches
+  // are being withheld so it can prompt the user to enable the 18+ toggle.
+  let adultHidden = 0;
+  if (q && !showAdult(req)) {
+    const adWhere = where.filter((c) => c !== "m.is_18_plus = 0").concat("m.is_18_plus = 1");
+    const adRows = await query(
+      `SELECT COUNT(DISTINCT m.id) AS total FROM mangas m ${join} WHERE ${adWhere.join(" AND ")}`,
+      params
+    );
+    adultHidden = Number(adRows[0]?.total || 0);
+  }
+
   res.json({
     data: rows.map(mangaCard),
     total: Number(totalRows[0]?.total || 0),
+    adult_hidden: adultHidden,
     limit,
     offset,
   });
@@ -110,7 +138,7 @@ router.get("/popular", wrap(async (req, res) => {
 router.get("/recent", wrap(async (req, res) => {
   const limit = asInt(req.query.limit, 24, { min: 1, max: 60 });
   const adult = showAdult(req) ? "" : "WHERE m.is_18_plus = 0";
-  const rows = await query(`${CARD_SELECT} ${adult} ORDER BY m.updated_at DESC, m.id DESC LIMIT ${limit}`);
+  const rows = await query(`${CARD_SELECT} ${adult} ORDER BY ${RECENT_ORDER} LIMIT ${limit}`);
   res.json({ data: rows.map(mangaCard) });
 }));
 
@@ -137,8 +165,10 @@ router.get("/manga/:slug", wrap(async (req, res) => {
   if (!rows.length) return res.status(404).json({ error: "Manga not found", slug });
   const row = rows[0];
 
-  // Best-effort view counter (non-blocking semantics, but awaited for simplicity).
-  await query("UPDATE mangas SET views = views + 1 WHERE id = :id", { id: row.id });
+  // Best-effort view counter. Keep updated_at unchanged (it has ON UPDATE
+  // CURRENT_TIMESTAMP) so simply viewing a title never bumps it into the
+  // "recently updated" feed.
+  await query("UPDATE mangas SET views = views + 1, updated_at = updated_at WHERE id = :id", { id: row.id });
 
   const genres = await query(
     `SELECT g.id, g.name, g.slug FROM genres g
