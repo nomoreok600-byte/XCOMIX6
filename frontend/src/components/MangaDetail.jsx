@@ -10,7 +10,7 @@ import Comments from "./Comments";
 import Stars from "./Stars";
 import Icon from "./Icon";
 import AdSlot from "./AdSlot";
-import { fetchManga, proxyImage, decodeEntities } from "../lib/api";
+import { fetchManga, proxyImage, decodeEntities, formatDateTime, timeAgo, isFresh } from "../lib/api";
 
 export default function MangaDetail({ slug }) {
   const [data, setData] = useState(null);
@@ -81,6 +81,19 @@ export default function MangaDetail({ slug }) {
                     <span className="tag ongoing">{manga.status}</span>
                     <span className="tag">{chapters.length} Chapters</span>
                   </div>
+                  <div className="detail-meta">
+                    {manga.author && (
+                      <span><Icon name="user" size={13} /> {decodeEntities(manga.author)}</span>
+                    )}
+                    {manga.views != null && (
+                      <span><Icon name="chart" size={13} /> {Number(manga.views).toLocaleString()} views</span>
+                    )}
+                    {manga.last_chapter_at && (
+                      <span title={formatDateTime(manga.last_chapter_at)}>
+                        <Icon name="clock" size={13} /> Updated {timeAgo(manga.last_chapter_at)}
+                      </span>
+                    )}
+                  </div>
                   {manga.rating?.avg != null && (
                     <div className="rating-line">
                       <Stars value={manga.rating.avg} />
@@ -123,8 +136,18 @@ export default function MangaDetail({ slug }) {
                 <div className="chapter-list">
                   {chapters.slice().reverse().map((ch) => (
                     <Link key={ch.id} href={`/reader/?id=${ch.id}`} className="chapter-row">
-                      <span className="num">{decodeEntities(ch.title) || `Chapter ${ch.chapter_number}`}</span>
-                      <span className="date">#{ch.chapter_number}</span>
+                      <span className="ch-no">#{ch.chapter_number}</span>
+                      <span className="ch-main">
+                        <span className="num">
+                          {decodeEntities(ch.title) || `Chapter ${ch.chapter_number}`}
+                          {isFresh(ch.created_at) && <span className="ch-new">NEW</span>}
+                        </span>
+                        {ch.created_at && (
+                          <span className="date" title={formatDateTime(ch.created_at)}>
+                            <Icon name="clock" size={12} /> {timeAgo(ch.created_at)}
+                          </span>
+                        )}
+                      </span>
                     </Link>
                   ))}
                 </div>

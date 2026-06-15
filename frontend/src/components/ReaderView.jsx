@@ -10,6 +10,7 @@ import {
   getToken,
   proxyImage,
   decodeEntities,
+  formatDateTime,
 } from "../lib/api";
 import Comments from "./Comments";
 import Icon from "./Icon";
@@ -254,6 +255,11 @@ export default function ReaderView({ id }) {
 
       {!loading && !error && chapter && (
         <div className="reader-end">
+          {chapter.created_at && (
+            <p className="reader-published">
+              <Icon name="clock" size={13} /> Published {formatDateTime(chapter.created_at)}
+            </p>
+          )}
           <div className="reader-end-nav">
             <button className="btn btn-ghost" disabled={!prevId} onClick={() => go(prevId)}>
               <Icon name="chevronLeft" size={16} /> Previous chapter
