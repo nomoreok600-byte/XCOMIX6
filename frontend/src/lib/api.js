@@ -36,6 +36,41 @@ export function proxyImage(url) {
   return `${API_BASE}/api/proxy/image?url=${encodeURIComponent(url)}`;
 }
 
+/** Absolute date + time, e.g. "Jun 14, 2026, 8:18 PM". */
+export function formatDateTime(input) {
+  if (!input) return "";
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString(undefined, {
+    year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  });
+}
+
+/** Compact relative time, e.g. "3h ago", "2d ago", falling back to a date. */
+export function timeAgo(input) {
+  if (!input) return "";
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return "";
+  const secs = Math.round((Date.now() - d.getTime()) / 1000);
+  if (secs < 60) return "just now";
+  const mins = Math.round(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.round(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.round(months / 12)}y ago`;
+}
+
+/** True if a timestamp is within the last `hours` hours (for a NEW badge). */
+export function isFresh(input, hours = 72) {
+  if (!input) return false;
+  const d = new Date(input);
+  return !Number.isNaN(d.getTime()) && Date.now() - d.getTime() < hours * 3600 * 1000;
+}
+
 /** Decode the handful of HTML entities that arrive in scraped titles/synopses. */
 export function decodeEntities(input) {
   if (!input) return "";
