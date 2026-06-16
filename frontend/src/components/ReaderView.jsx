@@ -15,6 +15,7 @@ import {
 import Comments from "./Comments";
 import Icon from "./Icon";
 import AdSlot from "./AdSlot";
+import Select from "./Select";
 
 const FIT_KEY = "xcomix_reader_fit";
 const FIT_MODES = [
@@ -108,6 +109,15 @@ export default function ReaderView({ id }) {
   const pages = data?.pages || [];
   const prevId = data?.prev_chapter_id;
   const nextId = data?.next_chapter_id;
+
+  // Newest-first options for the custom chapter picker.
+  const chapterOptions = chapters
+    .slice()
+    .reverse()
+    .map((c) => ({
+      value: String(c.id),
+      label: decodeEntities(c.title) || `Chapter ${c.chapter_number}`,
+    }));
 
   // Load the full chapter directory for the jump-to selector.
   useEffect(() => {
@@ -213,20 +223,15 @@ export default function ReaderView({ id }) {
           </div>
           <div className="reader-settings-row">
             <span className="reader-settings-label">Jump to chapter</span>
-            <select
+            <Select
               className="reader-select"
+              ariaLabel="Jump to chapter"
+              searchable
               value={id || ""}
-              onChange={(e) => go(e.target.value)}
-            >
-              {chapters
-                .slice()
-                .reverse()
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {decodeEntities(c.title) || `Chapter ${c.chapter_number}`}
-                  </option>
-                ))}
-            </select>
+              onChange={(v) => go(v)}
+              options={chapterOptions}
+              placeholder={`Chapter ${chapter?.chapter_number || ""}`}
+            />
           </div>
           <p className="reader-settings-hint">
             Tip: tap the page to hide these bars · use ← and → to change chapters.
@@ -286,22 +291,16 @@ export default function ReaderView({ id }) {
           <button className="btn btn-ghost reader-nav-btn" disabled={!prevId} onClick={() => go(prevId)}>
             <Icon name="chevronLeft" size={16} /> Prev
           </button>
-          <select
+          <Select
             className="reader-select compact"
+            ariaLabel="Jump to chapter"
+            searchable
+            up
             value={id || ""}
-            onChange={(e) => go(e.target.value)}
-            aria-label="Jump to chapter"
-          >
-            {chapters
-              .slice()
-              .reverse()
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {decodeEntities(c.title) || `Chapter ${c.chapter_number}`}
-                </option>
-              ))}
-            {chapters.length === 0 && <option value={id}>Ch. {chapter.chapter_number}</option>}
-          </select>
+            onChange={(v) => go(v)}
+            options={chapterOptions.length ? chapterOptions : [{ value: id, label: `Ch. ${chapter.chapter_number}` }]}
+            placeholder={`Ch. ${chapter.chapter_number}`}
+          />
           <button className="btn btn-primary reader-nav-btn" disabled={!nextId} onClick={() => go(nextId)}>
             Next <Icon name="chevronRight" size={16} />
           </button>

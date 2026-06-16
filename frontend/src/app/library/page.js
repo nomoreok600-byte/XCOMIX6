@@ -5,6 +5,7 @@ import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
 import Footer from "../../components/Footer";
 import Icon from "../../components/Icon";
+import Select from "../../components/Select";
 import { useAuth } from "../../lib/auth";
 import {
   fetchLibrary,
@@ -48,17 +49,13 @@ function BookmarkTile({ item, folders, onRemove, onMove }) {
           {decodeEntities(m.title)}
         </Link>
         <div className="lib-tile-actions">
-          <select
+          <Select
             className="lib-select"
+            ariaLabel="Move to folder"
             value={item.folder_id || ""}
-            onChange={(e) => onMove(item, e.target.value)}
-            aria-label="Move to folder"
-          >
-            <option value="">No folder</option>
-            {folders.map((f) => (
-              <option key={f.id} value={f.id}>{f.name}</option>
-            ))}
-          </select>
+            onChange={(v) => onMove(item, v)}
+            options={[{ value: "", label: "No folder" }, ...folders.map((f) => ({ value: String(f.id), label: f.name }))]}
+          />
           <button className="icon-btn danger" onClick={() => onRemove(m.id)} title="Remove bookmark" aria-label="Remove bookmark">
             <Icon name="trash" size={16} />
           </button>

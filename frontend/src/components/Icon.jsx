@@ -10,6 +10,7 @@ const PATHS = {
   chevronLeft: <polyline points="15 18 9 12 15 6" />,
   chevronRight: <polyline points="9 18 15 12 9 6" />,
   chevronDown: <polyline points="6 9 12 15 18 9" />,
+  chevronUp: <polyline points="18 15 12 9 6 15" />,
   arrowRight: <><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></>,
   flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.5 0 3-1 3-3 0-1.5-1-2-1.5-3.5C12 9 13 7 13 5c0 0 4 2 4 7a5 5 0 0 1-10 0c0-1.5.5-2.5 1.5-3.5z" />,
   bolt: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,

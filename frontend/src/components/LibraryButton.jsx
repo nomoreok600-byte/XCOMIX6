@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { libraryStatus, setLibrary, removeLibrary } from "../lib/api";
 import Icon from "./Icon";
+import Select from "./Select";
 
 const STATUSES = [
   ["reading", "Reading"],
@@ -54,25 +55,17 @@ export default function LibraryButton({ mangaId }) {
 
   return (
     <div className="row" style={{ gap: 8 }}>
-      <select
-        className="input"
-        style={{ width: "auto" }}
+      <Select
+        className="librarybtn-select"
+        ariaLabel="Add to library"
         value={entry?.status || ""}
-        disabled={busy}
-        onChange={(e) => choose(e.target.value)}
-      >
-        <option value="" disabled>
-          ＋ Add to library
-        </option>
-        {STATUSES.map(([v, l]) => (
-          <option key={v} value={v}>
-            {l}
-          </option>
-        ))}
-      </select>
+        onChange={(v) => choose(v)}
+        placeholder="＋ Add to library"
+        options={STATUSES.map(([v, l]) => ({ value: v, label: l }))}
+      />
       {entry && (
         <button className="btn btn-ghost" disabled={busy} onClick={remove}>
-          Remove
+          <Icon name="trash" size={15} /> Remove
         </button>
       )}
     </div>
