@@ -134,24 +134,26 @@ export default function MangaDetail({ slug }) {
                 <div className="center-state">No chapters indexed yet.</div>
               ) : (
                 <div className="chapter-list">
-                  {chapters.slice().reverse().map((ch) => (
-                    <Link key={ch.id} href={`/reader/?id=${ch.id}`} className="chapter-row">
-                      <span className="ch-no">#{ch.chapter_number}</span>
-                      <span className="ch-main">
-                        <span className="num">
-                          <span className="ch-title-text">
-                            {decodeEntities(ch.title) || `Chapter ${ch.chapter_number}`}
+                  {chapters.slice().reverse().map((ch) => {
+                    const title = decodeEntities(ch.title);
+                    const hasSub = title && title.toLowerCase() !== `chapter ${ch.chapter_number}`.toLowerCase();
+                    return (
+                      <Link key={ch.id} href={`/reader/?id=${ch.id}`} className="chapter-row">
+                        <span className="ch-left">
+                          <span className="ch-head">
+                            <span className="ch-no">Ch. {ch.chapter_number}</span>
+                            {isFresh(ch.created_at) && <span className="ch-new">NEW</span>}
                           </span>
-                          {isFresh(ch.created_at) && <span className="ch-new">NEW</span>}
+                          <span className="ch-sub">{hasSub ? title : "—"}</span>
                         </span>
                         {ch.created_at && (
-                          <span className="date" title={formatDateTime(ch.created_at)}>
+                          <span className="ch-time" title={formatDateTime(ch.created_at)}>
                             <Icon name="clock" size={12} /> {timeAgo(ch.created_at)}
                           </span>
                         )}
-                      </span>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               )
             )}
