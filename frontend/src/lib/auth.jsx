@@ -5,25 +5,38 @@ import * as api from "./api";
 
 const AuthContext = createContext(null);
 
+const DEFAULT_THEME = "crimson";
+const THEME_KEY = "xcomix_theme";
+
 const THEMES = {
+  crimson: { crimson: "#ff2a5f", crimson2: "#ff0044", glow: "rgba(255,42,95,0.45)" },
   aqua: { crimson: "#14b8a6", crimson2: "#0d9488", glow: "rgba(20,184,166,0.4)" },
   cyber: { crimson: "#06b6d4", crimson2: "#3b82f6", glow: "rgba(6,182,212,0.45)" },
   violet: { crimson: "#a855f7", crimson2: "#7c3aed", glow: "rgba(168,85,247,0.45)" },
   toxic: { crimson: "#22c55e", crimson2: "#16a34a", glow: "rgba(34,197,94,0.45)" },
-  crimson: { crimson: "#ff2a5f", crimson2: "#ff0044", glow: "rgba(255,42,95,0.45)" },
   amber: { crimson: "#ffb020", crimson2: "#f97316", glow: "rgba(255,176,32,0.45)" },
-  // Back-compat: older accounts stored theme="neon" → render as the aqua default.
-  neon: { crimson: "#14b8a6", crimson2: "#0d9488", glow: "rgba(20,184,166,0.4)" },
+  // "neon" was the legacy auto-default users never explicitly picked, so it now
+  // resolves to the new RED default (keeps the site red by default for existing
+  // default accounts too; users who chose aqua/cyber/etc. keep their choice).
+  neon: { crimson: "#ff2a5f", crimson2: "#ff0044", glow: "rgba(255,42,95,0.45)" },
 };
 
 export function applyTheme(name) {
   if (typeof document === "undefined") return;
-  const t = THEMES[name] || THEMES.aqua;
+  const key = THEMES[name] ? name : DEFAULT_THEME;
+  const t = THEMES[key];
   const r = document.documentElement.style;
   r.setProperty("--crimson", t.crimson);
   r.setProperty("--crimson-2", t.crimson2);
   r.setProperty("--glow", `0 0 22px ${t.glow}`);
   r.setProperty("--border-strong", t.crimson);
+  // Persist so the inline <head> script can pre-apply it on the next load
+  // (prevents the color flash/flicker before React hydrates).
+  try {
+    window.localStorage.setItem(THEME_KEY, key);
+  } catch {
+    /* ignore */
+  }
 }
 // Hide the internal back-compat alias from the theme picker.
 export const THEME_NAMES = Object.keys(THEMES).filter((n) => n !== "neon");
@@ -80,7 +93,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     api.setToken(null);
     setUser(null);
-    applyTheme("aqua");
+    applyTheme(DEFAULT_THEME);
   };
   const updateUser = (u) => {
     setUser(u);

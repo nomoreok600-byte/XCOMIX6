@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `avatar_url`      TEXT NULL,
   `banner_url`      TEXT NULL,
   `bio`             VARCHAR(500) NULL,
-  `theme`           VARCHAR(30)  NOT NULL DEFAULT 'neon',
+  `theme`           VARCHAR(30)  NOT NULL DEFAULT 'crimson',
   `profile_public`  TINYINT(1)   NOT NULL DEFAULT 1,
   `created_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
