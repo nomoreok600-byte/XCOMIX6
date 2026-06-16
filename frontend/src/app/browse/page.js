@@ -8,6 +8,7 @@ import MangaGrid from "../../components/MangaGrid";
 import Footer from "../../components/Footer";
 import Stars from "../../components/Stars";
 import Icon from "../../components/Icon";
+import Select from "../../components/Select";
 import { browse, fetchGenres, proxyImage, decodeEntities, getAdult, setAdult } from "../../lib/api";
 
 const STATUSES = ["", "Ongoing", "Completed"];
@@ -50,7 +51,9 @@ function BrowseInner() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("list");
   const [page, setPage] = useState(0);
+  const [genresOpen, setGenresOpen] = useState(false);
   const [f, setF] = useState({ genre: "", status: "", type: "", order: "updated", q: "" });
+  const GENRE_PREVIEW = 14;
 
   // Seed filters from the URL and re-seed whenever it changes (so a fresh nav
   // search from anywhere — even while already on /browse — re-runs the search).
@@ -113,15 +116,27 @@ function BrowseInner() {
         </div>
 
         <div className="filter-bar">
-          <select value={f.status} onChange={(e) => set("status", e.target.value)}>
-            {STATUSES.map((s) => <option key={s} value={s}>{s || "All status"}</option>)}
-          </select>
-          <select value={f.type} onChange={(e) => set("type", e.target.value)}>
-            {TYPES.map((t) => <option key={t} value={t}>{t || "All types"}</option>)}
-          </select>
-          <select value={f.order} onChange={(e) => set("order", e.target.value)}>
-            {ORDERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select>
+          <Select
+            className="filter-select"
+            ariaLabel="Status"
+            value={f.status}
+            onChange={(v) => set("status", v)}
+            options={STATUSES.map((s) => ({ value: s, label: s || "All status" }))}
+          />
+          <Select
+            className="filter-select"
+            ariaLabel="Type"
+            value={f.type}
+            onChange={(v) => set("type", v)}
+            options={TYPES.map((t) => ({ value: t, label: t || "All types" }))}
+          />
+          <Select
+            className="filter-select"
+            ariaLabel="Sort order"
+            value={f.order}
+            onChange={(v) => set("order", v)}
+            options={ORDERS.map(([v, l]) => ({ value: v, label: l }))}
+          />
           <span style={{ flex: 1 }} />
           <div className="view-toggle">
             <button className={view === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="List view"><Icon name="list" size={16} /></button>
@@ -130,13 +145,19 @@ function BrowseInner() {
         </div>
 
         {genres.length > 0 && (
-          <div className="genre-chips">
+          <div className={`genre-chips ${genresOpen ? "expanded" : "collapsed"}`}>
             <span className={`chip${!f.genre ? " active" : ""}`} onClick={() => set("genre", "")}>All genres</span>
-            {genres.map((g) => (
+            {(genresOpen ? genres : genres.slice(0, GENRE_PREVIEW)).map((g) => (
               <span key={g.id} className={`chip${f.genre === g.slug ? " active" : ""}`} onClick={() => set("genre", g.slug)}>
-                {g.name} ({g.count})
+                {g.name} <span className="chip-count">{g.count}</span>
               </span>
             ))}
+            {genres.length > GENRE_PREVIEW && (
+              <button className="chip chip-more" onClick={() => setGenresOpen((o) => !o)}>
+                {genresOpen ? "Show less" : `+${genres.length - GENRE_PREVIEW} more`}
+                <Icon name={genresOpen ? "chevronUp" : "chevronDown"} size={13} />
+              </button>
+            )}
           </div>
         )}
 
