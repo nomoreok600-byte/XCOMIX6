@@ -24,53 +24,60 @@ const FIT_MODES = [
   ["native", "Original"],
 ];
 
-function ReaderImage({ page, eager, fit, onError, onManualRetry }) {
-  const [status, setStatus] = useState("loading");
-  const [attempt, setAttempt] = useState(0);
+// Pages never show a scary error to the reader. On failure they keep a subtle
+// loading shimmer and silently retry with backoff (cache-busting each attempt),
+// while asking the parent to re-scrape fresh source URLs for the whole chapter.
+// A freshly re-scraped URL (page.source_url change) resets and reloads cleanly.
+function ReaderImage({ page, eager, fit, onError }) {
+  const [loaded, setLoaded] = useState(false);
+  const [bust, setBust] = useState(0);
+  const triesRef = useRef(0);
+  const timerRef = useRef(null);
   const src = proxyImage(page.source_url);
-  // Cache-bust on retry so a transient proxy failure can recover.
-  const finalSrc = attempt > 0 ? `${src}${src.includes("?") ? "&" : "?"}r=${attempt}` : src;
+  const finalSrc = bust > 0 ? `${src}${src.includes("?") ? "&" : "?"}r=${bust}` : src;
 
-  // When the parent swaps in a freshly re-scraped URL for this page (because the
-  // old source CDN link expired), clear the error state and load the new image.
   useEffect(() => {
-    setStatus("loading");
-    setAttempt(0);
+    // New URL (fresh re-scrape) or first mount: reset retry state.
+    setLoaded(false);
+    triesRef.current = 0;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    return () => timerRef.current && clearTimeout(timerRef.current);
   }, [page.source_url]);
+
+  const handleError = () => {
+    triesRef.current += 1;
+    const n = triesRef.current;
+    // First failure for this page → ask the parent to re-resolve the chapter
+    // (the parent throttles/caps this), which usually swaps in working URLs.
+    if (n === 1) onError?.();
+    // Keep retrying this image. Fast backoff at first, then a slow heartbeat so
+    // it recovers on its own if the source/proxy comes back — without ever
+    // surfacing an error message.
+    const delay = n <= 6 ? Math.min(600 * n, 3500) : 15000;
+    if (n % 5 === 0) onError?.();
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setBust((b) => b + 1), delay);
+  };
 
   return (
     <div className={`reader-page fit-${fit}`}>
-      {status === "error" ? (
-        <div className="reader-fallback">
-          <p>Page {page.page_number} could not be streamed.</p>
-          <button
-            className="btn btn-ghost"
-            onClick={() => {
-              setStatus("loading");
-              setAttempt((a) => a + 1);
-              onManualRetry?.();
-            }}
-          >
-            Retry
-          </button>
+      {!loaded && (
+        <div className="reader-page-loading" aria-hidden="true">
+          <span className="reader-spinner" />
         </div>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={finalSrc}
-          alt={`Page ${page.page_number}`}
-          loading={eager ? "eager" : "lazy"}
-          // eslint-disable-next-line react/no-unknown-property
-          fetchpriority={eager ? "high" : "auto"}
-          decoding="async"
-          onLoad={() => setStatus("loaded")}
-          onError={() => {
-            setStatus("error");
-            onError?.();
-          }}
-          style={status === "loading" ? { minHeight: 240, background: "var(--bg-2)" } : undefined}
-        />
       )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={finalSrc}
+        alt={`Page ${page.page_number}`}
+        loading={eager ? "eager" : "lazy"}
+        // eslint-disable-next-line react/no-unknown-property
+        fetchpriority={eager ? "high" : "auto"}
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={handleError}
+        style={loaded ? undefined : { minHeight: 320 }}
+      />
     </div>
   );
 }
@@ -83,6 +90,8 @@ export default function ReaderView({ id }) {
   const [chapters, setChapters] = useState([]);
   const [fit, setFit] = useState("width");
   const [showSettings, setShowSettings] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [showTop, setShowTop] = useState(false);
   const [progress, setProgress] = useState(0);
   // Immersive reading: tap the page area to toggle the top/bottom option bars so
   // they don't permanently overlay (and shift) the artwork.
@@ -98,11 +107,13 @@ export default function ReaderView({ id }) {
     if (typeof window !== "undefined") window.localStorage.setItem(FIT_KEY, v);
   };
 
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
-    if (!id) return;
+    if (!id) return undefined;
     let active = true;
+    let retryTimer = null;
     setLoading(true);
-    window.scrollTo({ top: 0 });
+    if (retry === 0) window.scrollTo({ top: 0 });
     fetchChapterPages(id)
       .then((res) => {
         if (!active) return;
@@ -112,12 +123,21 @@ export default function ReaderView({ id }) {
           pushHistory({ manga_id: res.chapter.manga_id, chapter_id: res.chapter.id }).catch(() => {});
         }
       })
-      .catch((err) => active && setError(err.message))
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message);
+        // Auto-retry the chapter load in the background (capped) so a transient
+        // network/API hiccup heals itself instead of showing an error.
+        if (retry < 6) retryTimer = setTimeout(() => active && setRetry((r) => r + 1), 3000);
+      })
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [id]);
+  }, [id, retry]);
+  // Reset the retry counter on chapter change.
+  useEffect(() => setRetry(0), [id]);
 
   const chapter = data?.chapter;
   const pages = data?.pages || [];
@@ -125,28 +145,50 @@ export default function ReaderView({ id }) {
   const nextId = data?.next_chapter_id;
 
   // Self-healing pages: source CDN URLs expire after a few days, so a chapter
-  // that loaded once can later show broken images. When a page image fails, ask
-  // the backend to re-scrape fresh URLs (once per chapter to avoid loops); the
-  // new URLs flow back into the pages and each image reloads automatically.
+  // that loaded once can later show broken images. When a page image fails we
+  // ask the backend to re-scrape fresh URLs; the new URLs flow back into the
+  // pages and each image reloads automatically. Throttled + capped per chapter
+  // so concurrent page failures don't hammer the source.
   const refreshingRef = useRef(false);
-  const refreshedForRef = useRef(null);
+  const lastRefreshRef = useRef(0);
+  const refreshCountRef = useRef(0);
+  useEffect(() => {
+    // Reset the per-chapter re-resolve budget whenever the chapter changes.
+    lastRefreshRef.current = 0;
+    refreshCountRef.current = 0;
+  }, [id]);
   const refreshPages = useCallback(async () => {
     if (!id || refreshingRef.current) return;
+    const now = Date.now();
+    if (now - lastRefreshRef.current < 8000) return;
+    if (refreshCountRef.current >= 5) return;
     refreshingRef.current = true;
+    lastRefreshRef.current = now;
+    refreshCountRef.current += 1;
     try {
       const res = await fetchChapterPages(id, { refresh: true });
       if (res?.pages?.length) setData(res);
     } catch {
-      /* keep showing the retry fallback */
+      /* keep retrying silently */
     } finally {
       refreshingRef.current = false;
     }
   }, [id]);
   const onImageError = useCallback(() => {
-    if (refreshedForRef.current === id) return;
-    refreshedForRef.current = id;
     refreshPages();
-  }, [id, refreshPages]);
+  }, [refreshPages]);
+
+  // If a chapter loads with zero pages (e.g. the very first resolve hit the
+  // source while it was briefly unavailable), keep trying in the background
+  // instead of showing a "no pages" dead end.
+  useEffect(() => {
+    if (loading || error) return undefined;
+    if (data && (data.pages?.length || 0) === 0) {
+      const t = setTimeout(() => refreshPages(), 4000);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [data, loading, error, refreshPages]);
 
   // Newest-first options for the custom chapter picker.
   const chapterOptions = chapters
@@ -181,6 +223,7 @@ export default function ReaderView({ id }) {
     if (e.target.closest("button, a, select, input")) return;
     setChrome((c) => !c);
     setShowSettings(false);
+    setShowInfo(false);
   };
 
   // Keyboard navigation: ←/→ jump chapters, Home returns to the series.
@@ -199,6 +242,7 @@ export default function ReaderView({ id }) {
     const onScroll = () => {
       const h = document.documentElement.scrollHeight - window.innerHeight;
       setProgress(h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0);
+      setShowTop(window.scrollY > 700);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -280,15 +324,11 @@ export default function ReaderView({ id }) {
       <AdSlot slot="chapter" className="ad-slot-chapter" />
 
       <div className={`reader-stage fit-${fit}`} onClick={toggleChrome}>
-        {!id || loading ? (
-          <div className="center-state">Streaming pages…</div>
-        ) : error ? (
-          <div className="center-state">
-            <p>Could not load this chapter.</p>
-            <p style={{ color: "var(--text-faint)", fontSize: 13 }}>{error}</p>
+        {!id || loading || error || pages.length === 0 ? (
+          <div className="center-state reader-loading-state">
+            <span className="reader-spinner lg" />
+            <p>Streaming pages…</p>
           </div>
-        ) : pages.length === 0 ? (
-          <div className="center-state">No pages found for this chapter.</div>
         ) : (
           pages.map((p, i) => (
             <ReaderImage
@@ -297,7 +337,6 @@ export default function ReaderView({ id }) {
               fit={fit}
               eager={i < 2}
               onError={onImageError}
-              onManualRetry={refreshPages}
             />
           ))
         )}
@@ -331,10 +370,49 @@ export default function ReaderView({ id }) {
         </div>
       )}
 
+      {chapter && (
+        <button
+          type="button"
+          className={`reader-to-top${showTop ? " show" : ""}`}
+          aria-label="Back to top"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          <Icon name="arrowUp" size={20} />
+        </button>
+      )}
+
+      {showInfo && chapter && (
+        <div className="reader-info-panel">
+          <div className="reader-info-head">
+            <h3><Icon name="info" size={16} /> Chapter info</h3>
+            <button className="btn btn-ghost reader-nav-btn" onClick={() => setShowInfo(false)} aria-label="Close info">
+              <Icon name="close" size={16} />
+            </button>
+          </div>
+          <div className="reader-info-grid">
+            <div><div className="k">Series</div><div className="v">{decodeEntities(chapter.manga_title)}</div></div>
+            <div><div className="k">Chapter</div><div className="v">{decodeEntities(chapter.title) || `Chapter ${chapter.chapter_number}`}</div></div>
+            <div><div className="k">Number</div><div className="v">Ch. {chapter.chapter_number}</div></div>
+            <div><div className="k">Pages</div><div className="v">{pages.length}</div></div>
+            {chapter.created_at && (
+              <div><div className="k">Published</div><div className="v">{formatDateTime(chapter.created_at)}</div></div>
+            )}
+          </div>
+        </div>
+      )}
+
       {!loading && !error && chapter && (
         <div className="reader-bar bottom">
           <button className="btn btn-ghost reader-nav-btn" disabled={!prevId} onClick={() => go(prevId)}>
             <Icon name="chevronLeft" size={16} /> Prev
+          </button>
+          <button
+            className={`btn btn-ghost reader-nav-btn reader-info-btn${showInfo ? " active" : ""}`}
+            onClick={() => setShowInfo((s) => !s)}
+            aria-label="Chapter info"
+            aria-expanded={showInfo}
+          >
+            <Icon name="info" size={18} />
           </button>
           <Select
             className="reader-select compact"
