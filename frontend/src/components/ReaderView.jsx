@@ -15,7 +15,6 @@ import {
 import Comments from "./Comments";
 import Icon from "./Icon";
 import AdSlot from "./AdSlot";
-import Select from "./Select";
 
 const FIT_KEY = "xcomix_reader_fit";
 const FIT_MODES = [
@@ -91,6 +90,8 @@ export default function ReaderView({ id }) {
   const [fit, setFit] = useState("width");
   const [showSettings, setShowSettings] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showChapters, setShowChapters] = useState(false);
+  const [chapterQuery, setChapterQuery] = useState("");
   const [showTop, setShowTop] = useState(false);
   const [progress, setProgress] = useState(0);
   // Immersive reading: tap the page area to toggle the top/bottom option bars so
@@ -190,14 +191,17 @@ export default function ReaderView({ id }) {
     return undefined;
   }, [data, loading, error, refreshPages]);
 
-  // Newest-first options for the custom chapter picker.
-  const chapterOptions = chapters
-    .slice()
-    .reverse()
-    .map((c) => ({
-      value: String(c.id),
-      label: decodeEntities(c.title) || `Chapter ${c.chapter_number}`,
-    }));
+  // Newest-first chapter directory for the chapter drawer, with a live filter.
+  const chaptersNewestFirst = chapters.slice().reverse();
+  const filteredChapters = chapterQuery.trim()
+    ? chaptersNewestFirst.filter((c) => {
+        const q = chapterQuery.trim().toLowerCase();
+        return (
+          String(c.chapter_number).toLowerCase().includes(q) ||
+          decodeEntities(c.title).toLowerCase().includes(q)
+        );
+      })
+    : chaptersNewestFirst;
 
   // Load the full chapter directory for the jump-to selector.
   useEffect(() => {
@@ -225,6 +229,18 @@ export default function ReaderView({ id }) {
     setShowSettings(false);
     setShowInfo(false);
   };
+
+  // Close transient panels with Escape.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      setShowChapters(false);
+      setShowSettings(false);
+      setShowInfo(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Keyboard navigation: ←/→ jump chapters, Home returns to the series.
   useEffect(() => {
@@ -304,16 +320,16 @@ export default function ReaderView({ id }) {
             </div>
           </div>
           <div className="reader-settings-row">
-            <span className="reader-settings-label">Jump to chapter</span>
-            <Select
-              className="reader-select"
-              ariaLabel="Jump to chapter"
-              searchable
-              value={id || ""}
-              onChange={(v) => go(v)}
-              options={chapterOptions}
-              placeholder={`Chapter ${chapter?.chapter_number || ""}`}
-            />
+            <span className="reader-settings-label">Chapters</span>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setShowSettings(false);
+                setShowChapters(true);
+              }}
+            >
+              <Icon name="list" size={15} /> Browse all chapters
+            </button>
           </div>
           <p className="reader-settings-hint">
             Tip: tap the page to hide these bars · use ← and → to change chapters.
@@ -403,30 +419,98 @@ export default function ReaderView({ id }) {
 
       {!loading && !error && chapter && (
         <div className="reader-bar bottom">
-          <button className="btn btn-ghost reader-nav-btn" disabled={!prevId} onClick={() => go(prevId)}>
-            <Icon name="chevronLeft" size={16} /> Prev
+          <button
+            className="reader-pill-btn"
+            disabled={!prevId}
+            onClick={() => go(prevId)}
+            aria-label="Previous chapter"
+          >
+            <Icon name="chevronLeft" size={18} />
           </button>
           <button
-            className={`btn btn-ghost reader-nav-btn reader-info-btn${showInfo ? " active" : ""}`}
+            className={`reader-pill-btn${showInfo ? " active" : ""}`}
             onClick={() => setShowInfo((s) => !s)}
             aria-label="Chapter info"
             aria-expanded={showInfo}
           >
             <Icon name="info" size={18} />
           </button>
-          <Select
-            className="reader-select compact"
-            ariaLabel="Jump to chapter"
-            searchable
-            up
-            value={id || ""}
-            onChange={(v) => go(v)}
-            options={chapterOptions.length ? chapterOptions : [{ value: id, label: `Ch. ${chapter.chapter_number}` }]}
-            placeholder={`Ch. ${chapter.chapter_number}`}
-          />
-          <button className="btn btn-primary reader-nav-btn" disabled={!nextId} onClick={() => go(nextId)}>
-            Next <Icon name="chevronRight" size={16} />
+          <button
+            className="reader-ch-btn"
+            onClick={() => setShowChapters(true)}
+            aria-label="Select chapter"
+          >
+            <Icon name="list" size={16} />
+            <span>Ch. {chapter.chapter_number}</span>
+            <Icon name="chevronUp" size={14} className="reader-ch-caret" />
           </button>
+          <button
+            className="reader-pill-btn primary"
+            disabled={!nextId}
+            onClick={() => go(nextId)}
+            aria-label="Next chapter"
+          >
+            <Icon name="chevronRight" size={18} />
+          </button>
+        </div>
+      )}
+
+      {showChapters && (
+        <div
+          className="chapter-drawer-overlay"
+          onClick={() => setShowChapters(false)}
+          role="presentation"
+        >
+          <div className="chapter-drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Chapters">
+            <div className="chapter-drawer-grab" />
+            <div className="chapter-drawer-head">
+              <h3><Icon name="list" size={17} /> Chapters <span className="faint">{chapters.length}</span></h3>
+              <button className="reader-pill-btn" onClick={() => setShowChapters(false)} aria-label="Close">
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            <div className="chapter-drawer-search">
+              <Icon name="search" size={16} />
+              <input
+                autoFocus
+                value={chapterQuery}
+                onChange={(e) => setChapterQuery(e.target.value)}
+                placeholder="Search chapter number or title…"
+                aria-label="Search chapters"
+              />
+              {chapterQuery && (
+                <button className="chapter-drawer-clear" onClick={() => setChapterQuery("")} aria-label="Clear">
+                  <Icon name="close" size={14} />
+                </button>
+              )}
+            </div>
+            <div className="chapter-drawer-list">
+              {filteredChapters.length === 0 ? (
+                <div className="chapter-drawer-empty">No chapters match “{chapterQuery}”.</div>
+              ) : (
+                filteredChapters.map((c) => {
+                  const current = String(c.id) === String(id);
+                  const title = decodeEntities(c.title);
+                  const hasSub = title && title.toLowerCase() !== `chapter ${c.chapter_number}`.toLowerCase();
+                  return (
+                    <button
+                      key={c.id}
+                      className={`chapter-drawer-item${current ? " current" : ""}`}
+                      onClick={() => {
+                        setShowChapters(false);
+                        setChapterQuery("");
+                        if (!current) go(c.id);
+                      }}
+                    >
+                      <span className="cd-no">Ch. {c.chapter_number}</span>
+                      {hasSub && <span className="cd-title">{title}</span>}
+                      {current && <Icon name="check" size={16} className="cd-check" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
