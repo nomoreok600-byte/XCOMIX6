@@ -149,6 +149,63 @@ a {
   color: var(--crimson);
 }
 
+/* Search is a tap-to-open icon button + an expanding bar (app-style). */
+.nav-spacer { flex: 1; }
+.nav-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 999px; flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+  color: var(--text-dim); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.nav-icon-btn:hover { color: var(--crimson); border-color: var(--border-strong); }
+.nav-icon-btn.active { color: var(--crimson); border-color: var(--border-strong); box-shadow: var(--glow); }
+.nav-search-panel {
+  max-height: 0; overflow: hidden; border-top: 1px solid transparent;
+  transition: max-height 0.28s ease, border-color 0.28s ease, background 0.28s ease;
+}
+.nav-search-panel.open {
+  max-height: 96px; border-top: 1px solid var(--border); background: rgba(8, 8, 12, 0.55);
+}
+.nav-search-panel .container { padding-top: 12px; padding-bottom: 12px; }
+.nav-search-panel .nav-search { flex: none; width: 100%; max-width: 100%; }
+.nav-search-panel .nav-search input { padding-right: 42px; }
+.nav-search-clear {
+  position: absolute; right: 12px; background: transparent; border: 0;
+  color: var(--text-faint); cursor: pointer; display: inline-flex; align-items: center;
+}
+.nav-search-clear:hover { color: var(--text); }
+
+/* App-style bottom tab bar — hidden on desktop, shown on small screens. */
+.bottom-nav { display: none; }
+@media (max-width: 860px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 80;
+    background: rgba(8, 8, 12, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  .bn-item {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: 0; cursor: pointer;
+    color: var(--text-faint); font-size: 10.5px; font-weight: 600;
+    padding: 6px 2px; border-radius: 12px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .bn-item .icon { color: inherit; }
+  .bn-item span { line-height: 1; }
+  .bn-item:active { background: rgba(255, 255, 255, 0.06); }
+  .bn-item.active { color: var(--crimson); }
+  /* Keep page content clear of the fixed bar. */
+  body { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+}
+
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
@@ -1427,6 +1484,10 @@ select.input {
   display: flex; flex-direction: column; max-height: 320px;
 }
 .xselect.up .xselect-menu { top: auto; bottom: calc(100% + 6px); }
+/* Portaled menu floats on <body> with fixed positioning (set inline), so it is
+   never clipped by an ancestor overflow/stacking context. It sits above the
+   nav, reader bars and modals. */
+.xselect-portal { right: auto; z-index: 2000; }
 .xselect-search {
   margin: 8px; padding: 8px 10px; background: var(--bg-2); border: 1px solid var(--border);
   border-radius: 8px; color: var(--text); font: inherit; font-size: 13px; outline: none;
