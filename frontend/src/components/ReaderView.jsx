@@ -24,12 +24,19 @@ const FIT_MODES = [
   ["native", "Original"],
 ];
 
-function ReaderImage({ page, eager, fit }) {
+function ReaderImage({ page, eager, fit, onError, onManualRetry }) {
   const [status, setStatus] = useState("loading");
   const [attempt, setAttempt] = useState(0);
   const src = proxyImage(page.source_url);
   // Cache-bust on retry so a transient proxy failure can recover.
   const finalSrc = attempt > 0 ? `${src}${src.includes("?") ? "&" : "?"}r=${attempt}` : src;
+
+  // When the parent swaps in a freshly re-scraped URL for this page (because the
+  // old source CDN link expired), clear the error state and load the new image.
+  useEffect(() => {
+    setStatus("loading");
+    setAttempt(0);
+  }, [page.source_url]);
 
   return (
     <div className={`reader-page fit-${fit}`}>
@@ -38,7 +45,11 @@ function ReaderImage({ page, eager, fit }) {
           <p>Page {page.page_number} could not be streamed.</p>
           <button
             className="btn btn-ghost"
-            onClick={() => (setStatus("loading"), setAttempt((a) => a + 1))}
+            onClick={() => {
+              setStatus("loading");
+              setAttempt((a) => a + 1);
+              onManualRetry?.();
+            }}
           >
             Retry
           </button>
@@ -53,7 +64,10 @@ function ReaderImage({ page, eager, fit }) {
           fetchpriority={eager ? "high" : "auto"}
           decoding="async"
           onLoad={() => setStatus("loaded")}
-          onError={() => setStatus("error")}
+          onError={() => {
+            setStatus("error");
+            onError?.();
+          }}
           style={status === "loading" ? { minHeight: 240, background: "var(--bg-2)" } : undefined}
         />
       )}
@@ -109,6 +123,30 @@ export default function ReaderView({ id }) {
   const pages = data?.pages || [];
   const prevId = data?.prev_chapter_id;
   const nextId = data?.next_chapter_id;
+
+  // Self-healing pages: source CDN URLs expire after a few days, so a chapter
+  // that loaded once can later show broken images. When a page image fails, ask
+  // the backend to re-scrape fresh URLs (once per chapter to avoid loops); the
+  // new URLs flow back into the pages and each image reloads automatically.
+  const refreshingRef = useRef(false);
+  const refreshedForRef = useRef(null);
+  const refreshPages = useCallback(async () => {
+    if (!id || refreshingRef.current) return;
+    refreshingRef.current = true;
+    try {
+      const res = await fetchChapterPages(id, { refresh: true });
+      if (res?.pages?.length) setData(res);
+    } catch {
+      /* keep showing the retry fallback */
+    } finally {
+      refreshingRef.current = false;
+    }
+  }, [id]);
+  const onImageError = useCallback(() => {
+    if (refreshedForRef.current === id) return;
+    refreshedForRef.current = id;
+    refreshPages();
+  }, [id, refreshPages]);
 
   // Newest-first options for the custom chapter picker.
   const chapterOptions = chapters
@@ -253,7 +291,14 @@ export default function ReaderView({ id }) {
           <div className="center-state">No pages found for this chapter.</div>
         ) : (
           pages.map((p, i) => (
-            <ReaderImage key={p.page_number} page={p} fit={fit} eager={i < 2} />
+            <ReaderImage
+              key={p.page_number}
+              page={p}
+              fit={fit}
+              eager={i < 2}
+              onError={onImageError}
+              onManualRetry={refreshPages}
+            />
           ))
         )}
       </div>
