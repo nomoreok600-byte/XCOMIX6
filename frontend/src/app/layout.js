@@ -3,6 +3,7 @@ import { AuthProvider } from "../lib/auth";
 import { SiteConfigProvider } from "../lib/siteConfig";
 import Announcement from "../components/Announcement";
 import AdSlot from "../components/AdSlot";
+import AdRedirect from "../components/AdRedirect";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.xcomix.top";
 const API_ORIGIN = (() => {
@@ -121,6 +122,7 @@ export default function RootLayout({ children }) {
       <body>
         <AuthProvider>
           <SiteConfigProvider>
+            <AdRedirect />
             <Announcement />
             <AdSlot slot="header" className="ad-slot-top" />
             {children}

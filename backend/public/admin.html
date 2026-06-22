@@ -109,6 +109,24 @@
     </div>
 
     <div class="panel">
+      <h2>Click redirect ad (pop-under)</h2>
+      <p style="color:var(--muted)">
+        No on-page banner. While enabled, a visitor's click opens this ad URL in a new tab
+        (the site keeps working in their original tab). The cooldown is the minimum minutes
+        before the same visitor can trigger another redirect, so it never gets spammy.
+        Paste a direct link from your ad network (e.g. Adsterra/PropellerAds "Direct Link").
+      </p>
+      <div class="row" style="margin-bottom:10px">
+        <label class="row" style="gap:6px"><input type="checkbox" id="rd-on" /> Enabled</label>
+        <span class="badge">Cooldown</span>
+        <input id="rd-cooldown" type="number" min="1" max="60" value="2" style="width:80px" title="minutes between redirects" />
+        <span style="color:var(--muted)">minutes</span>
+      </div>
+      <input id="rd-url" placeholder="https://your-ad-network-direct-link.example/..." style="width:100%" />
+      <div class="row" style="margin-top:10px"><button id="rd-save">Save redirect ad</button></div>
+    </div>
+
+    <div class="panel">
       <h2>Recently updated manga</h2>
       <table><thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Source</th><th>Chapters</th><th>Updated</th></tr></thead>
       <tbody id="recent-manga"></tbody></table>
@@ -188,6 +206,10 @@ async function loadSettings() {
        <textarea class="ad-html" data-slot="${k}" rows="3" style="width:100%;background:#0e0e18;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:ui-monospace,monospace;font-size:12px" placeholder="&lt;a href=...&gt;&lt;img src=...&gt;&lt;/a&gt; or &lt;script&gt;…&lt;/script&gt;">${esc(cfg.ads[k].html||"")}</textarea>
      </div>`
   ).join("");
+  const rd = cfg.redirect || {};
+  $("#rd-on").checked = !!rd.enabled;
+  $("#rd-url").value = rd.url || "";
+  $("#rd-cooldown").value = rd.cooldownMin || 2;
 }
 
 $("#ann-save").onclick = async () => {
@@ -199,6 +221,11 @@ $("#ads-save").onclick = async () => {
   document.querySelectorAll(".ad-html").forEach((t) => { ads[t.dataset.slot] = { html: t.value }; });
   document.querySelectorAll(".ad-on").forEach((c) => { ads[c.dataset.slot] = { ...(ads[c.dataset.slot]||{}), enabled: c.checked }; });
   try { await api("/settings", { method:"POST", body: JSON.stringify({ ads }) }); log("Ads saved."); }
+  catch (e) { log("ERROR: " + e.message); }
+};
+$("#rd-save").onclick = async () => {
+  const redirect = { enabled: $("#rd-on").checked, url: $("#rd-url").value.trim(), cooldownMin: Number($("#rd-cooldown").value) || 2 };
+  try { await api("/settings", { method:"POST", body: JSON.stringify({ redirect }) }); log("Redirect ad saved."); }
   catch (e) { log("ERROR: " + e.message); }
 };
 

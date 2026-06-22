@@ -17,7 +17,19 @@ const KEYS = [
   ...AD_SLOTS.map((s) => `ad_${s}_on`),
   "announcement_text",
   "announcement_on",
+  // Click-triggered redirect ("pop-under") ad — no on-page banner; an eligible
+  // click opens this URL in a new tab, then a cooldown blocks the next one.
+  "ad_redirect_on",
+  "ad_redirect_url",
+  "ad_redirect_cooldown",
 ];
+
+// Clamp the per-visitor cooldown to a sane range (minutes).
+function cooldownMinutes(raw) {
+  const n = Number.parseInt(raw, 10);
+  if (Number.isNaN(n)) return 2;
+  return Math.min(Math.max(n, 1), 60);
+}
 
 async function getAll() {
   const rows = await query("SELECT `key`, `value` FROM site_settings");
@@ -48,6 +60,11 @@ async function adminConfig() {
   return {
     ads,
     announcement: { text: m.announcement_text || "", enabled: isOn(m.announcement_on) },
+    redirect: {
+      enabled: isOn(m.ad_redirect_on),
+      url: m.ad_redirect_url || "",
+      cooldownMin: cooldownMinutes(m.ad_redirect_cooldown),
+    },
   };
 }
 
@@ -59,9 +76,17 @@ async function publicConfig() {
     ads[slot] = isOn(m[`ad_${slot}_on`]) ? m[`ad_${slot}`] || "" : "";
   }
   const annOn = isOn(m.announcement_on);
+  // Only expose the redirect config (and URL) to the public when it's enabled
+  // AND a URL is set, so the frontend never opens a blank/garbage popup.
+  const redirectOn = isOn(m.ad_redirect_on) && Boolean((m.ad_redirect_url || "").trim());
   return {
     ads,
     announcement: { enabled: annOn, text: annOn ? m.announcement_text || "" : "" },
+    redirect: {
+      enabled: redirectOn,
+      url: redirectOn ? m.ad_redirect_url || "" : "",
+      cooldownMin: cooldownMinutes(m.ad_redirect_cooldown),
+    },
   };
 }
 
