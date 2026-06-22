@@ -9,7 +9,7 @@ import Icon from "./Icon";
 import Logo from "./Logo";
 
 export default function SiteNav({ query, onQuery }) {
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [unread, setUnread] = useState(0);
@@ -131,6 +131,10 @@ export default function SiteNav({ query, onQuery }) {
                 Logout
               </a>
             </>
+          ) : authLoading ? (
+            // Auth not resolved yet — don't flash a "Sign in" button at a user
+            // who is actually logged in. Show a tiny placeholder instead.
+            <span className="nav-auth-pending" aria-hidden="true" />
           ) : (
             <Link href="/login" className="btn btn-primary nav-login">
               Sign in
