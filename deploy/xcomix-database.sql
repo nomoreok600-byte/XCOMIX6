@@ -101,6 +101,13 @@ ALTER TABLE `mangas`
 ALTER TABLE `chapters`
   ADD COLUMN IF NOT EXISTS `views` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `title`;
 
+-- When a chapter's page images were last (re)scraped from the source. Source
+-- CDN URLs go stale after a few days (tokenised/rotated hotlink URLs), so the
+-- reader re-resolves a chapter's pages once they age past PAGE_TTL_HOURS. Backfill
+-- existing rows to "now" so already-cached chapters refresh on their next read.
+ALTER TABLE `pages`
+  ADD COLUMN IF NOT EXISTS `resolved_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `remote_source_url`;
+
 -- ---------------------------------------------------------------------
 --  Genres + manga<->genre join
 -- ---------------------------------------------------------------------
