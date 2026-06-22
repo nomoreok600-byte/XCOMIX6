@@ -12,7 +12,19 @@ import {
   reactComment,
 } from "../lib/api";
 
-const EMOJIS = ["👍", "❤️", "🔥", "😂", "😮", "😢", "💀"];
+// Real-icon reactions (no emoji). The stored value is a short key (≤16 chars,
+// fits the comment_reactions.emoji column); legacy emoji rows still render via
+// the fallback below so old reactions don't disappear.
+const REACTIONS = [
+  { key: "like", label: "Like", icon: "thumbsUp" },
+  { key: "love", label: "Love", icon: "heart" },
+  { key: "fire", label: "Fire", icon: "flame" },
+  { key: "laugh", label: "Haha", icon: "laugh" },
+  { key: "wow", label: "Wow", icon: "wow" },
+  { key: "sad", label: "Sad", icon: "sad" },
+  { key: "skull", label: "Dead", icon: "skull" },
+];
+const REACTION_MAP = Object.fromEntries(REACTIONS.map((r) => [r.key, r]));
 
 function Spoiler({ children }) {
   const [show, setShow] = useState(false);
@@ -25,17 +37,19 @@ function Spoiler({ children }) {
 
 function CommentNode({ c, onReply, onChanged, depth = 0 }) {
   const { user } = useAuth();
-  const [showEmoji, setShowEmoji] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
-  const react = async (emoji) => {
-    await reactComment(c.id, emoji);
-    setShowEmoji(false);
+  const react = async (key) => {
+    await reactComment(c.id, key);
+    setShowPicker(false);
     onChanged();
   };
   const remove = async () => {
     await deleteComment(c.id);
     onChanged();
   };
+
+  const reactions = (c.reactions || []).filter((r) => r.count > 0);
 
   return (
     <div className={`comment${depth > 0 ? " reply" : ""}`}>
@@ -44,7 +58,7 @@ function CommentNode({ c, onReply, onChanged, depth = 0 }) {
         <Link href={`/u/?username=${encodeURIComponent(c.user.username)}`} className="name">
           @{c.user.username}
         </Link>
-        <span className="when">{new Date(c.created_at).toLocaleString()}</span>
+        <span className="when"><Icon name="clock" size={12} /> {new Date(c.created_at).toLocaleString()}</span>
       </div>
       <div className="comment-body">
         {c.is_spoiler ? <Spoiler>{c.body}</Spoiler> : c.body}
@@ -54,46 +68,67 @@ function CommentNode({ c, onReply, onChanged, depth = 0 }) {
         <img className="comment-img" src={c.image_url} alt="attachment" />
       )}
       <div className="comment-actions">
-        {(c.reactions || []).map((r) => (
-          <button
-            key={r.emoji}
-            className={`react-pill${r.mine ? " mine" : ""}`}
-            onClick={() => react(r.emoji)}
-            disabled={!user}
-          >
-            {r.emoji} {r.count}
-          </button>
-        ))}
-        {user && (
-          <>
-            <button className="link-btn" onClick={() => setShowEmoji((s) => !s)}>
-              React
+        {reactions.map((r) => {
+          const meta = REACTION_MAP[r.emoji];
+          return (
+            <button
+              key={r.emoji}
+              className={`react-pill${r.mine ? " mine" : ""}`}
+              onClick={() => react(r.emoji)}
+              disabled={!user}
+              title={meta ? meta.label : r.emoji}
+            >
+              {meta ? <Icon name={meta.icon} size={14} /> : <span className="react-legacy">{r.emoji}</span>}
+              <span className="react-count">{r.count}</span>
             </button>
+          );
+        })}
+        {user && (
+          <div className="comment-tools">
+            <div className="react-wrap">
+              <button
+                className={`comment-tool${showPicker ? " active" : ""}`}
+                onClick={() => setShowPicker((s) => !s)}
+                aria-label="Add reaction"
+              >
+                <Icon name="heart" size={15} /> React
+              </button>
+              {showPicker && (
+                <div className="reaction-picker" role="menu">
+                  {REACTIONS.map((rx) => (
+                    <button
+                      key={rx.key}
+                      className="reaction-opt"
+                      title={rx.label}
+                      aria-label={rx.label}
+                      onClick={() => react(rx.key)}
+                    >
+                      <Icon name={rx.icon} size={18} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {depth === 0 && (
-              <button className="link-btn" onClick={() => onReply(c)}>
-                Reply
+              <button className="comment-tool" onClick={() => onReply(c)}>
+                <Icon name="comment" size={15} /> Reply
               </button>
             )}
             {(user.id === c.user.id || user.role === "admin") && (
-              <button className="link-btn" onClick={remove}>
-                Delete
+              <button className="comment-tool danger" onClick={remove}>
+                <Icon name="trash" size={15} /> Delete
               </button>
             )}
-          </>
+          </div>
         )}
       </div>
-      {showEmoji && (
-        <div className="emoji-row">
-          {EMOJIS.map((e) => (
-            <button key={e} onClick={() => react(e)}>
-              {e}
-            </button>
+      {(c.replies || []).length > 0 && (
+        <div className="comment-replies">
+          {c.replies.map((r) => (
+            <CommentNode key={r.id} c={r} onReply={onReply} onChanged={onChanged} depth={depth + 1} />
           ))}
         </div>
       )}
-      {(c.replies || []).map((r) => (
-        <CommentNode key={r.id} c={r} onReply={onReply} onChanged={onChanged} depth={depth + 1} />
-      ))}
     </div>
   );
 }
@@ -103,7 +138,7 @@ function reactionTotal(c) {
 }
 
 export default function Comments({ mangaId, chapterId }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [list, setList] = useState([]);
   const [body, setBody] = useState("");
   const [spoiler, setSpoiler] = useState(false);
@@ -198,7 +233,7 @@ export default function Comments({ mangaId, chapterId }) {
             </div>
           </div>
         </div>
-      ) : (
+      ) : authLoading ? null : (
         <p className="muted">
           <Link href="/login" style={{ color: "var(--crimson)" }}>Sign in</Link> to join the discussion.
         </p>
