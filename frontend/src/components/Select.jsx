@@ -81,16 +81,22 @@ export default function Select({
     ? options.filter((o) => String(o.label).toLowerCase().includes(q.toLowerCase()))
     : options;
 
-  const menuStyle = rect
-    ? {
-        position: "fixed",
-        left: rect.left,
-        width: rect.width,
-        ...(up
-          ? { bottom: Math.max(8, window.innerHeight - rect.top + 6) }
-          : { top: rect.bottom + 6 }),
-      }
-    : { position: "fixed", left: -9999, top: -9999 };
+  // Width: at least the trigger's width, but never narrower than ~220px (so
+  // short triggers like "＋ Add to library" don't truncate "Plan to read"), and
+  // capped to the viewport. Clamp `left` so the menu never spills off-screen.
+  let menuStyle = { position: "fixed", left: -9999, top: -9999 };
+  if (rect && typeof window !== "undefined") {
+    const width = Math.min(Math.max(rect.width, 220), window.innerWidth - 16);
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+    menuStyle = {
+      position: "fixed",
+      left,
+      width,
+      ...(up
+        ? { bottom: Math.max(8, window.innerHeight - rect.top + 6) }
+        : { top: rect.bottom + 6 }),
+    };
+  }
 
   return (
     <div className={`xselect ${className} ${open ? "open" : ""} ${up ? "up" : ""}`} ref={triggerRef}>
