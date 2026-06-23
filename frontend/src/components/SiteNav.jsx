@@ -1,25 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { fetchNotifications, fetchRandom, getAdult, setAdult } from "../lib/api";
 import Icon from "./Icon";
 import Logo from "./Logo";
 
 export default function SiteNav({ query, onQuery }) {
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [adult, setAdultState] = useState(false);
   // Local search text for pages that don't drive a live filter (onQuery absent).
   const [term, setTerm] = useState("");
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     setAdultState(getAdult());
   }, []);
+
+  // Focus the field the moment the search bar opens; close it on Escape.
+  useEffect(() => {
+    if (!searchOpen) return undefined;
+    const t = setTimeout(() => searchInputRef.current?.focus(), 20);
+    const onKey = (e) => e.key === "Escape" && setSearchOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [searchOpen]);
 
   const toggleAdult = () => {
     const next = !adult;
@@ -60,27 +75,31 @@ export default function SiteNav({ query, onQuery }) {
   const onSubmit = (e) => {
     e.preventDefault();
     const q = (value || "").trim();
+    setSearchOpen(false);
     if (!q) return;
     router.push(`/browse/?q=${encodeURIComponent(q)}`);
   };
 
+  const isActive = (href) => pathname === href || pathname?.startsWith(`${href}/`);
+
   return (
+    <>
     <nav className="nav">
       <div className="container nav-inner">
         <Link href="/home" className="brand" aria-label="XCOMIX home">
           <Logo size={30} />
         </Link>
 
-        <form className="nav-search" onSubmit={onSubmit} role="search">
-          <Icon name="search" size={18} className="nav-search-icon" />
-          <input
-            type="search"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="Search manga, manhwa, manhua…"
-            aria-label="Search manga"
-          />
-        </form>
+        <span className="nav-spacer" />
+
+        <button
+          className={`nav-icon-btn nav-search-btn${searchOpen ? " active" : ""}`}
+          onClick={() => setSearchOpen((s) => !s)}
+          aria-label="Search"
+          aria-expanded={searchOpen}
+        >
+          <Icon name={searchOpen ? "close" : "search"} size={20} />
+        </button>
 
         <button className="nav-burger" onClick={() => setOpen((o) => !o)} aria-label="Menu">
           <Icon name={open ? "close" : "menu"} size={22} />
@@ -112,6 +131,10 @@ export default function SiteNav({ query, onQuery }) {
                 Logout
               </a>
             </>
+          ) : authLoading ? (
+            // Auth not resolved yet — don't flash a "Sign in" button at a user
+            // who is actually logged in. Show a tiny placeholder instead.
+            <span className="nav-auth-pending" aria-hidden="true" />
           ) : (
             <Link href="/login" className="btn btn-primary nav-login">
               Sign in
@@ -119,6 +142,63 @@ export default function SiteNav({ query, onQuery }) {
           )}
         </div>
       </div>
+
+      <div className={`nav-search-panel${searchOpen ? " open" : ""}`}>
+        <div className="container">
+          <form className="nav-search" onSubmit={onSubmit} role="search">
+            <Icon name="search" size={18} className="nav-search-icon" />
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Search manga, manhwa, manhua…"
+              aria-label="Search manga"
+            />
+            {value && (
+              <button
+                type="button"
+                className="nav-search-clear"
+                aria-label="Clear search"
+                onClick={() => onChange("")}
+              >
+                <Icon name="close" size={16} />
+              </button>
+            )}
+          </form>
+        </div>
+      </div>
     </nav>
+
+    {/* App-style bottom tab bar (mobile only). */}
+    <nav className="bottom-nav" aria-label="Primary">
+      <Link href="/home" className={`bn-item${isActive("/home") ? " active" : ""}`}>
+        <Icon name="home" size={21} /><span>Home</span>
+      </Link>
+      <Link href="/browse" className={`bn-item${isActive("/browse") ? " active" : ""}`}>
+        <Icon name="book" size={21} /><span>Browse</span>
+      </Link>
+      <button
+        type="button"
+        className={`bn-item${searchOpen ? " active" : ""}`}
+        onClick={() => setSearchOpen((s) => !s)}
+        aria-label="Search"
+      >
+        <Icon name="search" size={21} /><span>Search</span>
+      </button>
+      <Link
+        href={user ? "/library" : "/login"}
+        className={`bn-item${isActive("/library") ? " active" : ""}`}
+      >
+        <Icon name="bookmark" size={21} /><span>Library</span>
+      </Link>
+      <Link
+        href={user ? "/profile" : "/login"}
+        className={`bn-item${isActive(user ? "/profile" : "/login") ? " active" : ""}`}
+      >
+        <Icon name="user" size={21} /><span>{user ? "You" : "Sign in"}</span>
+      </Link>
+    </nav>
+    </>
   );
 }

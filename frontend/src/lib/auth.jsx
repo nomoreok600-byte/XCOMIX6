@@ -8,7 +8,7 @@ const AuthContext = createContext(null);
 const DEFAULT_THEME = "crimson";
 const THEME_KEY = "xcomix_theme";
 
-const THEMES = {
+export const THEMES = {
   crimson: { crimson: "#ff2a5f", crimson2: "#ff0044", glow: "rgba(255,42,95,0.45)" },
   aqua: { crimson: "#14b8a6", crimson2: "#0d9488", glow: "rgba(20,184,166,0.4)" },
   cyber: { crimson: "#06b6d4", crimson2: "#3b82f6", glow: "rgba(6,182,212,0.45)" },

@@ -90,6 +90,14 @@ a {
   padding: 0 20px;
 }
 
+/* Site-wide guard against horizontal overflow on mobile (a stray wide element
+   used to push the layout and cut options off the right edge). `clip` prevents
+   sideways scrolling WITHOUT creating a scroll container, so the sticky nav and
+   fixed bars keep working. */
+html, body { overflow-x: clip; max-width: 100%; }
+*, *::before, *::after { min-width: 0; }
+img, video, canvas, svg { max-width: 100%; }
+
 /* ---------- Sticky nav ---------- */
 .nav {
   position: sticky;
@@ -147,6 +155,64 @@ a {
 }
 .nav-links a:hover {
   color: var(--crimson);
+}
+
+/* Search is a tap-to-open icon button + an expanding bar (app-style). */
+.nav-spacer { flex: 1; }
+.nav-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 999px; flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+  color: var(--text-dim); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.nav-icon-btn:hover { color: var(--crimson); border-color: var(--border-strong); }
+.nav-icon-btn.active { color: var(--crimson); border-color: var(--border-strong); box-shadow: var(--glow); }
+.nav-search-panel {
+  max-height: 0; overflow: hidden; border-top: 1px solid transparent;
+  transition: max-height 0.28s ease, border-color 0.28s ease, background 0.28s ease;
+}
+.nav-search-panel.open {
+  max-height: 96px; border-top: 1px solid var(--border); background: rgba(8, 8, 12, 0.55);
+}
+.nav-search-panel .container { padding-top: 12px; padding-bottom: 12px; }
+.nav-search-panel .nav-search { flex: none; width: 100%; max-width: 100%; }
+.nav-search-panel .nav-search input { padding-right: 42px; }
+.nav-search-clear {
+  position: absolute; right: 12px; background: transparent; border: 0;
+  color: var(--text-faint); cursor: pointer; display: inline-flex; align-items: center;
+}
+.nav-search-clear:hover { color: var(--text); }
+.nav-auth-pending { display: inline-block; width: 64px; height: 20px; }
+
+/* App-style bottom tab bar — hidden on desktop, shown on small screens. */
+.bottom-nav { display: none; }
+@media (max-width: 860px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 80;
+    background: rgba(8, 8, 12, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  .bn-item {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: 0; cursor: pointer;
+    color: var(--text-faint); font-size: 10.5px; font-weight: 600;
+    padding: 6px 2px; border-radius: 12px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .bn-item .icon { color: inherit; }
+  .bn-item span { line-height: 1; }
+  .bn-item:active { background: rgba(255, 255, 255, 0.06); }
+  .bn-item.active { color: var(--crimson); }
+  /* Keep page content clear of the fixed bar. */
+  body { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
 }
 
 /* ---------- Hero ---------- */
@@ -498,6 +564,7 @@ a {
 .reader-page {
   width: 100%;
   display: block;
+  position: relative;
 }
 .reader-page img {
   width: 100%;
@@ -509,6 +576,73 @@ a {
   color: var(--text-faint);
   border-bottom: 1px solid var(--border);
 }
+/* Subtle per-page loading shimmer shown until the image decodes (and while it
+   silently retries) — never an error message. */
+.reader-page-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(100deg, var(--bg-2) 30%, rgba(255,255,255,0.04) 50%, var(--bg-2) 70%);
+  background-size: 200% 100%;
+  animation: reader-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes reader-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.reader-spinner {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: var(--crimson);
+  animation: reader-spin 0.8s linear infinite;
+}
+.reader-spinner.lg { width: 38px; height: 38px; border-width: 4px; }
+@keyframes reader-spin { to { transform: rotate(360deg); } }
+.reader-loading-state { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+/* Floating scroll-to-top arrow (reader). */
+.reader-to-top {
+  position: fixed;
+  right: 18px;
+  bottom: 92px;
+  z-index: 45;
+  width: 44px; height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(8, 8, 12, 0.85);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  opacity: 0; transform: translateY(10px); pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, color 0.15s;
+}
+.reader-to-top.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.reader-to-top:hover { color: var(--crimson); }
+
+/* Reader chapter-info popover (toggled from the bottom bar). */
+.reader-info-panel {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 86px;
+  z-index: 46;
+  width: min(560px, calc(100% - 24px));
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  animation: reader-info-pop 0.18s ease;
+}
+@keyframes reader-info-pop { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.reader-info-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.reader-info-head h3 { margin: 0; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; }
+.reader-info-btn { flex-shrink: 0; padding: 0 12px; }
+.reader-info-btn.active { color: var(--crimson); border-color: var(--border-strong); }
+.reader-info-panel h3 { margin: 0 0 10px; font-size: 15px; }
+.reader-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; }
+.reader-info-grid .k { color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.reader-info-grid .v { font-size: 14px; font-weight: 600; }
 .reader-bar {
   position: sticky;
   z-index: 40;
@@ -530,11 +664,88 @@ a {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  width: min(640px, calc(100% - 24px));
+  width: min(460px, calc(100% - 24px));
   border-radius: 999px;
-  margin-bottom: 16px;
+  margin-bottom: calc(16px + env(safe-area-inset-bottom));
   box-shadow: var(--shadow);
+  gap: 8px;
+  padding: 8px 10px;
 }
+/* Refined floating control bar buttons. */
+.reader-pill-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 999px; flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+  color: var(--text); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.reader-pill-btn:hover:not(:disabled) { color: var(--crimson); border-color: var(--border-strong); }
+.reader-pill-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.reader-pill-btn.active { color: var(--crimson); border-color: var(--border-strong); box-shadow: var(--glow); }
+.reader-pill-btn.primary {
+  background: linear-gradient(135deg, var(--crimson), var(--crimson-2));
+  border-color: transparent; color: #fff;
+}
+.reader-pill-btn.primary:hover:not(:disabled) { color: #fff; filter: brightness(1.08); }
+.reader-ch-btn {
+  flex: 1; min-width: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 42px; border-radius: 999px; padding: 0 14px;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+  color: var(--text); font-weight: 800; font-size: 14px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.reader-ch-btn:hover { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.08); }
+.reader-ch-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reader-ch-caret { color: var(--text-faint); flex-shrink: 0; }
+
+/* Chapter drawer (bottom sheet) — replaces the cramped dropdown. */
+.chapter-drawer-overlay {
+  position: fixed; inset: 0; z-index: 95;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: cd-fade 0.18s ease;
+}
+@keyframes cd-fade { from { opacity: 0; } to { opacity: 1; } }
+.chapter-drawer {
+  width: 100%; max-width: 560px; max-height: 80vh;
+  display: flex; flex-direction: column;
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong); border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  box-shadow: var(--shadow);
+  animation: cd-up 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@keyframes cd-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.chapter-drawer-grab { width: 42px; height: 4px; border-radius: 2px; background: var(--border-strong); margin: 10px auto 2px; flex-shrink: 0; }
+.chapter-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 12px; }
+.chapter-drawer-head h3 { margin: 0; font-size: 16px; display: inline-flex; align-items: center; gap: 8px; }
+.chapter-drawer-head .faint { font-size: 12px; font-weight: 600; }
+.chapter-drawer-search {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  margin: 0 16px 10px; padding: 0 12px;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px;
+}
+.chapter-drawer-search .icon { color: var(--text-faint); flex-shrink: 0; }
+.chapter-drawer-search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--text); font: inherit; font-size: 14px; padding: 11px 0; }
+.chapter-drawer-clear { background: none; border: 0; color: var(--text-faint); cursor: pointer; display: inline-flex; align-items: center; }
+.chapter-drawer-clear:hover { color: var(--text); }
+.chapter-drawer-list { overflow-y: auto; padding: 4px 10px 16px; display: flex; flex-direction: column; gap: 4px; }
+.chapter-drawer-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  text-align: left; background: none; border: 1px solid transparent;
+  border-radius: 12px; padding: 11px 12px; cursor: pointer;
+  color: var(--text-dim); transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.chapter-drawer-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+.chapter-drawer-item.current { background: rgba(255, 255, 255, 0.04); border-color: var(--border-strong); color: var(--crimson); }
+.cd-no { font-weight: 800; font-size: 13.5px; flex-shrink: 0; }
+.cd-title { font-size: 13px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chapter-drawer-item.current .cd-title { color: var(--crimson); }
+.cd-check { margin-left: auto; flex-shrink: 0; }
+.chapter-drawer-empty { padding: 30px; text-align: center; color: var(--text-faint); }
 .reader-title {
   font-weight: 800;
   font-size: 14px;
@@ -971,15 +1182,26 @@ select.input {
 .comment {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
-  margin-bottom: 10px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
 }
-.comment.reply { margin-left: 28px; background: rgba(255, 255, 255, 0.02); }
-.comment-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.comment:hover { border-color: var(--border-strong); }
+.comment-replies {
+  margin-top: 12px;
+  padding-left: 16px;
+  border-left: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.comment.reply { margin-left: 0; background: rgba(255, 255, 255, 0.02); }
+.comment-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .comment-head .name { font-weight: 800; font-size: 13px; }
-.comment-head .when { color: var(--text-faint); font-size: 11px; }
-.comment-body { font-size: 14px; line-height: 1.55; color: var(--text); white-space: pre-wrap; }
+.comment-head .name:hover { color: var(--crimson); }
+.comment-head .when { color: var(--text-faint); font-size: 11px; display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+.comment-body { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
 .comment-img { max-width: 240px; border-radius: 10px; margin-top: 8px; border: 1px solid var(--border); }
 .spoiler-mask {
   background: #1a1a26;
@@ -990,22 +1212,56 @@ select.input {
   padding: 2px 6px;
 }
 .spoiler-mask.revealed { background: transparent; color: var(--text); cursor: default; }
-.comment-actions { display: flex; gap: 10px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+.comment-actions { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
 .react-pill {
+  display: inline-flex; align-items: center; gap: 6px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.04);
   border-radius: 999px;
-  padding: 3px 10px;
+  padding: 4px 11px;
   font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
   color: var(--text-dim);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.react-pill.mine { border-color: var(--border-strong); color: var(--crimson); }
+.react-pill:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text); }
+.react-pill.mine { border-color: var(--border-strong); color: var(--crimson); background: rgba(255,255,255,0.06); }
+.react-pill .icon { display: block; }
+.react-count { font-variant-numeric: tabular-nums; }
+.react-legacy { font-size: 13px; }
+.comment-tools { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+.comment-tool {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: 0; color: var(--text-faint);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  padding: 5px 8px; border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
+}
+.comment-tool:hover { color: var(--crimson); background: rgba(255,255,255,0.05); }
+.comment-tool.active { color: var(--crimson); }
+.comment-tool.danger:hover { color: #ff5470; }
+/* Reaction picker popover (real icons, not emoji). */
+.react-wrap { position: relative; display: inline-flex; }
+.reaction-picker {
+  position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 30;
+  display: flex; gap: 2px; padding: 6px;
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong); border-radius: 999px;
+  box-shadow: var(--shadow);
+  animation: reaction-pop 0.16s ease;
+}
+@keyframes reaction-pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.reaction-opt {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: none; border: 0; color: var(--text-dim); cursor: pointer;
+  transition: transform 0.12s, color 0.12s, background 0.12s;
+}
+.reaction-opt:hover { transform: scale(1.25); color: var(--crimson); background: rgba(255,255,255,0.06); }
+/* Keep the legacy link-btn used elsewhere. */
 .link-btn { background: none; border: 0; color: var(--text-dim); font-size: 12px; cursor: pointer; padding: 0; }
 .link-btn:hover { color: var(--crimson); }
-.emoji-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.emoji-row button { background: none; border: 0; font-size: 18px; cursor: pointer; opacity: 0.7; }
-.emoji-row button:hover { opacity: 1; transform: scale(1.2); }
 
 /* ---------- Avatars ---------- */
 .avatar {
@@ -1209,7 +1465,10 @@ select.input {
 
 /* ---- Profile redesign (MangaTaro-style) ---- */
 .pf-banner {
-  height: 200px; border-radius: 0 0 20px 20px; margin: 0 -20px 0;
+  height: 200px; border-radius: 0 0 20px 20px;
+  /* Robust full-bleed regardless of the container's (responsive) padding, so it
+     never overflows the viewport on mobile. */
+  width: 100vw; margin-left: calc(50% - 50vw);
   background: linear-gradient(135deg, rgba(20,184,166,0.25), rgba(6,182,212,0.12)), var(--bg-2);
   background-size: cover; background-position: center; position: relative;
 }
@@ -1246,7 +1505,24 @@ select.input {
 .stat-card .n { font-size: 28px; font-weight: 900; }
 .stat-card .l { color: var(--text-faint); font-size: 13px; }
 .share-box { display: flex; gap: 8px; }
-.share-box input { flex: 1; }
+.share-box input { flex: 1; min-width: 0; }
+
+/* Visual theme picker (color swatches) */
+.theme-swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.theme-swatch {
+  width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
+  border: 2px solid var(--border);
+  background: linear-gradient(135deg, var(--sw1), var(--sw2));
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.12s, border-color 0.15s;
+}
+.theme-swatch:hover { transform: scale(1.08); }
+.theme-swatch.active { border-color: #fff; }
+/* Checkbox option rows */
+.toggle-row { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: 14px; }
+.toggle-row input { width: 18px; height: 18px; accent-color: var(--crimson); flex-shrink: 0; }
+.seg { flex-wrap: wrap; }
 
 /* ---- Community wall ---- */
 .wall-post {
@@ -1282,6 +1558,21 @@ select.input {
   /* Keep search reachable on mobile (shrink instead of hiding it). */
   .nav-search { order: 3; flex-basis: 100%; max-width: 100%; }
   .nav-inner { flex-wrap: wrap; row-gap: 10px; }
+  /* Profile tabs: wrap into pills so every tab (incl. Settings) is reachable
+     instead of scrolling off the right edge. */
+  .pf-tabs { flex-wrap: wrap; overflow-x: visible; border-bottom: 0; gap: 8px; margin: 18px 0 16px; }
+  .pf-tab {
+    padding: 8px 14px; font-size: 13px;
+    border: 1px solid var(--border); border-bottom: 1px solid var(--border); border-radius: 999px;
+  }
+  .pf-tab.active {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--crimson), var(--crimson-2)); color: #fff;
+  }
+  /* Filter dropdowns: two per row so they never run off-screen. */
+  .filter-bar { gap: 10px; padding: 14px; }
+  .filter-select { flex: 1 1 calc(50% - 5px); min-width: 0; }
+  .view-toggle { flex: 0 0 auto; }
 }
 @media (max-width: 420px) {
   .grid { gap: 10px; }
@@ -1308,18 +1599,94 @@ select.input {
 .nav-links a .icon { color: var(--text-faint); }
 .nav-links a:hover .icon { color: var(--crimson); }
 
-/* Announcement banner */
-.announcement {
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(90deg, var(--crimson), var(--crimson-2));
-  color: #04140f; font-weight: 700; font-size: 14px;
-  padding: 10px 18px; position: relative; z-index: 55;
+/* Announcement — closable, sliding pop banner (not a top header bar). */
+.announce-pop {
+  position: fixed;
+  top: 76px;
+  right: 16px;
+  z-index: 70;
+  width: min(340px, calc(100vw - 32px));
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--crimson);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 12px 12px 10px;
+  animation: announce-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.announcement-text { flex: 1; text-align: center; }
-.announcement-close {
-  background: rgba(0,0,0,0.18); border: 0; color: inherit; cursor: pointer;
-  width: 26px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+@keyframes announce-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+.announce-pop-body { display: flex; align-items: flex-start; gap: 10px; }
+.announce-pop-icon { color: var(--crimson); margin-top: 2px; flex-shrink: 0; }
+.announce-pop-track { flex: 1; min-width: 0; overflow: hidden; }
+.announce-pop-text {
+  margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text); font-weight: 600;
+  animation: announce-slide 0.35s ease;
 }
+@keyframes announce-slide { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+.announce-pop-close {
+  background: none; border: 0; color: var(--text-faint); cursor: pointer;
+  flex-shrink: 0; padding: 2px; border-radius: 6px; display: inline-flex; align-items: center;
+}
+.announce-pop-close:hover { color: var(--text); }
+.announce-pop-dots { display: flex; gap: 5px; justify-content: center; margin-top: 9px; }
+.announce-dot {
+  width: 6px; height: 6px; border-radius: 50%; border: 0; padding: 0;
+  background: var(--border-strong); cursor: pointer; transition: width 0.2s, background 0.2s;
+}
+.announce-dot.active { background: var(--crimson); width: 16px; border-radius: 3px; }
+@media (max-width: 860px) {
+  .announce-pop { top: auto; bottom: calc(72px + env(safe-area-inset-bottom)); right: 12px; left: 12px; width: auto; }
+}
+
+/* PWA "Install app" prompt (bottom-left card on desktop; top bar on mobile so
+   it never collides with the bottom tab bar or the announcement banner). */
+.install-banner {
+  position: fixed;
+  z-index: 75;
+  left: 16px;
+  bottom: 16px;
+  width: min(380px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 12px 12px 12px 14px;
+  animation: announce-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.install-banner-icon { flex-shrink: 0; display: flex; }
+.install-banner-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.install-banner-text strong { font-size: 14px; }
+.install-banner-text span { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+.install-banner-btn { flex-shrink: 0; height: 38px; padding: 0 14px; }
+.install-banner-close {
+  background: none; border: 0; color: var(--text-faint); cursor: pointer;
+  align-self: flex-start; padding: 2px; border-radius: 6px; display: inline-flex;
+}
+.install-banner-close:hover { color: var(--text); }
+@media (max-width: 860px) {
+  .install-banner { left: 12px; right: 12px; bottom: auto; top: calc(72px + env(safe-area-inset-top)); width: auto; }
+}
+
+.install-ios-overlay {
+  position: fixed; inset: 0; z-index: 96;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  animation: cd-fade 0.18s ease;
+}
+.install-ios-sheet {
+  width: 100%; max-width: 380px;
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong);
+  border-radius: 18px; box-shadow: var(--shadow);
+  padding: 20px 22px;
+}
+.install-ios-sheet h3 { margin: 0 0 12px; font-size: 16px; display: inline-flex; align-items: center; gap: 8px; }
+.install-ios-sheet ol { margin: 0 0 16px; padding-left: 20px; color: var(--text-dim); font-size: 14px; line-height: 1.7; }
+.install-ios-sheet ol b { color: var(--text); }
 
 /* Ad slots */
 .ad-slot { margin: 16px auto; max-width: 1280px; padding: 0 20px; text-align: center; }
@@ -1427,6 +1794,10 @@ select.input {
   display: flex; flex-direction: column; max-height: 320px;
 }
 .xselect.up .xselect-menu { top: auto; bottom: calc(100% + 6px); }
+/* Portaled menu floats on <body> with fixed positioning (set inline), so it is
+   never clipped by an ancestor overflow/stacking context. It sits above the
+   nav, reader bars and modals. */
+.xselect-portal { right: auto; z-index: 2000; }
 .xselect-search {
   margin: 8px; padding: 8px 10px; background: var(--bg-2); border: 1px solid var(--border);
   border-radius: 8px; color: var(--text); font: inherit; font-size: 13px; outline: none;

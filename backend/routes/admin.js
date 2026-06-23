@@ -142,6 +142,12 @@ router.post("/settings", wrap(async (req, res) => {
     if (body.announcement.text !== undefined) updates.announcement_text = String(body.announcement.text);
     if (body.announcement.enabled !== undefined) updates.announcement_on = flag(body.announcement.enabled);
   }
+  // Click-triggered redirect ad: { redirect: { url, enabled, cooldownMin } }
+  if (body.redirect && typeof body.redirect === "object") {
+    if (body.redirect.url !== undefined) updates.ad_redirect_url = String(body.redirect.url).trim();
+    if (body.redirect.enabled !== undefined) updates.ad_redirect_on = flag(body.redirect.enabled);
+    if (body.redirect.cooldownMin !== undefined) updates.ad_redirect_cooldown = String(body.redirect.cooldownMin);
+  }
   await settings.setMany(updates);
   res.json({ ok: true, config: await settings.adminConfig() });
 }));
