@@ -90,6 +90,14 @@ a {
   padding: 0 20px;
 }
 
+/* Site-wide guard against horizontal overflow on mobile (a stray wide element
+   used to push the layout and cut options off the right edge). `clip` prevents
+   sideways scrolling WITHOUT creating a scroll container, so the sticky nav and
+   fixed bars keep working. */
+html, body { overflow-x: clip; max-width: 100%; }
+*, *::before, *::after { min-width: 0; }
+img, video, canvas, svg { max-width: 100%; }
+
 /* ---------- Sticky nav ---------- */
 .nav {
   position: sticky;
@@ -1457,7 +1465,10 @@ select.input {
 
 /* ---- Profile redesign (MangaTaro-style) ---- */
 .pf-banner {
-  height: 200px; border-radius: 0 0 20px 20px; margin: 0 -20px 0;
+  height: 200px; border-radius: 0 0 20px 20px;
+  /* Robust full-bleed regardless of the container's (responsive) padding, so it
+     never overflows the viewport on mobile. */
+  width: 100vw; margin-left: calc(50% - 50vw);
   background: linear-gradient(135deg, rgba(20,184,166,0.25), rgba(6,182,212,0.12)), var(--bg-2);
   background-size: cover; background-position: center; position: relative;
 }
@@ -1494,7 +1505,24 @@ select.input {
 .stat-card .n { font-size: 28px; font-weight: 900; }
 .stat-card .l { color: var(--text-faint); font-size: 13px; }
 .share-box { display: flex; gap: 8px; }
-.share-box input { flex: 1; }
+.share-box input { flex: 1; min-width: 0; }
+
+/* Visual theme picker (color swatches) */
+.theme-swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.theme-swatch {
+  width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
+  border: 2px solid var(--border);
+  background: linear-gradient(135deg, var(--sw1), var(--sw2));
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.12s, border-color 0.15s;
+}
+.theme-swatch:hover { transform: scale(1.08); }
+.theme-swatch.active { border-color: #fff; }
+/* Checkbox option rows */
+.toggle-row { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: 14px; }
+.toggle-row input { width: 18px; height: 18px; accent-color: var(--crimson); flex-shrink: 0; }
+.seg { flex-wrap: wrap; }
 
 /* ---- Community wall ---- */
 .wall-post {
@@ -1530,6 +1558,21 @@ select.input {
   /* Keep search reachable on mobile (shrink instead of hiding it). */
   .nav-search { order: 3; flex-basis: 100%; max-width: 100%; }
   .nav-inner { flex-wrap: wrap; row-gap: 10px; }
+  /* Profile tabs: wrap into pills so every tab (incl. Settings) is reachable
+     instead of scrolling off the right edge. */
+  .pf-tabs { flex-wrap: wrap; overflow-x: visible; border-bottom: 0; gap: 8px; margin: 18px 0 16px; }
+  .pf-tab {
+    padding: 8px 14px; font-size: 13px;
+    border: 1px solid var(--border); border-bottom: 1px solid var(--border); border-radius: 999px;
+  }
+  .pf-tab.active {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--crimson), var(--crimson-2)); color: #fff;
+  }
+  /* Filter dropdowns: two per row so they never run off-screen. */
+  .filter-bar { gap: 10px; padding: 14px; }
+  .filter-select { flex: 1 1 calc(50% - 5px); min-width: 0; }
+  .view-toggle { flex: 0 0 auto; }
 }
 @media (max-width: 420px) {
   .grid { gap: 10px; }
