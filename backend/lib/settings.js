@@ -50,6 +50,13 @@ async function setMany(values) {
 
 const isOn = (v) => String(v) === "1" || String(v).toLowerCase() === "true";
 
+// Split a multi-line textarea value into trimmed, non-empty lines.
+const splitLines = (s) =>
+  String(s || "")
+    .split(/\r?\n/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+
 /** Admin view: raw settings normalized into a structured object. */
 async function adminConfig() {
   const m = await getAll();
@@ -75,16 +82,25 @@ async function publicConfig() {
   for (const slot of AD_SLOTS) {
     ads[slot] = isOn(m[`ad_${slot}_on`]) ? m[`ad_${slot}`] || "" : "";
   }
-  const annOn = isOn(m.announcement_on);
-  // Only expose the redirect config (and URL) to the public when it's enabled
-  // AND a URL is set, so the frontend never opens a blank/garbage popup.
-  const redirectOn = isOn(m.ad_redirect_on) && Boolean((m.ad_redirect_url || "").trim());
+  // Announcements: one per line → multiple closable, sliding pop banners.
+  const annItems = splitLines(m.announcement_text);
+  const annOn = isOn(m.announcement_on) && annItems.length > 0;
+  // Redirect ("pop-under") ads: one direct link per line, rotated client-side.
+  // Only http(s) links are exposed so the frontend never opens junk.
+  const urls = splitLines(m.ad_redirect_url).filter((u) => /^https?:\/\//i.test(u));
+  const redirectOn = isOn(m.ad_redirect_on) && urls.length > 0;
   return {
     ads,
-    announcement: { enabled: annOn, text: annOn ? m.announcement_text || "" : "" },
+    announcement: {
+      enabled: annOn,
+      items: annOn ? annItems : [],
+      // Back-compat for older frontends that read a single string.
+      text: annOn ? annItems[0] || "" : "",
+    },
     redirect: {
       enabled: redirectOn,
-      url: redirectOn ? m.ad_redirect_url || "" : "",
+      urls: redirectOn ? urls : [],
+      url: redirectOn ? urls[0] || "" : "",
       cooldownMin: cooldownMinutes(m.ad_redirect_cooldown),
     },
   };

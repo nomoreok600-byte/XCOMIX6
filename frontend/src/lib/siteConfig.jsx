@@ -5,8 +5,8 @@ import { fetchSiteConfig } from "./api";
 
 const DEFAULT_CONFIG = {
   ads: {},
-  announcement: { enabled: false, text: "" },
-  redirect: { enabled: false, url: "", cooldownMin: 2 },
+  announcement: { enabled: false, items: [], text: "" },
+  redirect: { enabled: false, urls: [], url: "", cooldownMin: 2 },
 };
 
 const SiteConfigContext = createContext(DEFAULT_CONFIG);

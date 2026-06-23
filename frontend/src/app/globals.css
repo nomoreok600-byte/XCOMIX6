@@ -1556,17 +1556,43 @@ select.input {
 .nav-links a .icon { color: var(--text-faint); }
 .nav-links a:hover .icon { color: var(--crimson); }
 
-/* Announcement banner */
-.announcement {
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(90deg, var(--crimson), var(--crimson-2));
-  color: #04140f; font-weight: 700; font-size: 14px;
-  padding: 10px 18px; position: relative; z-index: 55;
+/* Announcement — closable, sliding pop banner (not a top header bar). */
+.announce-pop {
+  position: fixed;
+  top: 76px;
+  right: 16px;
+  z-index: 70;
+  width: min(340px, calc(100vw - 32px));
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--crimson);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 12px 12px 10px;
+  animation: announce-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.announcement-text { flex: 1; text-align: center; }
-.announcement-close {
-  background: rgba(0,0,0,0.18); border: 0; color: inherit; cursor: pointer;
-  width: 26px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+@keyframes announce-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+.announce-pop-body { display: flex; align-items: flex-start; gap: 10px; }
+.announce-pop-icon { color: var(--crimson); margin-top: 2px; flex-shrink: 0; }
+.announce-pop-track { flex: 1; min-width: 0; overflow: hidden; }
+.announce-pop-text {
+  margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text); font-weight: 600;
+  animation: announce-slide 0.35s ease;
+}
+@keyframes announce-slide { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+.announce-pop-close {
+  background: none; border: 0; color: var(--text-faint); cursor: pointer;
+  flex-shrink: 0; padding: 2px; border-radius: 6px; display: inline-flex; align-items: center;
+}
+.announce-pop-close:hover { color: var(--text); }
+.announce-pop-dots { display: flex; gap: 5px; justify-content: center; margin-top: 9px; }
+.announce-dot {
+  width: 6px; height: 6px; border-radius: 50%; border: 0; padding: 0;
+  background: var(--border-strong); cursor: pointer; transition: width 0.2s, background 0.2s;
+}
+.announce-dot.active { background: var(--crimson); width: 16px; border-radius: 3px; }
+@media (max-width: 860px) {
+  .announce-pop { top: auto; bottom: calc(72px + env(safe-area-inset-bottom)); right: 12px; left: 12px; width: auto; }
 }
 
 /* Ad slots */

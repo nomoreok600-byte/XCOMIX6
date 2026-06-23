@@ -92,13 +92,13 @@
     </div>
 
     <div class="panel">
-      <h2>Announcement banner</h2>
-      <p style="color:var(--muted)">Shown across the top of the site only while enabled.</p>
+      <h2>Announcements</h2>
+      <p style="color:var(--muted)">Shown as a closable pop banner that slides between announcements (NOT a top bar). <b>One announcement per line</b> — each line becomes a slide.</p>
       <div class="row" style="margin-bottom:10px">
         <label class="row" style="gap:6px"><input type="checkbox" id="ann-on" /> Enabled</label>
       </div>
-      <textarea id="ann-text" rows="2" style="width:100%;background:#0e0e18;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px" placeholder="e.g. New chapters added daily — enjoy XCOMIX!"></textarea>
-      <div class="row" style="margin-top:10px"><button id="ann-save">Save announcement</button></div>
+      <textarea id="ann-text" rows="4" style="width:100%;background:#0e0e18;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px" placeholder="New chapters added daily — enjoy XCOMIX!&#10;Join our community wall and leave a review&#10;Tip: bookmark titles to get update alerts"></textarea>
+      <div class="row" style="margin-top:10px"><button id="ann-save">Save announcements</button></div>
     </div>
 
     <div class="panel">
@@ -111,10 +111,11 @@
     <div class="panel">
       <h2>Click redirect ad (pop-under)</h2>
       <p style="color:var(--muted)">
-        No on-page banner. While enabled, a visitor's click opens this ad URL in a new tab
+        No on-page banner. While enabled, a visitor's click opens an ad URL in a new tab
         (the site keeps working in their original tab). The cooldown is the minimum minutes
         before the same visitor can trigger another redirect, so it never gets spammy.
-        Paste a direct link from your ad network (e.g. Adsterra/PropellerAds "Direct Link").
+        <b>One direct link per line</b> — links from multiple ad networks (Adsterra,
+        PropellerAds, etc.) are <b>rotated</b> round-robin across clicks.
       </p>
       <div class="row" style="margin-bottom:10px">
         <label class="row" style="gap:6px"><input type="checkbox" id="rd-on" /> Enabled</label>
@@ -122,7 +123,7 @@
         <input id="rd-cooldown" type="number" min="1" max="60" value="2" style="width:80px" title="minutes between redirects" />
         <span style="color:var(--muted)">minutes</span>
       </div>
-      <input id="rd-url" placeholder="https://your-ad-network-direct-link.example/..." style="width:100%" />
+      <textarea id="rd-url" rows="4" style="width:100%;background:#0e0e18;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:ui-monospace,monospace;font-size:12px" placeholder="https://network-a.example/direct-link&#10;https://network-b.example/smartlink&#10;https://network-c.example/..."></textarea>
       <div class="row" style="margin-top:10px"><button id="rd-save">Save redirect ad</button></div>
     </div>
 
