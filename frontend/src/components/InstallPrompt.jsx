@@ -65,8 +65,14 @@ export default function InstallPrompt() {
     };
   }, []);
 
-  // Keep the reader immersive (it has its own bottom controls).
-  if (pathname?.startsWith("/reader")) return null;
+  // Keep the reader immersive and don't clutter the auth pages.
+  if (
+    pathname?.startsWith("/reader") ||
+    pathname?.startsWith("/login") ||
+    pathname?.startsWith("/register")
+  ) {
+    return null;
+  }
   if (!show) return null;
 
   const dismiss = () => {
