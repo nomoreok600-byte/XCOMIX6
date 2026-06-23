@@ -1595,6 +1595,56 @@ select.input {
   .announce-pop { top: auto; bottom: calc(72px + env(safe-area-inset-bottom)); right: 12px; left: 12px; width: auto; }
 }
 
+/* PWA "Install app" prompt (bottom-left card on desktop; top bar on mobile so
+   it never collides with the bottom tab bar or the announcement banner). */
+.install-banner {
+  position: fixed;
+  z-index: 75;
+  left: 16px;
+  bottom: 16px;
+  width: min(380px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 12px 12px 12px 14px;
+  animation: announce-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.install-banner-icon { flex-shrink: 0; display: flex; }
+.install-banner-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.install-banner-text strong { font-size: 14px; }
+.install-banner-text span { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+.install-banner-btn { flex-shrink: 0; height: 38px; padding: 0 14px; }
+.install-banner-close {
+  background: none; border: 0; color: var(--text-faint); cursor: pointer;
+  align-self: flex-start; padding: 2px; border-radius: 6px; display: inline-flex;
+}
+.install-banner-close:hover { color: var(--text); }
+@media (max-width: 860px) {
+  .install-banner { left: 12px; right: 12px; bottom: auto; top: calc(72px + env(safe-area-inset-top)); width: auto; }
+}
+
+.install-ios-overlay {
+  position: fixed; inset: 0; z-index: 96;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  animation: cd-fade 0.18s ease;
+}
+.install-ios-sheet {
+  width: 100%; max-width: 380px;
+  background: var(--panel-solid, var(--panel));
+  border: 1px solid var(--border-strong);
+  border-radius: 18px; box-shadow: var(--shadow);
+  padding: 20px 22px;
+}
+.install-ios-sheet h3 { margin: 0 0 12px; font-size: 16px; display: inline-flex; align-items: center; gap: 8px; }
+.install-ios-sheet ol { margin: 0 0 16px; padding-left: 20px; color: var(--text-dim); font-size: 14px; line-height: 1.7; }
+.install-ios-sheet ol b { color: var(--text); }
+
 /* Ad slots */
 .ad-slot { margin: 16px auto; max-width: 1280px; padding: 0 20px; text-align: center; }
 .ad-slot img, .ad-slot iframe { max-width: 100%; height: auto; border-radius: 10px; }

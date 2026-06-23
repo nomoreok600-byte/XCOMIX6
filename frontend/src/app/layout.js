@@ -4,6 +4,7 @@ import { SiteConfigProvider } from "../lib/siteConfig";
 import Announcement from "../components/Announcement";
 import AdSlot from "../components/AdSlot";
 import AdRedirect from "../components/AdRedirect";
+import InstallPrompt from "../components/InstallPrompt";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.xcomix.top";
 const API_ORIGIN = (() => {
@@ -124,6 +125,7 @@ export default function RootLayout({ children }) {
           <SiteConfigProvider>
             <AdRedirect />
             <Announcement />
+            <InstallPrompt />
             <AdSlot slot="header" className="ad-slot-top" />
             {children}
           </SiteConfigProvider>
