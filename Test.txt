@@ -1,32 +1,12 @@
 $ProgressPreference = 'SilentlyContinue';
-Set-ExecutionPolicy Bypass -Scope Process -Force;
+Set-Location "C:\auto-stream"
 
-Write-Host "1. Creating new folder..." -ForegroundColor Cyan
-$dir = "C:\auto-stream"
-New-Item -ItemType Directory -Force -Path $dir -ErrorAction SilentlyContinue | Out-Null
-Set-Location $dir
+Write-Host "1. Downloading Chrome binaries..." -ForegroundColor Cyan
+npx puppeteer browsers install chrome
 
-Write-Host "2. Checking Node.js..." -ForegroundColor Cyan
-if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-    Invoke-WebRequest -Uri "https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi" -OutFile "node.msi"
-    Start-Process msiexec.exe -ArgumentList '/i node.msi /quiet /norestart' -Wait
-    Remove-Item "node.msi" -Force
-}
-$env:Path += ";C:\Program Files\nodejs\;$dir\"
-
-Write-Host "3. Checking FFmpeg..." -ForegroundColor Cyan
-if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
-    Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "ffmpeg.zip"
-    Expand-Archive ffmpeg.zip -DestinationPath "$dir\ffmpeg_temp" -Force
-    Move-Item "$dir\ffmpeg_temp\*\bin\ffmpeg.exe" "$dir\ffmpeg.exe" -Force
-    Remove-Item "ffmpeg.zip", "ffmpeg_temp" -Recurse -Force
-}
-
-Write-Host "4. Installing required packages directly..." -ForegroundColor Cyan
-npm install puppeteer puppeteer-stream
-
-Write-Host "5. Creating bulletproof stream file..." -ForegroundColor Cyan
+Write-Host "2. Updating stream script with browser path..." -ForegroundColor Cyan
 $code = @(
+"const puppeteer = require('puppeteer');",
 "const { launch, getStream } = require('puppeteer-stream');",
 "const { spawn } = require('child_process');",
 "const CONFIG = {",
@@ -40,6 +20,7 @@ $code = @(
 "  console.log('1. Starting browser...');",
 "  const browser = await launch({",
 "    headless: false,",
+"    executablePath: puppeteer.executablePath(),",
 "    defaultViewport: { width: CONFIG.width, height: CONFIG.height },",
 "    args: ['--window-size=1280,720', '--autoplay-policy=no-user-gesture-required', '--no-sandbox']",
 "  });",
@@ -55,7 +36,7 @@ $code = @(
 "}",
 "startStream();"
 )
-$code | Out-File -FilePath "$dir\stream.js" -Encoding utf8
+$code | Out-File -FilePath "C:\auto-stream\stream.js" -Encoding utf8
 
-Write-Host "6. Starting stream..." -ForegroundColor Cyan
+Write-Host "3. Launching stream..." -ForegroundColor Cyan
 node stream.js
