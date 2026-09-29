@@ -1,10 +1,6 @@
 $ProgressPreference = 'SilentlyContinue';
 Set-Location "C:\auto-stream"
 
-Write-Host "1. Downloading Chrome binaries..." -ForegroundColor Cyan
-npx puppeteer browsers install chrome
-
-Write-Host "2. Updating stream script with browser path..." -ForegroundColor Cyan
 $code = @(
 "const puppeteer = require('puppeteer');",
 "const { launch, getStream } = require('puppeteer-stream');",
@@ -17,19 +13,21 @@ $code = @(
 "  fps: 30",
 "};",
 "async function startStream() {",
-"  console.log('1. Starting browser...');",
+"  console.log('1. Locating Chrome...');",
+"  const chromePath = await puppeteer.executablePath();",
+"  console.log('2. Starting browser...');",
 "  const browser = await launch({",
 "    headless: false,",
-"    executablePath: puppeteer.executablePath(),",
+"    executablePath: chromePath,",
 "    defaultViewport: { width: CONFIG.width, height: CONFIG.height },",
 "    args: ['--window-size=1280,720', '--autoplay-policy=no-user-gesture-required', '--no-sandbox']",
 "  });",
 "  const page = await browser.newPage();",
-"  console.log('2. Opening game website...');",
+"  console.log('3. Opening game website...');",
 "  await page.goto(CONFIG.url, { waitUntil: 'networkidle2' });",
-"  console.log('3. Capturing stream...');",
+"  console.log('4. Capturing stream...');",
 "  const webStream = await getStream(page, { audio: true, video: true, frameSize: 20, mimeType: 'video/webm;codecs=vp8,opus' });",
-"  console.log('4. Broadcasting to YouTube...');",
+"  console.log('5. Broadcasting to YouTube...');",
 "  const ffmpeg = spawn('ffmpeg', ['-i', '-', '-c:v', 'libx264', '-preset', 'ultrafast', '-r', '30', '-b:v', '3500k', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-f', 'flv', 'rtmp://a.rtmp.youtube.com/live2/' + CONFIG.streamKey]);",
 "  webStream.pipe(ffmpeg.stdin);",
 "  ffmpeg.on('close', () => { console.log('Stream disconnected. Restarting...'); browser.close(); setTimeout(startStream, 5000); });",
@@ -38,5 +36,5 @@ $code = @(
 )
 $code | Out-File -FilePath "C:\auto-stream\stream.js" -Encoding utf8
 
-Write-Host "3. Launching stream..." -ForegroundColor Cyan
+Write-Host "Launching fixed stream..." -ForegroundColor Cyan
 node stream.js
