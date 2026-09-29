@@ -25,7 +25,7 @@ $code = @(
 "  const page = await browser.newPage();",
 "  page.setDefaultNavigationTimeout(0);",
 "  console.log('3. Opening game website...');",
-"  await page.goto(CONFIG.url, { waitUntil: 'domcontentloaded' });",
+"  await page.goto(CONFIG.url, { waitUntil: 'domcontentloaded', timeout: 0 });",
 "  console.log('4. Capturing stream...');",
 "  const webStream = await getStream(page, { audio: true, video: true, frameSize: 20, mimeType: 'video/webm;codecs=vp8,opus' });",
 "  console.log('5. Broadcasting to YouTube...');",
@@ -37,5 +37,5 @@ $code = @(
 )
 $code | Out-File -FilePath "C:\auto-stream\stream.js" -Encoding utf8
 
-Write-Host "Launching fixed stream..." -ForegroundColor Cyan
+Write-Host "Launching stream..." -ForegroundColor Cyan
 node stream.js
