@@ -1,111 +1,61 @@
 $ProgressPreference = 'SilentlyContinue';
 Set-ExecutionPolicy Bypass -Scope Process -Force;
 
-# Clean up broken directory
-Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force;
-Remove-Item -Recurse -Force "C:\stream" -ErrorAction SilentlyContinue;
-New-Item -ItemType Directory -Force -Path "C:\stream" | Out-Null;
-Set-Location "C:\stream";
+Write-Host "1. Creating new folder..." -ForegroundColor Cyan
+$dir = "C:\auto-stream"
+New-Item -ItemType Directory -Force -Path $dir -ErrorAction SilentlyContinue | Out-Null
+Set-Location $dir
 
-Write-Host "1. Checking Node.js..." -ForegroundColor Cyan
+Write-Host "2. Checking Node.js..." -ForegroundColor Cyan
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     Invoke-WebRequest -Uri "https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi" -OutFile "node.msi"
     Start-Process msiexec.exe -ArgumentList '/i node.msi /quiet /norestart' -Wait
     Remove-Item "node.msi" -Force
 }
-$env:Path += ";C:\Program Files\nodejs\;C:\stream\"
+$env:Path += ";C:\Program Files\nodejs\;$dir\"
 
-Write-Host "2. Checking FFmpeg..." -ForegroundColor Cyan
+Write-Host "3. Checking FFmpeg..." -ForegroundColor Cyan
 if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
     Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "ffmpeg.zip"
-    Expand-Archive ffmpeg.zip -DestinationPath "C:\stream\ffmpeg_temp" -Force
-    Move-Item "C:\stream\ffmpeg_temp\*\bin\ffmpeg.exe" "C:\stream\ffmpeg.exe" -Force
+    Expand-Archive ffmpeg.zip -DestinationPath "$dir\ffmpeg_temp" -Force
+    Move-Item "$dir\ffmpeg_temp\*\bin\ffmpeg.exe" "$dir\ffmpeg.exe" -Force
     Remove-Item "ffmpeg.zip", "ffmpeg_temp" -Recurse -Force
 }
 
-Write-Host "3. Creating clean files..." -ForegroundColor Cyan
+Write-Host "4. Installing required packages directly..." -ForegroundColor Cyan
+npm install puppeteer puppeteer-stream
 
-@'
-TARGET_WEBSITE=https://stream.virallinx.site/
-YOUTUBE_KEY=m3kx-5ae5-k3br-xr31-6h0w
-'@ | Out-File -FilePath "C:\stream\.env" -Encoding utf8
+Write-Host "5. Creating bulletproof stream file..." -ForegroundColor Cyan
+$code = @(
+"const { launch, getStream } = require('puppeteer-stream');",
+"const { spawn } = require('child_process');",
+"const CONFIG = {",
+"  url: 'https://stream.virallinx.site/',",
+"  streamKey: 'm3kx-5ae5-k3br-xr31-6h0w',",
+"  width: 1280,",
+"  height: 720,",
+"  fps: 30",
+"};",
+"async function startStream() {",
+"  console.log('1. Starting browser...');",
+"  const browser = await launch({",
+"    headless: false,",
+"    defaultViewport: { width: CONFIG.width, height: CONFIG.height },",
+"    args: ['--window-size=1280,720', '--autoplay-policy=no-user-gesture-required', '--no-sandbox']",
+"  });",
+"  const page = await browser.newPage();",
+"  console.log('2. Opening game website...');",
+"  await page.goto(CONFIG.url, { waitUntil: 'networkidle2' });",
+"  console.log('3. Capturing stream...');",
+"  const webStream = await getStream(page, { audio: true, video: true, frameSize: 20, mimeType: 'video/webm;codecs=vp8,opus' });",
+"  console.log('4. Broadcasting to YouTube...');",
+"  const ffmpeg = spawn('ffmpeg', ['-i', '-', '-c:v', 'libx264', '-preset', 'ultrafast', '-r', '30', '-b:v', '3500k', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-f', 'flv', 'rtmp://a.rtmp.youtube.com/live2/' + CONFIG.streamKey]);",
+"  webStream.pipe(ffmpeg.stdin);",
+"  ffmpeg.on('close', () => { console.log('Stream disconnected. Restarting...'); browser.close(); setTimeout(startStream, 5000); });",
+"}",
+"startStream();"
+)
+$code | Out-File -FilePath "$dir\stream.js" -Encoding utf8
 
-@'
-{
-  "name": "auto-stream",
-  "version": "1.0.0",
-  "main": "stream.js",
-  "dependencies": {
-    "dotenv": "^16.4.5",
-    "puppeteer": "^23.4.0",
-    "puppeteer-stream": "^2.1.3"
-  }
-}
-'@ | Out-File -FilePath "C:\stream\package.json" -Encoding utf8
-
-@'
-require('dotenv').config();
-const { launch, getStream } = require('puppeteer-stream');
-const { spawn } = require('child_process');
-
-const CONFIG = {
-  url: process.env.TARGET_WEBSITE,
-  streamKey: process.env.YOUTUBE_KEY,
-  width: 1280,
-  height: 720,
-  fps: 30
-};
-
-async function startStream() {
-  console.log('1. Starting browser...');
-  const browser = await launch({
-    headless: false, 
-    defaultViewport: { width: CONFIG.width, height: CONFIG.height },
-    args: [
-      '--window-size=' + CONFIG.width + ',' + CONFIG.height,
-      '--autoplay-policy=no-user-gesture-required',
-      '--no-sandbox'
-    ]
-  });
-
-  const page = await browser.newPage();
-  console.log('2. Opening game website...');
-  await page.goto(CONFIG.url, { waitUntil: 'networkidle2' });
-
-  console.log('3. Capturing stream...');
-  const webStream = await getStream(page, {
-    audio: true,
-    video: true,
-    frameSize: 20,
-    mimeType: 'video/webm;codecs=vp8,opus'
-  });
-
-  console.log('4. Broadcasting to YouTube...');
-  const ffmpeg = spawn('ffmpeg', [
-    '-i', '-',
-    '-c:v', 'libx264',
-    '-preset', 'ultrafast',
-    '-r', CONFIG.fps.toString(),
-    '-b:v', '3500k',
-    '-pix_fmt', 'yuv420p',
-    '-c:a', 'aac',
-    '-b:a', '128k',
-    '-f', 'flv',
-    'rtmp://a.rtmp.youtube.com/live2/' + CONFIG.streamKey
-  ]);
-
-  webStream.pipe(ffmpeg.stdin);
-
-  ffmpeg.on('close', () => {
-    console.log('Stream disconnected. Restarting...');
-    browser.close();
-    setTimeout(startStream, 5000);
-  });
-}
-
-startStream();
-'@ | Out-File -FilePath "C:\stream\stream.js" -Encoding utf8
-
-Write-Host "4. Installing packages & starting stream..." -ForegroundColor Cyan
-npm install
+Write-Host "6. Starting stream..." -ForegroundColor Cyan
 node stream.js
