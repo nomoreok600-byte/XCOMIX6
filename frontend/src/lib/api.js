@@ -128,7 +128,8 @@ const qs = (params) => {
 // ---- Catalog ----
 export const fetchMangaList = (params = {}) => request(`/api/manga${qs(params)}`);
 export const fetchManga = (slug) => request(`/api/catalog/manga/${encodeURIComponent(slug)}`);
-export const fetchChapterPages = (id) => request(`/api/chapters/${encodeURIComponent(id)}/pages`);
+export const fetchChapterPages = (id, { refresh = false } = {}) =>
+  request(`/api/chapters/${encodeURIComponent(id)}/pages${refresh ? "?refresh=1" : ""}`);
 export const fetchGenres = () => request(`/api/catalog/genres`);
 export const browse = (params = {}) => request(`/api/catalog/browse${qs({ ...adultQ(), ...params })}`);
 export const fetchPopular = (limit = 12) => request(`/api/catalog/popular${qs({ limit, ...adultQ() })}`);

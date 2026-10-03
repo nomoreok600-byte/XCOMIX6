@@ -5,7 +5,7 @@ import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
 import Footer from "../../components/Footer";
 import Icon from "../../components/Icon";
-import { useAuth, THEME_NAMES, applyTheme } from "../../lib/auth";
+import { useAuth, THEME_NAMES, THEMES, applyTheme } from "../../lib/auth";
 import {
   fetchProfile,
   fetchHistory,
@@ -13,9 +13,17 @@ import {
   updateMe,
   changePassword,
   deleteAccount,
+  clearHistory,
   proxyImage,
   decodeEntities,
 } from "../../lib/api";
+
+const READER_FIT_KEY = "xcomix_reader_fit";
+const FIT_OPTIONS = [
+  ["width", "Fit width"],
+  ["height", "Fit height"],
+  ["native", "Original"],
+];
 
 function StatCard({ icon, n, label }) {
   return (
@@ -38,6 +46,16 @@ export default function ProfilePage() {
   const [form, setForm] = useState({ username: "", bio: "", avatar_url: "", banner_url: "", theme: "aqua", profile_public: true });
   const [msg, setMsg] = useState(null);
   const [pw, setPw] = useState({ current_password: "", new_password: "" });
+  const [readerFit, setReaderFit] = useState("width");
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(READER_FIT_KEY);
+      if (saved && FIT_OPTIONS.some(([v]) => v === saved)) setReaderFit(saved);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -90,6 +108,16 @@ export default function ProfilePage() {
     navigator.clipboard?.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+  const chooseReaderFit = (v) => {
+    setReaderFit(v);
+    try { window.localStorage.setItem(READER_FIT_KEY, v); } catch { /* ignore */ }
+    flash("Reading preference saved.");
+  };
+  const wipeHistory = async () => {
+    if (!window.confirm("Clear your entire reading history?")) return;
+    try { await clearHistory(); setHistory([]); flash("Reading history cleared."); }
+    catch (e) { flash(e.message, false); }
   };
   const avatarStyle = form.avatar_url ? { backgroundImage: `url(${proxyImage(form.avatar_url)})`, backgroundSize: "cover", color: "transparent" } : undefined;
 
@@ -241,6 +269,15 @@ export default function ProfilePage() {
               <p className="faint">{stats.comments} comments · {stats.reviews} reviews posted.</p>
             </div>
             <div className="panel-box">
+              <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="clock" size={18} /> Reading History</h3>
+                {history.length > 0 && (
+                  <button className="btn btn-ghost" onClick={wipeHistory}><Icon name="trash" size={15} /> Clear history</button>
+                )}
+              </div>
+              <p className="faint">{history.length} {history.length === 1 ? "title" : "titles"} in your history.</p>
+            </div>
+            <div className="panel-box">
               <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="bell" size={18} /> Notifications</h3>
               <Link href="/notifications" className="btn btn-ghost">View notifications →</Link>
             </div>
@@ -265,12 +302,24 @@ export default function ProfilePage() {
               <div className="field"><label>Avatar image URL</label><input className="input" value={form.avatar_url} onChange={(e) => set("avatar_url", e.target.value)} placeholder="https://…" /></div>
               <div className="field"><label>Banner image URL</label><input className="input" value={form.banner_url} onChange={(e) => set("banner_url", e.target.value)} placeholder="https://…" /></div>
               <div className="field">
-                <label>Theme</label>
-                <select className="input" value={form.theme} onChange={(e) => { set("theme", e.target.value); applyTheme(e.target.value); }}>
-                  {THEME_NAMES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <label>Accent theme</label>
+                <div className="theme-swatches">
+                  {THEME_NAMES.map((t) => (
+                    <button
+                      type="button"
+                      key={t}
+                      className={`theme-swatch${form.theme === t ? " active" : ""}`}
+                      style={{ "--sw1": THEMES[t].crimson, "--sw2": THEMES[t].crimson2 }}
+                      onClick={() => { set("theme", t); applyTheme(t); }}
+                      aria-label={`${t} theme`}
+                      title={t}
+                    >
+                      {form.theme === t && <Icon name="check" size={15} />}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <label className="row" style={{ gap: 8 }}>
+              <label className="toggle-row">
                 <input type="checkbox" checked={form.profile_public} onChange={(e) => set("profile_public", e.target.checked)} />
                 <span>Public profile (others can see your library)</span>
               </label>
@@ -278,10 +327,31 @@ export default function ProfilePage() {
             </div>
 
             <div className="panel-box">
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="book" size={18} /> Reading preferences</h3>
+              <div className="field">
+                <label>Default page fit in the reader</label>
+                <div className="seg">
+                  {FIT_OPTIONS.map(([v, l]) => (
+                    <button key={v} type="button" className={`seg-btn${readerFit === v ? " active" : ""}`} onClick={() => chooseReaderFit(v)}>{l}</button>
+                  ))}
+                </div>
+              </div>
+              <p className="faint" style={{ margin: "4px 0 0" }}>Applied automatically the next time you open a chapter.</p>
+            </div>
+
+            <div className="panel-box">
               <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="key" size={18} /> Security</h3>
               <div className="field"><label>Current password</label><input className="input" type="password" value={pw.current_password} onChange={(e) => setPw((p) => ({ ...p, current_password: e.target.value }))} /></div>
               <div className="field"><label>New password</label><input className="input" type="password" value={pw.new_password} onChange={(e) => setPw((p) => ({ ...p, new_password: e.target.value }))} /></div>
               <button className="btn btn-ghost" onClick={savePassword}>Update password</button>
+            </div>
+
+            <div className="panel-box">
+              <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><Icon name="lock" size={18} /> Session</h3>
+              <p className="faint" style={{ marginTop: 0 }}>Sign out of your account on this device.</p>
+              <button className="btn btn-ghost" onClick={() => { logout(); window.location.href = "/home"; }}>
+                <Icon name="arrowRight" size={15} /> Log out
+              </button>
             </div>
 
             <div className="panel-box" style={{ borderColor: "rgba(255,0,68,0.4)" }}>

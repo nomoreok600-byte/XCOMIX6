@@ -209,25 +209,29 @@ app.get("/api/chapters/:id/pages", wrap(async (req, res) => {
   }
   const ch = chapterRows[0];
 
-  let pageRows = await query(
-    `SELECT page_number, remote_source_url
-     FROM pages WHERE chapter_id = :id ORDER BY page_number ASC`,
-    { id }
-  );
+  // ?refresh=1 forces a re-scrape of fresh page URLs — the reader calls this
+  // automatically when stored images fail to load (source CDN URLs that have
+  // expired after a few days), and it's also useful to manually heal a chapter.
+  const refresh = req.query.refresh === "1" || req.query.refresh === "true";
 
-  // Lazy "chapter reader": if pages were never resolved but we know the source
-  // chapter URL, scrape + cache them on first read, then continue normally.
-  if (pageRows.length === 0 && ch.source_url) {
+  let pageRows;
+  if (ch.source_url) {
+    // Lazy "chapter reader": resolves on first read, serves cached rows while
+    // fresh, and transparently re-scrapes when they age past the TTL or when a
+    // refresh is requested. Never wipes a chapter to zero on a failed re-scrape.
     try {
-      const result = await ensureChapterPages(pool, { id: ch.id, source_url: ch.source_url });
-      if (result.inserted > 0) {
-        pageRows = result.pages.map((p) => ({
-          page_number: p.page_number,
-          remote_source_url: p.source_url,
-        }));
-      }
+      const result = await ensureChapterPages(
+        pool,
+        { id: ch.id, source_url: ch.source_url },
+        { force: refresh }
+      );
+      pageRows = result.pages.map((p) => ({
+        page_number: p.page_number,
+        remote_source_url: p.source_url,
+      }));
     } catch (err) {
       console.warn(`[reader] could not resolve pages for chapter ${id}:`, err.message);
+      pageRows = [];
     }
     // Safety net: if this request resolved nothing (e.g. a concurrent request
     // won the resolution), re-read from the DB before giving up.
@@ -238,6 +242,12 @@ app.get("/api/chapters/:id/pages", wrap(async (req, res) => {
         { id }
       );
     }
+  } else {
+    pageRows = await query(
+      `SELECT page_number, remote_source_url
+       FROM pages WHERE chapter_id = :id ORDER BY page_number ASC`,
+      { id }
+    );
   }
 
   // Sibling chapters for prev/next navigation (ordered by numeric chapter).

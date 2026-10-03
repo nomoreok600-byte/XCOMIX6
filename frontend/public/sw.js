@@ -2,8 +2,19 @@
    faster repeat loads. Network-first for navigations (always try fresh HTML,
    fall back to cache/offline), cache-first for static build assets. API and
    image-proxy requests are never cached here (handled by HTTP cache headers). */
-const CACHE = "xcomix-shell-v1";
-const SHELL = ["/", "/home/", "/offline.html", "/manifest.webmanifest", "/icon-192.png"];
+const CACHE = "xcomix-shell-v2";
+const SHELL = [
+  "/",
+  "/home/",
+  "/browse/",
+  "/library/",
+  "/offline.html",
+  "/manifest.webmanifest",
+  "/favicon.png",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-512.png",
+];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()));

@@ -133,8 +133,16 @@ Non-obvious caveats:
   Tune with `ACTIVITY_*` env (defaults match 15 min / 60 min / 5 pages); inspect
   via `GET /api/activity/status`.
 - The image proxy (`GET /api/proxy/image`) has an in-memory LRU cache; repeat
-  hits return `X-Proxy-Cache: HIT` instantly. It is per-process and bounded
-  (`PROXY_CACHE_MAX_BYTES`/`_ENTRIES`/`_ITEM`); restarting the backend clears it.
+ hits return `X-Proxy-Cache: HIT` instantly. It is per-process and bounded
+ (`PROXY_CACHE_MAX_BYTES`/`_ENTRIES`/`_ITEM`); restarting the backend clears it.
+- The activity-driven importer is **on by default** (`ACTIVITY_IMPORT_ENABLED=true`).
+ In local dev it fires on the first frontend page views and crawls the source
+ sites; while a crawl is mid-flight it inserts partial stub rows whose
+ `title='Untitled'` with empty `cover_url`. Because `/api/catalog/browse` and
+ `recent` sort newest-first, those stubs transiently show up at the top of
+ `/browse`. For a stable local demo, set `ACTIVITY_IMPORT_ENABLED=false` in
+ `backend/.env` (or just wait for the crawl to finish — stubs get real metadata
+ on completion). `DELETE FROM mangas WHERE title='Untitled'` clears leftover stubs.
 - Importers filter chapter links to the series' own slug, so MangaKatana
   "you may also like" rails no longer leak foreign chapters into a title.
 - Ad slots + the announcement banner are admin-managed via the `site_settings`

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
 import Footer from "../../components/Footer";
@@ -11,23 +12,39 @@ import { useAuth } from "../../lib/auth";
 import { fetchProfile, follow, unfollow, proxyImage } from "../../lib/api";
 
 export default function PublicProfilePage() {
+  return (
+    <Suspense fallback={<><SiteNav /><div className="center-state">Loading…</div></>}>
+      <PublicProfile />
+    </Suspense>
+  );
+}
+
+function PublicProfile() {
   const { user } = useAuth();
-  const [username, setUsername] = useState(null);
+  // Read the username reactively from the query string so navigating from one
+  // profile to another (same route, query-only change) re-fetches the new user
+  // instead of leaving the previous profile's data on screen.
+  const params = useSearchParams();
+  const username = params.get("username") || "";
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    setUsername(p.get("username") || "");
+  const load = useCallback((name) => {
+    fetchProfile(name)
+      .then((d) => {
+        setData(d);
+        setError(null);
+      })
+      .catch((e) => setError(e.message));
   }, []);
-
-  const load = (name) => {
-    fetchProfile(name).then(setData).catch((e) => setError(e.message));
-  };
   useEffect(() => {
+    // Clear stale data immediately on a profile switch so we never flash the
+    // previous user's followers/library while the new request is in flight.
+    setData(null);
+    setError(null);
     if (username) load(username);
-  }, [username]);
+  }, [username, load]);
 
   if (error) return <><SiteNav /><div className="center-state">{error}</div></>;
   if (!data) return <><SiteNav /><div className="center-state">Loading…</div></>;
@@ -64,7 +81,7 @@ export default function PublicProfilePage() {
               <button className={`btn ${is_following ? "btn-ghost" : "btn-primary"}`} disabled={busy} onClick={toggleFollow}>
                 {is_following ? <><Icon name="check" size={15} /> Following</> : <><Icon name="plus" size={15} /> Follow</>}
               </button>
-              <Link href={`/messages?to=${profile.id}`} className="btn btn-ghost">Message</Link>
+              <Link href={`/messages/?to=${profile.id}`} className="btn btn-ghost">Message</Link>
             </div>
           )}
         </div>
