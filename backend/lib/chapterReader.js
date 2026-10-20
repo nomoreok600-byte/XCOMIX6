@@ -10,6 +10,28 @@
 
 const { fetchHtml, extractPageImagesFor } = require("./source");
 
+// Source CDN page URLs are tokenised / rotated and stop working after a few
+// days, which is why a chapter that loaded fine "the first time" shows broken
+// images 2–3 days later. We treat stored pages as stale once they age past this
+// TTL and transparently re-scrape fresh URLs on the next read. Tunable via env.
+const PAGE_TTL_HOURS = Number(process.env.PAGE_TTL_HOURS || 36);
+const PAGE_TTL_MS = Math.max(1, PAGE_TTL_HOURS) * 3600 * 1000;
+
+// Whether the optional `pages.resolved_at` column exists (added by app-schema.sql).
+// Probed once and cached; when absent we simply skip the time-based staleness
+// refresh (force + the reader's error-driven refresh still work everywhere).
+let hasResolvedAt = null;
+async function resolvedAtSupported(db) {
+  if (hasResolvedAt !== null) return hasResolvedAt;
+  try {
+    const [cols] = await db.execute("SHOW COLUMNS FROM pages LIKE 'resolved_at'");
+    hasResolvedAt = cols.length > 0;
+  } catch {
+    hasResolvedAt = false;
+  }
+  return hasResolvedAt;
+}
+
 /** Fetch a chapter source page and return ordered page-image URLs. */
 async function readChapterPages(sourceUrl, { referer } = {}) {
   if (!sourceUrl) return [];
@@ -44,24 +66,46 @@ function ensureChapterPages(db, chapter, { force = false } = {}) {
 
 async function resolveChapterPages(db, chapter, { force = false } = {}) {
   const chapterId = Number(chapter.id);
+  const supportsTtl = await resolvedAtSupported(db);
 
-  if (!force) {
-    const [existing] = await db.execute(
-      "SELECT page_number, remote_source_url FROM pages WHERE chapter_id = ? ORDER BY page_number ASC",
-      [chapterId]
-    );
-    if (existing.length > 0) {
-      return {
-        pages: existing.map((p) => ({ page_number: Number(p.page_number), source_url: p.remote_source_url })),
-        inserted: 0,
-      };
-    }
+  const selectSql = supportsTtl
+    ? "SELECT page_number, remote_source_url, resolved_at FROM pages WHERE chapter_id = ? ORDER BY page_number ASC"
+    : "SELECT page_number, remote_source_url FROM pages WHERE chapter_id = ? ORDER BY page_number ASC";
+  const [existing] = await db.execute(selectSql, [chapterId]);
+  const toPages = (rows) =>
+    rows.map((p) => ({ page_number: Number(p.page_number), source_url: p.remote_source_url }));
+
+  // Decide whether the cached rows are still good enough to serve as-is.
+  let stale = false;
+  if (existing.length > 0 && supportsTtl) {
+    const oldest = existing.reduce((min, p) => {
+      const t = p.resolved_at ? new Date(p.resolved_at).getTime() : 0;
+      return Number.isNaN(t) ? 0 : Math.min(min, t);
+    }, Date.now());
+    stale = Date.now() - oldest > PAGE_TTL_MS;
   }
 
-  if (!chapter.source_url) return { pages: [], inserted: 0 };
+  if (existing.length > 0 && !force && !stale) {
+    return { pages: toPages(existing), inserted: 0 };
+  }
 
-  const images = await readChapterPages(chapter.source_url, { referer: chapter.referer });
-  if (images.length === 0) return { pages: [], inserted: 0 };
+  if (!chapter.source_url) {
+    // Nothing to re-scrape from; serve whatever we have.
+    return { pages: toPages(existing), inserted: 0 };
+  }
+
+  let images = [];
+  try {
+    images = await readChapterPages(chapter.source_url, { referer: chapter.referer });
+  } catch {
+    images = [];
+  }
+
+  // Re-scrape failed (network/markup change): keep the existing rows rather than
+  // wiping a chapter to zero pages. A later read will try again.
+  if (images.length === 0) {
+    return { pages: toPages(existing), inserted: 0 };
+  }
 
   // Replace any stale rows then insert fresh, ordered pages.
   await db.execute("DELETE FROM pages WHERE chapter_id = ?", [chapterId]);

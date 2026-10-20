@@ -15,7 +15,7 @@ const STATUSES = [
 ];
 
 export default function LibraryButton({ mangaId }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [entry, setEntry] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -25,6 +25,16 @@ export default function LibraryButton({ mangaId }) {
       .then((d) => setEntry(d.entry))
       .catch(() => {});
   }, [user, mangaId]);
+
+  // While auth is still resolving, show a neutral placeholder rather than
+  // flashing "Sign in to bookmark" to a user who is actually logged in.
+  if (loading) {
+    return (
+      <button className="btn btn-ghost" disabled aria-busy="true">
+        <Icon name="bookmark" size={16} /> Library
+      </button>
+    );
+  }
 
   if (!user) {
     return (

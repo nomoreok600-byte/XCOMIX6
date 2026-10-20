@@ -15,7 +15,6 @@ import {
 import Comments from "./Comments";
 import Icon from "./Icon";
 import AdSlot from "./AdSlot";
-import Select from "./Select";
 
 const FIT_KEY = "xcomix_reader_fit";
 const FIT_MODES = [
@@ -24,39 +23,60 @@ const FIT_MODES = [
   ["native", "Original"],
 ];
 
-function ReaderImage({ page, eager, fit }) {
-  const [status, setStatus] = useState("loading");
-  const [attempt, setAttempt] = useState(0);
+// Pages never show a scary error to the reader. On failure they keep a subtle
+// loading shimmer and silently retry with backoff (cache-busting each attempt),
+// while asking the parent to re-scrape fresh source URLs for the whole chapter.
+// A freshly re-scraped URL (page.source_url change) resets and reloads cleanly.
+function ReaderImage({ page, eager, fit, onError }) {
+  const [loaded, setLoaded] = useState(false);
+  const [bust, setBust] = useState(0);
+  const triesRef = useRef(0);
+  const timerRef = useRef(null);
   const src = proxyImage(page.source_url);
-  // Cache-bust on retry so a transient proxy failure can recover.
-  const finalSrc = attempt > 0 ? `${src}${src.includes("?") ? "&" : "?"}r=${attempt}` : src;
+  const finalSrc = bust > 0 ? `${src}${src.includes("?") ? "&" : "?"}r=${bust}` : src;
+
+  useEffect(() => {
+    // New URL (fresh re-scrape) or first mount: reset retry state.
+    setLoaded(false);
+    triesRef.current = 0;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    return () => timerRef.current && clearTimeout(timerRef.current);
+  }, [page.source_url]);
+
+  const handleError = () => {
+    triesRef.current += 1;
+    const n = triesRef.current;
+    // First failure for this page → ask the parent to re-resolve the chapter
+    // (the parent throttles/caps this), which usually swaps in working URLs.
+    if (n === 1) onError?.();
+    // Keep retrying this image. Fast backoff at first, then a slow heartbeat so
+    // it recovers on its own if the source/proxy comes back — without ever
+    // surfacing an error message.
+    const delay = n <= 6 ? Math.min(600 * n, 3500) : 15000;
+    if (n % 5 === 0) onError?.();
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setBust((b) => b + 1), delay);
+  };
 
   return (
     <div className={`reader-page fit-${fit}`}>
-      {status === "error" ? (
-        <div className="reader-fallback">
-          <p>Page {page.page_number} could not be streamed.</p>
-          <button
-            className="btn btn-ghost"
-            onClick={() => (setStatus("loading"), setAttempt((a) => a + 1))}
-          >
-            Retry
-          </button>
+      {!loaded && (
+        <div className="reader-page-loading" aria-hidden="true">
+          <span className="reader-spinner" />
         </div>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={finalSrc}
-          alt={`Page ${page.page_number}`}
-          loading={eager ? "eager" : "lazy"}
-          // eslint-disable-next-line react/no-unknown-property
-          fetchpriority={eager ? "high" : "auto"}
-          decoding="async"
-          onLoad={() => setStatus("loaded")}
-          onError={() => setStatus("error")}
-          style={status === "loading" ? { minHeight: 240, background: "var(--bg-2)" } : undefined}
-        />
       )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={finalSrc}
+        alt={`Page ${page.page_number}`}
+        loading={eager ? "eager" : "lazy"}
+        // eslint-disable-next-line react/no-unknown-property
+        fetchpriority={eager ? "high" : "auto"}
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={handleError}
+        style={loaded ? undefined : { minHeight: 320 }}
+      />
     </div>
   );
 }
@@ -69,6 +89,10 @@ export default function ReaderView({ id }) {
   const [chapters, setChapters] = useState([]);
   const [fit, setFit] = useState("width");
   const [showSettings, setShowSettings] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [showChapters, setShowChapters] = useState(false);
+  const [chapterQuery, setChapterQuery] = useState("");
+  const [showTop, setShowTop] = useState(false);
   const [progress, setProgress] = useState(0);
   // Immersive reading: tap the page area to toggle the top/bottom option bars so
   // they don't permanently overlay (and shift) the artwork.
@@ -84,11 +108,13 @@ export default function ReaderView({ id }) {
     if (typeof window !== "undefined") window.localStorage.setItem(FIT_KEY, v);
   };
 
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
-    if (!id) return;
+    if (!id) return undefined;
     let active = true;
+    let retryTimer = null;
     setLoading(true);
-    window.scrollTo({ top: 0 });
+    if (retry === 0) window.scrollTo({ top: 0 });
     fetchChapterPages(id)
       .then((res) => {
         if (!active) return;
@@ -98,26 +124,84 @@ export default function ReaderView({ id }) {
           pushHistory({ manga_id: res.chapter.manga_id, chapter_id: res.chapter.id }).catch(() => {});
         }
       })
-      .catch((err) => active && setError(err.message))
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message);
+        // Auto-retry the chapter load in the background (capped) so a transient
+        // network/API hiccup heals itself instead of showing an error.
+        if (retry < 6) retryTimer = setTimeout(() => active && setRetry((r) => r + 1), 3000);
+      })
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [id]);
+  }, [id, retry]);
+  // Reset the retry counter on chapter change.
+  useEffect(() => setRetry(0), [id]);
 
   const chapter = data?.chapter;
   const pages = data?.pages || [];
   const prevId = data?.prev_chapter_id;
   const nextId = data?.next_chapter_id;
 
-  // Newest-first options for the custom chapter picker.
-  const chapterOptions = chapters
-    .slice()
-    .reverse()
-    .map((c) => ({
-      value: String(c.id),
-      label: decodeEntities(c.title) || `Chapter ${c.chapter_number}`,
-    }));
+  // Self-healing pages: source CDN URLs expire after a few days, so a chapter
+  // that loaded once can later show broken images. When a page image fails we
+  // ask the backend to re-scrape fresh URLs; the new URLs flow back into the
+  // pages and each image reloads automatically. Throttled + capped per chapter
+  // so concurrent page failures don't hammer the source.
+  const refreshingRef = useRef(false);
+  const lastRefreshRef = useRef(0);
+  const refreshCountRef = useRef(0);
+  useEffect(() => {
+    // Reset the per-chapter re-resolve budget whenever the chapter changes.
+    lastRefreshRef.current = 0;
+    refreshCountRef.current = 0;
+  }, [id]);
+  const refreshPages = useCallback(async () => {
+    if (!id || refreshingRef.current) return;
+    const now = Date.now();
+    if (now - lastRefreshRef.current < 8000) return;
+    if (refreshCountRef.current >= 5) return;
+    refreshingRef.current = true;
+    lastRefreshRef.current = now;
+    refreshCountRef.current += 1;
+    try {
+      const res = await fetchChapterPages(id, { refresh: true });
+      if (res?.pages?.length) setData(res);
+    } catch {
+      /* keep retrying silently */
+    } finally {
+      refreshingRef.current = false;
+    }
+  }, [id]);
+  const onImageError = useCallback(() => {
+    refreshPages();
+  }, [refreshPages]);
+
+  // If a chapter loads with zero pages (e.g. the very first resolve hit the
+  // source while it was briefly unavailable), keep trying in the background
+  // instead of showing a "no pages" dead end.
+  useEffect(() => {
+    if (loading || error) return undefined;
+    if (data && (data.pages?.length || 0) === 0) {
+      const t = setTimeout(() => refreshPages(), 4000);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [data, loading, error, refreshPages]);
+
+  // Newest-first chapter directory for the chapter drawer, with a live filter.
+  const chaptersNewestFirst = chapters.slice().reverse();
+  const filteredChapters = chapterQuery.trim()
+    ? chaptersNewestFirst.filter((c) => {
+        const q = chapterQuery.trim().toLowerCase();
+        return (
+          String(c.chapter_number).toLowerCase().includes(q) ||
+          decodeEntities(c.title).toLowerCase().includes(q)
+        );
+      })
+    : chaptersNewestFirst;
 
   // Load the full chapter directory for the jump-to selector.
   useEffect(() => {
@@ -143,7 +227,20 @@ export default function ReaderView({ id }) {
     if (e.target.closest("button, a, select, input")) return;
     setChrome((c) => !c);
     setShowSettings(false);
+    setShowInfo(false);
   };
+
+  // Close transient panels with Escape.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      setShowChapters(false);
+      setShowSettings(false);
+      setShowInfo(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Keyboard navigation: ←/→ jump chapters, Home returns to the series.
   useEffect(() => {
@@ -161,6 +258,7 @@ export default function ReaderView({ id }) {
     const onScroll = () => {
       const h = document.documentElement.scrollHeight - window.innerHeight;
       setProgress(h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0);
+      setShowTop(window.scrollY > 700);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -222,16 +320,16 @@ export default function ReaderView({ id }) {
             </div>
           </div>
           <div className="reader-settings-row">
-            <span className="reader-settings-label">Jump to chapter</span>
-            <Select
-              className="reader-select"
-              ariaLabel="Jump to chapter"
-              searchable
-              value={id || ""}
-              onChange={(v) => go(v)}
-              options={chapterOptions}
-              placeholder={`Chapter ${chapter?.chapter_number || ""}`}
-            />
+            <span className="reader-settings-label">Chapters</span>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setShowSettings(false);
+                setShowChapters(true);
+              }}
+            >
+              <Icon name="list" size={15} /> Browse all chapters
+            </button>
           </div>
           <p className="reader-settings-hint">
             Tip: tap the page to hide these bars · use ← and → to change chapters.
@@ -242,18 +340,20 @@ export default function ReaderView({ id }) {
       <AdSlot slot="chapter" className="ad-slot-chapter" />
 
       <div className={`reader-stage fit-${fit}`} onClick={toggleChrome}>
-        {!id || loading ? (
-          <div className="center-state">Streaming pages…</div>
-        ) : error ? (
-          <div className="center-state">
-            <p>Could not load this chapter.</p>
-            <p style={{ color: "var(--text-faint)", fontSize: 13 }}>{error}</p>
+        {!id || loading || error || pages.length === 0 ? (
+          <div className="center-state reader-loading-state">
+            <span className="reader-spinner lg" />
+            <p>Streaming pages…</p>
           </div>
-        ) : pages.length === 0 ? (
-          <div className="center-state">No pages found for this chapter.</div>
         ) : (
           pages.map((p, i) => (
-            <ReaderImage key={p.page_number} page={p} fit={fit} eager={i < 2} />
+            <ReaderImage
+              key={p.page_number}
+              page={p}
+              fit={fit}
+              eager={i < 2}
+              onError={onImageError}
+            />
           ))
         )}
       </div>
@@ -286,24 +386,131 @@ export default function ReaderView({ id }) {
         </div>
       )}
 
+      {chapter && (
+        <button
+          type="button"
+          className={`reader-to-top${showTop ? " show" : ""}`}
+          aria-label="Back to top"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          <Icon name="arrowUp" size={20} />
+        </button>
+      )}
+
+      {showInfo && chapter && (
+        <div className="reader-info-panel">
+          <div className="reader-info-head">
+            <h3><Icon name="info" size={16} /> Chapter info</h3>
+            <button className="btn btn-ghost reader-nav-btn" onClick={() => setShowInfo(false)} aria-label="Close info">
+              <Icon name="close" size={16} />
+            </button>
+          </div>
+          <div className="reader-info-grid">
+            <div><div className="k">Series</div><div className="v">{decodeEntities(chapter.manga_title)}</div></div>
+            <div><div className="k">Chapter</div><div className="v">{decodeEntities(chapter.title) || `Chapter ${chapter.chapter_number}`}</div></div>
+            <div><div className="k">Number</div><div className="v">Ch. {chapter.chapter_number}</div></div>
+            <div><div className="k">Pages</div><div className="v">{pages.length}</div></div>
+            {chapter.created_at && (
+              <div><div className="k">Published</div><div className="v">{formatDateTime(chapter.created_at)}</div></div>
+            )}
+          </div>
+        </div>
+      )}
+
       {!loading && !error && chapter && (
         <div className="reader-bar bottom">
-          <button className="btn btn-ghost reader-nav-btn" disabled={!prevId} onClick={() => go(prevId)}>
-            <Icon name="chevronLeft" size={16} /> Prev
+          <button
+            className="reader-pill-btn"
+            disabled={!prevId}
+            onClick={() => go(prevId)}
+            aria-label="Previous chapter"
+          >
+            <Icon name="chevronLeft" size={18} />
           </button>
-          <Select
-            className="reader-select compact"
-            ariaLabel="Jump to chapter"
-            searchable
-            up
-            value={id || ""}
-            onChange={(v) => go(v)}
-            options={chapterOptions.length ? chapterOptions : [{ value: id, label: `Ch. ${chapter.chapter_number}` }]}
-            placeholder={`Ch. ${chapter.chapter_number}`}
-          />
-          <button className="btn btn-primary reader-nav-btn" disabled={!nextId} onClick={() => go(nextId)}>
-            Next <Icon name="chevronRight" size={16} />
+          <button
+            className={`reader-pill-btn${showInfo ? " active" : ""}`}
+            onClick={() => setShowInfo((s) => !s)}
+            aria-label="Chapter info"
+            aria-expanded={showInfo}
+          >
+            <Icon name="info" size={18} />
           </button>
+          <button
+            className="reader-ch-btn"
+            onClick={() => setShowChapters(true)}
+            aria-label="Select chapter"
+          >
+            <Icon name="list" size={16} />
+            <span>Ch. {chapter.chapter_number}</span>
+            <Icon name="chevronUp" size={14} className="reader-ch-caret" />
+          </button>
+          <button
+            className="reader-pill-btn primary"
+            disabled={!nextId}
+            onClick={() => go(nextId)}
+            aria-label="Next chapter"
+          >
+            <Icon name="chevronRight" size={18} />
+          </button>
+        </div>
+      )}
+
+      {showChapters && (
+        <div
+          className="chapter-drawer-overlay"
+          onClick={() => setShowChapters(false)}
+          role="presentation"
+        >
+          <div className="chapter-drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Chapters">
+            <div className="chapter-drawer-grab" />
+            <div className="chapter-drawer-head">
+              <h3><Icon name="list" size={17} /> Chapters <span className="faint">{chapters.length}</span></h3>
+              <button className="reader-pill-btn" onClick={() => setShowChapters(false)} aria-label="Close">
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            <div className="chapter-drawer-search">
+              <Icon name="search" size={16} />
+              <input
+                autoFocus
+                value={chapterQuery}
+                onChange={(e) => setChapterQuery(e.target.value)}
+                placeholder="Search chapter number or title…"
+                aria-label="Search chapters"
+              />
+              {chapterQuery && (
+                <button className="chapter-drawer-clear" onClick={() => setChapterQuery("")} aria-label="Clear">
+                  <Icon name="close" size={14} />
+                </button>
+              )}
+            </div>
+            <div className="chapter-drawer-list">
+              {filteredChapters.length === 0 ? (
+                <div className="chapter-drawer-empty">No chapters match “{chapterQuery}”.</div>
+              ) : (
+                filteredChapters.map((c) => {
+                  const current = String(c.id) === String(id);
+                  const title = decodeEntities(c.title);
+                  const hasSub = title && title.toLowerCase() !== `chapter ${c.chapter_number}`.toLowerCase();
+                  return (
+                    <button
+                      key={c.id}
+                      className={`chapter-drawer-item${current ? " current" : ""}`}
+                      onClick={() => {
+                        setShowChapters(false);
+                        setChapterQuery("");
+                        if (!current) go(c.id);
+                      }}
+                    >
+                      <span className="cd-no">Ch. {c.chapter_number}</span>
+                      {hasSub && <span className="cd-title">{title}</span>}
+                      {current && <Icon name="check" size={16} className="cd-check" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
